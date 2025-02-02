@@ -10,6 +10,7 @@ import buildClassName from '../../util/buildClassName';
 import useHorizontalScroll from '../../hooks/useHorizontalScroll';
 import useOldLang from '../../hooks/useOldLang';
 import usePreviousDeprecated from '../../hooks/usePreviousDeprecated';
+import useAppLayout from '../../hooks/useAppLayout';
 
 import Tab from './Tab';
 
@@ -45,7 +46,9 @@ const TabList: FC<OwnProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const previousActiveTab = usePreviousDeprecated(activeTab);
 
-  useHorizontalScroll(containerRef, undefined, true);
+  const { isMobile } = useAppLayout();
+
+  useHorizontalScroll(containerRef, !isMobile, true);
 
   // Scroll container to place active tab in the center
   useEffect(() => {
@@ -79,23 +82,23 @@ const TabList: FC<OwnProps> = ({
       ref={containerRef}
       dir={lang.isRtl ? 'rtl' : undefined}
     >
-      {tabs.map((tab, i) => (
-        <Tab
-          key={tab.id}
-          title={tab.title}
-          isActive={i === activeTab}
-          isBlocked={tab.isBlocked}
-          badgeCount={tab.badgeCount}
-          isBadgeActive={tab.isBadgeActive}
-          previousActiveTab={previousActiveTab}
-          onClick={onSwitchTab}
-          clickArg={i}
-          contextActions={tab.contextActions}
-          contextRootElementSelector={contextRootElementSelector}
-          className={tabClassName}
-        />
-      ))}
-    </div>
+        {tabs.map((tab, i) => (
+          <Tab
+            key={tab.id}
+            title={tab.title}
+            isActive={i === activeTab}
+            isBlocked={tab.isBlocked}
+            badgeCount={tab.badgeCount}
+            isBadgeActive={tab.isBadgeActive}
+            previousActiveTab={previousActiveTab}
+            onClick={onSwitchTab}
+            clickArg={i}
+            contextActions={tab.contextActions}
+            contextRootElementSelector={contextRootElementSelector}
+            className={tabClassName}
+          />
+        ))}
+      </div>
   );
 };
 
