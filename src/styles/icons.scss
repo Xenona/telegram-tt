@@ -66,6 +66,7 @@ $icons-map: (
   "boosts": "\f11d",
   "bot-command": "\f11e",
   "bot-commands-filled": "\f11f",
+<<<<<<< HEAD
   "bots": "\f120",
   "bug": "\f121",
   "calendar-filter": "\f122",
@@ -96,6 +97,38 @@ $icons-map: (
   "copy": "\f13b",
   "crown-take-off": "\f13c",
   "crown-wear": "\f13d",
+=======
+  "bot": "\f120",
+  "bots": "\f121",
+  "bug": "\f122",
+  "calendar-filter": "\f123",
+  "calendar": "\f124",
+  "camera-add": "\f125",
+  "camera": "\f126",
+  "car": "\f127",
+  "card": "\f128",
+  "cash-circle": "\f129",
+  "channel-filled": "\f12a",
+  "channel": "\f12b",
+  "channelviews": "\f12c",
+  "chat-badge": "\f12d",
+  "chats-badge": "\f12e",
+  "chats": "\f12f",
+  "check": "\f130",
+  "clock-edit": "\f131",
+  "clock": "\f132",
+  "close-circle": "\f133",
+  "close-topic": "\f134",
+  "close": "\f135",
+  "cloud-download": "\f136",
+  "collapse-modal": "\f137",
+  "collapse": "\f138",
+  "colorize": "\f139",
+  "comments-sticker": "\f13a",
+  "comments": "\f13b",
+  "copy-media": "\f13c",
+  "copy": "\f13d",
+>>>>>>> 818d9c79c (Implemented folder icons)
   "darkmode": "\f13e",
   "data": "\f13f",
   "delete-filled": "\f140",
@@ -198,6 +231,7 @@ $icons-map: (
   "poll": "\f1a1",
   "previous": "\f1a2",
   "privacy-policy": "\f1a3",
+<<<<<<< HEAD
   "proof-of-ownership": "\f1a4",
   "quote-text": "\f1a5",
   "quote": "\f1a6",
@@ -289,6 +323,97 @@ $icons-map: (
   "word-wrap": "\f1fc",
   "zoom-in": "\f1fd",
   "zoom-out": "\f1fe",
+=======
+  "quote-text": "\f1a4",
+  "quote": "\f1a5",
+  "readchats": "\f1a6",
+  "recent": "\f1a7",
+  "reload": "\f1a8",
+  "remove-quote": "\f1a9",
+  "remove": "\f1aa",
+  "reopen-topic": "\f1ab",
+  "replace": "\f1ac",
+  "replies": "\f1ad",
+  "reply-filled": "\f1ae",
+  "reply": "\f1af",
+  "revenue-split": "\f1b0",
+  "revote": "\f1b1",
+  "save-story": "\f1b2",
+  "saved-messages": "\f1b3",
+  "schedule": "\f1b4",
+  "search": "\f1b5",
+  "select": "\f1b6",
+  "send-outline": "\f1b7",
+  "send": "\f1b8",
+  "settings-filled": "\f1b9",
+  "settings": "\f1ba",
+  "share-filled": "\f1bb",
+  "share-screen-outlined": "\f1bc",
+  "share-screen-stop": "\f1bd",
+  "share-screen": "\f1be",
+  "show-message": "\f1bf",
+  "sidebar": "\f1c0",
+  "skip-next": "\f1c1",
+  "skip-previous": "\f1c2",
+  "smallscreen": "\f1c3",
+  "smile": "\f1c4",
+  "sort": "\f1c5",
+  "speaker-muted-story": "\f1c6",
+  "speaker-outline": "\f1c7",
+  "speaker-story": "\f1c8",
+  "speaker": "\f1c9",
+  "spoiler-disable": "\f1ca",
+  "spoiler": "\f1cb",
+  "sport": "\f1cc",
+  "star-small": "\f1cd",
+  "star": "\f1ce",
+  "stars-lock": "\f1cf",
+  "stats": "\f1d0",
+  "stealth-future": "\f1d1",
+  "stealth-past": "\f1d2",
+  "stickers": "\f1d3",
+  "stop-raising-hand": "\f1d4",
+  "stop": "\f1d5",
+  "story-caption": "\f1d6",
+  "story-expired": "\f1d7",
+  "story-priority": "\f1d8",
+  "story-reply": "\f1d9",
+  "strikethrough": "\f1da",
+  "tag-add": "\f1db",
+  "tag-crossed": "\f1dc",
+  "tag-filter": "\f1dd",
+  "tag-name": "\f1de",
+  "tag": "\f1df",
+  "timer": "\f1e0",
+  "toncoin": "\f1e1",
+  "trade": "\f1e2",
+  "transcribe": "\f1e3",
+  "truck": "\f1e4",
+  "unarchive": "\f1e5",
+  "underlined": "\f1e6",
+  "unlock-badge": "\f1e7",
+  "unlock": "\f1e8",
+  "unmute": "\f1e9",
+  "unpin": "\f1ea",
+  "unread": "\f1eb",
+  "up": "\f1ec",
+  "user-filled": "\f1ed",
+  "user-online": "\f1ee",
+  "user": "\f1ef",
+  "video-outlined": "\f1f0",
+  "video-stop": "\f1f1",
+  "video": "\f1f2",
+  "view-once": "\f1f3",
+  "voice-chat": "\f1f4",
+  "volume-1": "\f1f5",
+  "volume-2": "\f1f6",
+  "volume-3": "\f1f7",
+  "web": "\f1f8",
+  "webapp": "\f1f9",
+  "word-wrap": "\f1fa",
+  "zoom-in": "\f1fb",
+  "zoom-out": "\f1fc",
+>>>>>>> 818d9c79c (Implemented folder icons)
 );
 
 .icon-active-sessions::before {
@@ -384,6 +509,9 @@ $icons-map: (
 .icon-bot-commands-filled::before {
   content: map.get($icons-map, "bot-commands-filled");
 }
+.icon-bot::before {
+  content: map.get($icons-map, "bot");
+}
 .icon-bots::before {
   content: map.get($icons-map, "bots");
 }
@@ -425,6 +553,9 @@ $icons-map: (
 }
 .icon-chats-badge::before {
   content: map.get($icons-map, "chats-badge");
+}
+.icon-chats::before {
+  content: map.get($icons-map, "chats");
 }
 .icon-check::before {
   content: map.get($icons-map, "check");
@@ -908,6 +1039,9 @@ $icons-map: (
 }
 .icon-sport::before {
   content: map.get($icons-map, "sport");
+}
+.icon-star-small::before {
+  content: map.get($icons-map, "star-small");
 }
 .icon-star::before {
   content: map.get($icons-map, "star");
