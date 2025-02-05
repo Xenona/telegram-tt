@@ -2,10 +2,32 @@
 
 #LeftMainHeader {
   position: relative;
+  padding: 0;
 
   .DropdownMenuFiller {
     width: 2.5rem;
     height: 2.5rem;
+  }
+
+  .DropdownMenu {
+    @media (min-width: 600px) {
+
+      background: #212121;
+      padding: 0;
+      margin: 0;
+      min-width: 5.27rem;
+      height: 100%;
+      display: flex;
+      align-content: center;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    }
+
+    &.white {
+      background: var(--color-background);
+    }
   }
 
   .DropdownMenu.rtl {
