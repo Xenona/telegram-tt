@@ -25,6 +25,7 @@ import Button from '../../ui/Button';
 
 import './TextFormatter.scss';
 import { betterExecCommand } from '../../../util/execCommand';
+import { selectAfterNode } from '../../../util/selection';
 
 export type OwnProps = {
   isOpen: boolean;
@@ -195,13 +196,13 @@ const TextFormatter: FC<OwnProps> = ({
       return 'active';
     }
 
-    if (key === 'monospace' || key === 'strikethrough') {
+    if (key === 'monospace') {
       if (Object.keys(selectedTextFormats).some(
         (fKey) => fKey !== key && Boolean(selectedTextFormats[fKey as keyof ISelectedTextFormats]),
       )) {
         return 'disabled';
       }
-    } else if (selectedTextFormats.monospace || selectedTextFormats.strikethrough) {
+    } else if (selectedTextFormats.monospace) {
       return 'disabled';
     }
 
@@ -276,6 +277,8 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleMonospaceText = useLastCallback(() => {
+    if(window.getSelection()?.isCollapsed) return;
+
     if (selectedTextFormats.monospace) {
       betterExecCommand(inputRef.current, 'removeFormat');
       setSelectedTextFormats((selectedFormats) => ({
@@ -285,19 +288,20 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = selectedRange?.toString() || '';
-    betterExecCommand(inputRef.current, 'insertHTML', `<code class="text-entity-code editSelectMe" dir="auto">${text}</code>`);
-    let el = inputRef.current?.querySelector('.editSelectMe')
-    if(el) {
-      el.classList.remove('editSelectMe')
-      let r = document.createRange()
-      // There is only one child text node, so select inside it
-      r.setStart(el, 0)
-      r.setEnd(el, 1)
-      let sel = window.getSelection()
-      sel?.removeAllRanges()
-      sel?.addRange(r)
-      console.log(sel, r)
+    const previousCode = [...(inputRef.current?.querySelectorAll("code") || [])];
+    
+    let text = selectedRange?.toString() || '';
+    if(text.length == 0) text = ''
+    betterExecCommand(
+      inputRef.current,
+      "insertHTML",
+      `<code class="text-entity-code" dir="auto">${text}</code>`
+    );
+    
+    const currentCode = inputRef.current?.querySelectorAll("code") || [];
+    for (let el of currentCode) {
+      if (previousCode.includes(el)) continue;
+      selectAfterNode(el)
     }
     onClose();
   });
@@ -348,8 +352,13 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedText();
-    document.execCommand('insertHTML', false, `<blockquote>${text}</blockquote>`);
+    let fragmentEl = document.createElement('div');
+    fragmentEl.replaceChildren(window.getSelection()!.getRangeAt(0)!.cloneContents());
+    let clearBlockQuote: HTMLElement | null;
+    while(clearBlockQuote = fragmentEl.querySelector('blockquote')) {
+      clearBlockQuote.replaceWith(...clearBlockQuote.childNodes);
+    }
+    document.execCommand('insertHTML', false, `\n<blockquote>${fragmentEl.innerHTML}</blockquote>\n`);
     onClose();
   });
 
@@ -381,9 +390,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleKeyDown]);

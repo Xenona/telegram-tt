@@ -76,3 +76,13 @@ export function removeAllSelections() {
   const selection = window.getSelection();
   selection?.removeAllRanges();
 }
+
+export function selectAfterNode(node: Node) {
+  const range = document.createRange();
+  range.setStartAfter(node);
+  range.setEndAfter(node);
+  range.collapse(true);
+  const selection = window.getSelection()!;
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
