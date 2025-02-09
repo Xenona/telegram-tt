@@ -1,4 +1,4 @@
-import type { FC } from '../../../lib/teact/teact';
+import type { FC, RefObject } from '../../../lib/teact/teact';
 import React, {
   memo, useEffect, useRef, useState,
 } from '../../../lib/teact/teact';
@@ -24,6 +24,7 @@ import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
 
 import './TextFormatter.scss';
+import { betterExecCommand } from '../../../util/execCommand';
 
 export type OwnProps = {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export type OwnProps = {
   selectedRange?: Range;
   setSelectedRange: (range: Range) => void;
   onClose: () => void;
+  inputRef: RefObject<HTMLElement | null>;
 };
 
 interface ISelectedTextFormats {
@@ -49,6 +51,7 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   EM: 'italic',
   U: 'underline',
   DEL: 'strikethrough',
+  STRIKE: 'strikethrough',
   CODE: 'monospace',
   SPAN: 'spoiler',
 };
@@ -60,6 +63,7 @@ const TextFormatter: FC<OwnProps> = ({
   selectedRange,
   setSelectedRange,
   onClose,
+  inputRef
 }) => {
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
@@ -233,13 +237,7 @@ const TextFormatter: FC<OwnProps> = ({
   const handleBoldText = useLastCallback(() => {
     setSelectedTextFormats((selectedFormats) => {
       // Somehow re-applying 'bold' command to already bold text doesn't work
-      document.execCommand(selectedFormats.bold ? 'removeFormat' : 'bold');
-      Object.keys(selectedFormats).forEach((key) => {
-        if ((key === 'italic' || key === 'underline') && Boolean(selectedFormats[key])) {
-          document.execCommand(key);
-        }
-      });
-
+      betterExecCommand(inputRef.current, 'bold');
       updateSelectedRange();
       return {
         ...selectedFormats,
@@ -249,7 +247,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleItalicText = useLastCallback(() => {
-    document.execCommand('italic');
+    betterExecCommand(inputRef.current, 'italic');
     updateSelectedRange();
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
@@ -258,7 +256,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleUnderlineText = useLastCallback(() => {
-    document.execCommand('underline');
+    betterExecCommand(inputRef.current, 'underline');
     updateSelectedRange();
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
@@ -267,54 +265,38 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleStrikethroughText = useLastCallback(() => {
-    if (selectedTextFormats.strikethrough) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.tagName !== 'DEL'
-        || !element.textContent
-      ) {
-        return;
-      }
-
-      element.replaceWith(element.textContent);
-      setSelectedTextFormats((selectedFormats) => ({
-        ...selectedFormats,
-        strikethrough: false,
-      }));
-
-      return;
-    }
-
-    const text = getSelectedText();
-    document.execCommand('insertHTML', false, `<del>${text}</del>`);
-    onClose();
+    betterExecCommand(inputRef.current, 'strikethrough');
+    updateSelectedRange();
+    setSelectedTextFormats((selectedFormats) => ({
+      ...selectedFormats,
+      strikethrough: !selectedFormats.strikethrough,
+    }));
   });
 
   const handleMonospaceText = useLastCallback(() => {
     if (selectedTextFormats.monospace) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.tagName !== 'CODE'
-        || !element.textContent
-      ) {
-        return;
-      }
-
-      element.replaceWith(element.textContent);
+      betterExecCommand(inputRef.current, 'removeFormat');
       setSelectedTextFormats((selectedFormats) => ({
         ...selectedFormats,
         monospace: false,
       }));
-
       return;
     }
 
-    const text = getSelectedText(true);
-    document.execCommand('insertHTML', false, `<code class="text-entity-code" dir="auto">${text}</code>`);
+    const text = selectedRange?.toString() || '';
+    betterExecCommand(inputRef.current, 'insertHTML', `<code class="text-entity-code editSelectMe" dir="auto">${text}</code>`);
+    let el = inputRef.current?.querySelector('.editSelectMe')
+    if(el) {
+      el.classList.remove('editSelectMe')
+      let r = document.createRange()
+      // There is only one child text node, so select inside it
+      r.setStart(el, 0)
+      r.setEnd(el, 1)
+      let sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(r)
+      console.log(sel, r)
+    }
     onClose();
   });
 
@@ -336,9 +318,8 @@ const TextFormatter: FC<OwnProps> = ({
 
     const text = getSelectedText(true);
     restoreSelection();
-    document.execCommand(
+    betterExecCommand(inputRef.current, 
       'insertHTML',
-      false,
       `<a href=${formattedLinkUrl} class="text-entity-link" dir="auto">${text}</a>`,
     );
     onClose();
