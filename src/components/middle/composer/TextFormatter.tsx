@@ -42,6 +42,7 @@ interface ISelectedTextFormats {
   strikethrough?: boolean;
   monospace?: boolean;
   spoiler?: boolean;
+  quote?: boolean;
 }
 
 const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
@@ -54,6 +55,7 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   STRIKE: 'strikethrough',
   CODE: 'monospace',
   SPAN: 'spoiler',
+  BLOCKQUOTE: 'quote',
 };
 const fragmentEl = document.createElement('div');
 
@@ -325,6 +327,32 @@ const TextFormatter: FC<OwnProps> = ({
     onClose();
   });
 
+  const handleQuote = useLastCallback(() => {
+    if (selectedTextFormats.quote) {
+      const element = getSelectedElement();
+      if (
+        !selectedRange
+        || !element
+        || element.tagName !== 'BLOCKQUOTE'
+        || !element.textContent
+      ) {
+        return;
+      }
+
+      element.replaceWith(element.textContent);
+      setSelectedTextFormats((selectedFormats) => ({
+        ...selectedFormats,
+        blockquote: false,
+      }));
+
+      return;
+    }
+
+    const text = getSelectedText();
+    document.execCommand('insertHTML', false, `<blockquote>${text}</blockquote>`);
+    onClose();
+  });
+
   const handleKeyDown = useLastCallback((e: KeyboardEvent) => {
     const HANDLERS_BY_KEY: Record<string, AnyToVoidFunction> = {
       k: openLinkControl,
@@ -334,6 +362,7 @@ const TextFormatter: FC<OwnProps> = ({
       m: handleMonospaceText,
       s: handleStrikethroughText,
       p: handleSpoilerText,
+      q: handleQuote
     };
 
     const handler = HANDLERS_BY_KEY[getKeyFromEvent(e)];
@@ -404,6 +433,14 @@ const TextFormatter: FC<OwnProps> = ({
           onClick={handleSpoilerText}
         >
           <Icon name="eye-closed" />
+        </Button>
+        <Button
+          color="translucent"
+          ariaLabel={selectedTextFormats.quote ? "Break quote" :  "Make quote" }
+          className={getFormatButtonClassName('quote')}
+          onClick={handleQuote}
+        >
+          <Icon name={selectedTextFormats.quote === true ? "remove-quote" :  "quote-text" } />
         </Button>
         <div className="TextFormatter-divider" />
         <Button
