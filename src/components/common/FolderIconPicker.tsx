@@ -73,6 +73,7 @@ type OwnProps = {
   isTranslucent?: boolean;
   onCustomEmojiSelect: (sticker: ApiSticker) => void;
   onEmojiSelect: (emoji: string, name: string) => void;
+  onIconSelect: (emoji: string) => void;
   onReactionSelect?: (reaction: ApiReactionWithPaid) => void;
   onReactionContext?: (reaction: ApiReactionWithPaid) => void;
   onContextMenuOpen?: NoneToVoidFunction;
@@ -165,6 +166,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   isWithPaidReaction,
   recentEmojis,
   onEmojiSelect,
+  onIconSelect,
   onCustomEmojiSelect,
   onReactionSelect,
   onReactionContext,
@@ -546,15 +548,14 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
         <div className="categories-emojis">
           <div className='emoji-category-stripe'>
             <div>
-
-            {allCategories.slice(1).map(renderCategoryButton)}
+              {allCategories.slice(1).map(renderCategoryButton)}
             </div>
           </div>
           <div className='shared-canvas-container'>
 
-          <canvas ref={sharedCanvasRef} className="shared-canvas" />
-          <canvas ref={sharedCanvasHqRef} className="shared-canvas" />
-          {allSets.map(renderCover)}
+            <canvas ref={sharedCanvasRef} className="shared-canvas" />
+            <canvas ref={sharedCanvasHqRef} className="shared-canvas" />
+            {allSets.map(renderCover)}
           </div>
         </div>
       </div>
@@ -566,7 +567,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
         <div className="symbol-set symbol-set-container">
           {Object.entries(EMOTICON_TO_FOLDER_ICON).map(([emoticon, v]) =>
             <div className="EmojiButton custom-folder-icons"
-            onClick={(e)=>console.log("XE", {emoticon})}>
+              onClick={() => { onIconSelect(emoticon) }}>
               <Icon name={v} />
             </div>
           )}
