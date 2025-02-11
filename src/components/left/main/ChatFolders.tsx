@@ -67,13 +67,14 @@ type StateProps = {
 const SAVED_MESSAGES_HOTKEY = '0';
 const FIRST_FOLDER_INDEX = 0;
 
-const EMOTICON_TO_FOLDER_ICON: {[key: string]: IconName} = {
-  "🤖": "bot",
-  "📢": "channel-filled",
-  "👥": "group-filled",
-  "👤": "user-filled",
-  "⭐️": "star-small",
+export const EMOTICON_TO_FOLDER_ICON: { [key: string]: IconName } = {
+  "💬": "chats",
   "✅": "comments-sticker",
+  "👤": "user-filled",
+  "👥": "group-filled",
+  "⭐️": "star-small",
+  "📢": "channel-filled",
+  "🤖": "bot",
   "📁": "folder-badge",
 };
 
@@ -257,17 +258,18 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
       }
 
       const iconStyle = EMOTICON_TO_FOLDER_ICON[folder.emoticon ?? ""];
-      const iconStyleOrDefault = `${iconStyle ? "icon icon-"+iconStyle : 'icon icon-folder-badge'}`;
+      const iconStyleOrDefault = `${iconStyle ? "icon icon-" + iconStyle : 'icon icon-folder-badge'}`
+
 
       const tabText = renderTextWithEntities({
         text: title.text,
         entities: title.entities,
         noCustomEmojiPlayback: folder.noTitleAnimations,
       });
-      
+
       return {
         id,
-        title: <><i className={iconStyleOrDefault}></i>{tabText}</>,
+        title: <><i className={iconStyleOrDefault}></i><div className='tab-name'>{tabText}</div></>,
         badgeCount: folderCountersById[id]?.chatsCount,
         isBadgeActive: Boolean(folderCountersById[id]?.notificationsCount),
         isBlocked,
