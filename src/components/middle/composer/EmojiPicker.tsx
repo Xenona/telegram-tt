@@ -47,7 +47,7 @@ type StateProps = Pick<GlobalState, 'recentEmojis'>;
 
 type EmojiCategoryData = { id: string; name: string; emojis: string[] };
 
-const ICONS_BY_CATEGORY: Record<string, IconName> = {
+export const ICONS_BY_CATEGORY: Record<string, IconName> = {
   recent: 'recent',
   people: 'smile',
   nature: 'animals',
@@ -60,10 +60,10 @@ const ICONS_BY_CATEGORY: Record<string, IconName> = {
 };
 
 const OPEN_ANIMATION_DELAY = 200;
-const SMOOTH_SCROLL_DISTANCE = 100;
+export const SMOOTH_SCROLL_DISTANCE = 100;
 const FOCUS_MARGIN = 3.25 * REM;
 const HEADER_BUTTON_WIDTH = 2.625 * REM; // Includes margins
-const INTERSECTION_THROTTLE = 200;
+export const INTERSECTION_THROTTLE = 200;
 
 const categoryIntersections: boolean[] = [];
 
