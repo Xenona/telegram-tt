@@ -39,6 +39,7 @@ import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
 import buildClassName from '../../../../util/buildClassName';
 import useMouseInside from '../../../../hooks/useMouseInside';
 import FolderIconPicker from '../../../common/FolderIconPicker';
+import { EMOTICON_TO_FOLDER_ICON } from '../../main/ChatFolders';
 
 type OwnProps = {
   state: FoldersState;
@@ -323,7 +324,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               className='button-for-emoji'
               onClick={() => isOpen ? setClose() : setOpen()}
             >
-              <Icon name="folder-badge" />
+              <Icon name={`${EMOTICON_TO_FOLDER_ICON[state.folder?.emoticon ?? ""] ?? 'folder-badge'}`} />
             </Button>
             <Menu
               isOpen={isOpen}
@@ -342,7 +343,11 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               }}
             >
               <FolderIconPicker
-                onEmojiSelect={(r) => { console.log(r) }}
+                onEmojiSelect={(r) => { console.log("XE", r) }}
+                onIconSelect={(emoticon) => {
+                  dispatch({ type: 'setEmoticon', payload: emoticon.trim() });
+
+                }}
                 className="picker-tab"
                 isHidden={!isOpen || !isActive}
                 idPrefix={'emojiii'}
