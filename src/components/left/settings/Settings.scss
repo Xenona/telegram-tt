@@ -96,6 +96,45 @@
   .input-group {
     width: 100%;
   }
+
+  .input-with-button {
+
+    position: relative;
+    width: 100%;
+
+    .button-for-emoji {
+      width: 2.35rem;
+      height: 2.35rem;
+      border-radius: 0.6rem;
+      top: 50%;
+      right: 0;
+      transform: translate(-15%, -50%);
+      position: absolute;
+    }
+
+    .menu-container {
+
+      width: min(82%, calc(24rem + var(--scrollbar-width)));
+      position: fixed;
+      top: 50%;
+      translate: 0 -56%;
+      left: 10%;
+
+      @media (max-width: 600px) {
+        left: auto;
+        right: calc(1.5rem + var(--scrollbar-width));
+      }
+
+      .StickerPicker {
+        height: 300px;
+
+        .custom-folder-icons {
+          color: var(--color-text-secondary);
+        }
+      }
+    }
+
+  }
 }
 
 .settings-content-icon {

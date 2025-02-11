@@ -14,7 +14,7 @@ const STICKER_INTERSECTION_MARGIN = 100;
 const SLIDE_TRANSITION_DURATION = 350 + ANIMATION_END_DELAY;
 const SCROLL_MAX_DISTANCE_WHEN_CLOSE = 200;
 const SCROLL_MAX_DISTANCE_WHEN_FAR = 80;
-const FOCUS_MARGIN = 0.5 * REM;
+export const FOCUS_MARGIN = 0.5 * REM;
 
 export function useStickerPickerObservers(
   containerRef: RefObject<HTMLDivElement>,
