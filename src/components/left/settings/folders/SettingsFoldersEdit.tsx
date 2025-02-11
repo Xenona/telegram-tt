@@ -31,6 +31,14 @@ import FloatingActionButton from '../../../ui/FloatingActionButton';
 import InputText from '../../../ui/InputText';
 import ListItem from '../../../ui/ListItem';
 import Spinner from '../../../ui/Spinner';
+import Button from '../../../ui/Button';
+import useAppLayout from '../../../../hooks/useAppLayout';
+import useFlag from '../../../../hooks/useFlag';
+import Menu from '../../../ui/Menu';
+import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
+import buildClassName from '../../../../util/buildClassName';
+import useMouseInside from '../../../../hooks/useMouseInside';
+import FolderIconPicker from '../../../common/FolderIconPicker';
 
 type OwnProps = {
   state: FoldersState;
@@ -94,6 +102,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
   const [isIncludedChatsListExpanded, setIsIncludedChatsListExpanded] = useState(false);
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
+  const { isMobile } = useAppLayout();
+  const [isOpen, setOpen, setClose] = useFlag();
+  const [handleMouseEnter, handleMouseLeave] = useMouseInside(isOpen, () => { }, undefined, isMobile);
 
   useEffect(() => {
     if (isRemoved) {
@@ -296,13 +307,53 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             </p>
           )}
 
-          <InputText
-            className="mb-0"
-            label={lang('FilterNameHint')}
-            value={state.folder.title.text}
-            onChange={handleChange}
-            error={state.error && state.error === ERROR_NO_TITLE ? ERROR_NO_TITLE : undefined}
-          />
+          <div className='input-with-button'>
+            <InputText
+              className="mb-0"
+              label={lang('FilterNameHint')}
+              value={state.folder.title.text}
+              onChange={handleChange}
+              // onKeyDown={}
+              error={state.error && state.error === ERROR_NO_TITLE ? ERROR_NO_TITLE : undefined}
+            />
+            <Button
+              round
+              size="smaller"
+              color="translucent"
+              className='button-for-emoji'
+              onClick={() => isOpen ? setClose() : setOpen()}
+            >
+              <Icon name="folder-badge" />
+            </Button>
+            <Menu
+              isOpen={isOpen}
+              onClose={() => { }}
+              withPortal={false}
+              className={buildClassName('SymbolMenu')}
+              onCloseAnimationEnd={() => { }}
+              onMouseEnter={!IS_TOUCH_ENV ? handleMouseEnter : undefined}
+              onMouseLeave={!IS_TOUCH_ENV ? handleMouseLeave : undefined}
+              noCloseOnBackdrop={!IS_TOUCH_ENV}
+              noCompact
+              // eslint-disable-next-line react/jsx-props-no-spreading
+              {...{
+                positionX: 'right',
+                positionY: 'top',
+              }}
+            >
+              <FolderIconPicker
+                onEmojiSelect={(r) => { console.log(r) }}
+                className="picker-tab"
+                isHidden={!isOpen || !isActive}
+                idPrefix={'emojiii'}
+                loadAndPlay={isOpen}
+                chatId={""}
+                isTranslucent={!isMobile}
+                onCustomEmojiSelect={(e) => { console.log(e) }}
+              />
+            </Menu>
+
+          </div>
         </div>
 
         {!isOnlyInvites && (

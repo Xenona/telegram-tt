@@ -25,6 +25,16 @@
   flex-wrap: wrap;
   justify-content: space-around;
   column-gap: 1rem;
+
+  @media (min-width: 900px) {
+
+    justify-content: space-between;
+
+    button {
+      padding: 0 0.75rem !important;
+    }
+  }
+
 }
 
 .button {
