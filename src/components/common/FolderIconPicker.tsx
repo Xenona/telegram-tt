@@ -53,7 +53,6 @@ import styles from './CustomEmojiPicker.module.scss';
 import { EmojiData, EmojiModule, EmojiRawData, uncompressEmoji } from '../../util/emoji/emoji';
 import { GlobalState } from '../../global/types';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
-import { IconName } from '../../types/icons';
 import { ICONS_BY_CATEGORY, INTERSECTION_THROTTLE, SMOOTH_SCROLL_DISTANCE } from '../middle/composer/EmojiPicker';
 import animateScroll from '../../util/animateScroll';
 import EmojiCategory from '../middle/composer/EmojiCategory';
@@ -538,19 +537,25 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   });
 
   // console.log("XE", allCategories)
-
-
   return (
     <div className={fullClassName}>
       <div
         ref={headerRef}
         className={headerClassName}
       >
-        <div className="shared-canvas-container">
-          {allCategories.slice(1).map(renderCategoryButton)}
+        <div className="categories-emojis">
+          <div className='emoji-category-stripe'>
+            <div>
+
+            {allCategories.slice(1).map(renderCategoryButton)}
+            </div>
+          </div>
+          <div className='shared-canvas-container'>
+
           <canvas ref={sharedCanvasRef} className="shared-canvas" />
           <canvas ref={sharedCanvasHqRef} className="shared-canvas" />
           {allSets.map(renderCover)}
+          </div>
         </div>
       </div>
       <div
@@ -559,8 +564,9 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
         className={listClassName}
       >
         <div className="symbol-set symbol-set-container">
-          {Object.entries(EMOTICON_TO_FOLDER_ICON).map(([_, v]) =>
-            <div className="EmojiButton custom-folder-icons">
+          {Object.entries(EMOTICON_TO_FOLDER_ICON).map(([emoticon, v]) =>
+            <div className="EmojiButton custom-folder-icons"
+            onClick={(e)=>console.log("XE", {emoticon})}>
               <Icon name={v} />
             </div>
           )}
