@@ -127,6 +127,42 @@
       .StickerPicker {
         height: 300px;
 
+        .categories-emojis {
+          display: flex;
+        }
+
+        .emoji-category-stripe {
+          display: flex;
+          align-items: center;
+
+          &>div {
+            border-radius: 2rem;
+            max-width: 2rem;
+            transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
+            overflow: hidden;
+
+            &:hover {
+              max-width: 18rem;
+              background-color: #f7f7f7;
+              padding: 0.5rem 0.2rem;
+
+            }
+
+
+          }
+
+          .symbol-set-button {
+            padding: 0;
+            margin: 0 !important;
+            height: auto;
+
+
+            &:hover {
+              background-color: transparent;
+            }
+          }
+        }
+
         .custom-folder-icons {
           color: var(--color-text-secondary);
         }
