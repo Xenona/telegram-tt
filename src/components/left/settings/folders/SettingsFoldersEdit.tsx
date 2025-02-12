@@ -1,6 +1,6 @@
 import type { FC } from '../../../../lib/teact/teact';
 import React, {
-  memo, useCallback, useEffect, useMemo, useState,
+  memo, useCallback, useEffect, useMemo, useRef, useState,
 } from '../../../../lib/teact/teact';
 import { getActions, getGlobal, withGlobal } from '../../../../global';
 
@@ -40,6 +40,9 @@ import buildClassName from '../../../../util/buildClassName';
 import useMouseInside from '../../../../hooks/useMouseInside';
 import FolderIconPicker from '../../../common/FolderIconPicker';
 import { EMOTICON_TO_FOLDER_ICON } from '../../main/ChatFolders';
+import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
+import useLastCallback from '../../../../hooks/useLastCallback';
+import { IAnchorPosition } from '../../../../types';
 
 type OwnProps = {
   state: FoldersState;
@@ -291,6 +294,18 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     );
   }
 
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<IAnchorPosition | undefined>(undefined);
+  const [handleMouseEnter, handleMouseLeave] = useMouseInside(isOpen, setClose, undefined, isMobile);
+
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const handleActivateSymbolMenu = useLastCallback(() => {
+    setOpen();
+    const triggerEl = triggerRef.current;
+    if (!triggerEl) return;
+    const { x, y } = triggerEl.getBoundingClientRect();
+    setContextMenuAnchor({ x, y });
+  });
+
   return (
     <div className="settings-fab-wrapper">
       <div className="settings-content no-border custom-scroll">
@@ -317,15 +332,29 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               // onKeyDown={}
               error={state.error && state.error === ERROR_NO_TITLE ? ERROR_NO_TITLE : undefined}
             />
-            <Button
-              round
-              size="smaller"
-              color="translucent"
-              className='button-for-emoji'
-              onClick={() => isOpen ? setClose() : setOpen()}
-            >
-              <Icon name={`${EMOTICON_TO_FOLDER_ICON[state.folder?.emoticon ?? ""] ?? 'folder-badge'}`} />
-            </Button>
+
+            {!isMobile ?
+                <ResponsiveHoverButton
+                  className={buildClassName('button-for-emoji', isOpen && 'activated')}
+                  color="translucent"
+                  onActivate={handleActivateSymbolMenu}
+                  ariaLabel="Choose emoji, sticker or GIF"
+                  isRectangular
+                >
+                  <div ref={triggerRef} className="symbol-menu-trigger" />
+                  <Icon name={`${EMOTICON_TO_FOLDER_ICON[state.folder?.emoticon ?? ""] ?? 'folder-badge'}`} />
+                </ResponsiveHoverButton>
+              :
+              <Button
+                round
+                size="smaller"
+                color="translucent"
+                className='button-for-emoji'
+                onClick={() => isOpen ? setClose() : setOpen()}
+              >
+                <Icon name={`${EMOTICON_TO_FOLDER_ICON[state.folder?.emoticon ?? ""] ?? 'folder-badge'}`} />
+              </Button>
+            }
             <Menu
               isOpen={isOpen}
               onClose={() => { }}
