@@ -331,6 +331,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               onChange={handleChange}
               // onKeyDown={}
               error={state.error && state.error === ERROR_NO_TITLE ? ERROR_NO_TITLE : undefined}
+              maxLength={12}
             />
 
             {!isMobile ?
