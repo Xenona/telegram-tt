@@ -61,11 +61,9 @@ import EmojiCategory from '../middle/composer/EmojiCategory';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { EMOTICON_TO_FOLDER_ICON } from '../left/main/ChatFolders';
 import SearchInput from '../ui/SearchInput';
-import { Api as GramJs } from '../../lib/gramjs';
-import { invokeRequest } from '../../api/gramjs/methods/client';
-import { fetchEmojiKeywords } from '../../api/gramjs/methods';
 import useDebouncedCallback from '../../hooks/useDebouncedCallback';
 import EmojiButton from '../middle/composer/EmojiButton';
+import useFlag from '../../hooks/useFlag';
 
 type OwnProps = {
   chatId?: string;
@@ -90,7 +88,7 @@ type OwnProps = {
 };
 
 type StateProps = {
-  keywordsForAllEmojis?: Record<string, (string | ApiSticker)[]>;
+  emojiKeywords?: Record<string, EmojiKeywords | undefined>;
   customEmojisById?: Record<string, ApiSticker>;
   recentCustomEmojiIds?: string[];
   recentStatusEmojis?: ApiSticker[];
@@ -148,12 +146,12 @@ type EmojiCategoryData = { id: string; name: string; emojis: string[] };
 
 
 const FolderIconPicker: FC<OwnProps & StateProps> = ({
+  emojiKeywords,
   className,
   pickerListClassName,
   isHidden,
   loadAndPlay,
   addedCustomEmojiIds,
-  keywordsForAllEmojis,
   customEmojisById,
   recentCustomEmojiIds,
   selectedReactionIds,
@@ -198,6 +196,26 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   const [categories, setCategories] = useState<EmojiCategoryData[]>();
   const [emojis, setEmojis] = useState<AllEmojis>();
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+
+  const textToEmojiMap = useMemo(() => {
+    const textToEmoji: Map<string, (Emoji | ApiSticker)[]> = new Map();
+    for(let emoji of Object.values(emojis ?? {})) {
+      let em = 'native' in emoji ? emoji : Object.values(emoji)[0];
+      let arr = textToEmoji.get(em.native) ?? []
+      arr.push(em)
+      textToEmoji.set(em.native, arr)
+    }
+
+    for(let custEm of Object.values(customEmojisById ?? {})) {
+      if(!custEm.emoji) continue;
+
+      let arr = textToEmoji.get(custEm.emoji) ?? []
+      arr.push(custEm)
+      textToEmoji.set(custEm.emoji, arr)
+    }
+
+    return textToEmoji
+  }, [emojis, customEmojisById])
 
   const { isMobile } = useAppLayout();
   const {
@@ -351,7 +369,6 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
       const exec = () => {
         setCategories(emojiData.categories);
         setEmojis(emojiData.emojis as AllEmojis);
-        // console.log("XE", emojis)
       };
 
       if (emojiData) {
@@ -389,6 +406,8 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
       pickerStyles.stickerCover,
       index === activeSetIndex && styles.activated,
     );
+
+    if (stickerSet.id === RECENT_SYMBOL_SET_ID) return;
 
     const withSharedCanvas = index < STICKER_PICKER_MAX_SHARED_COVERS;
     const isHq = selectIsAlwaysHighPriorityEmoji(getGlobal(), stickerSet as ApiStickerSet);
@@ -555,46 +574,27 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   const handleEmojiSearchQueryChange = useDebouncedCallback((query: string) => {
 
     setEmojiQuery(query);
-    console.log("XE1")
-    if (!keywordsForAllEmojis) return
-    console.log("XE2")
 
-    let arr: (Emoji | ApiSticker)[] = []
+    let arr: Set<(Emoji | ApiSticker)> = new Set();
 
-    for (let [kw, emojisByKw] of Object.entries(keywordsForAllEmojis)) {
-      console.log(emojisByKw)
-      if (kw.includes(query)) {
+    for(let emKw of Object.values(emojiKeywords ?? {})) {
+      if(!emKw || !emKw.keywords) continue;
+      for(let [kw, emojis] of Object.entries(emKw.keywords)) {
+        if(!kw.includes(query)) continue;
 
-        for (let em of Object.values(emojis ?? {})) {
-          const displayedEmoji = 'id' in em ? em : em[1];
-          for (let i = 0; i < emojisByKw.length; i++) {
-            if (typeof emojisByKw[i] === 'string') {
-              if (displayedEmoji.native === emojisByKw[i]) {
-                arr.push(displayedEmoji)
-              }
-            } else {
-              // @ts-ignore
-              if (displayedEmoji.native === emojisByKw[i]?.emoji) {
-                // @ts-ignore
-                arr.push(emojisByKw[i])
-              }
-
-            }
+        for(let em of emojis) {
+          for(let e of textToEmojiMap.get(em) ?? []) {
+            arr.add(e)
           }
-
-
         }
       }
     }
 
-
-    setEmojisFound(arr);
-
-    console.log("XE message", arr)
-
-
+    setEmojisFound([...arr.values()]);
 
   }, [], 300, true);
+
+  const [isInputFocused, setFocused, setUnfocused] = useFlag();
 
   // eslint-disable-next-line no-null/no-null
   const sharedSearchCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -603,10 +603,11 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
     <div className={fullClassName}>
       <div
         ref={headerRef}
-        className={headerClassName}
+        className={buildClassName(headerClassName, isInputFocused||emojiQuery ? "header-hide" : "", canAnimate ? "animated-slide":"")}
+
       >
         <div className="categories-emojis">
-          <div className='emoji-category-stripe'>
+          <div className={buildClassName('emoji-category-stripe', canAnimate ? "animated-width":'')}>
             <div>
               {allCategories.slice(1).map(renderCategoryButton)}
             </div>
@@ -622,15 +623,21 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
       <div
         ref={containerRef}
         onScroll={handleContentScroll}
-        className={listClassName}
+        className={buildClassName(listClassName, isInputFocused||emojiQuery ? "main-hide" : "", canAnimate ? "animated-slide" : "")}
       >
         <SearchInput
+          onBlur={()=>{setUnfocused()}}
+          onFocus={()=>{setFocused()}}
           value={emojiQuery}
-          placeholder={lang('SearchGifsTitle')}
+          className={buildClassName(
+
+          )}
+          // lang pack should have a proper key
+          placeholder={lang('Search Emoji')}
           onChange={handleEmojiSearchQueryChange}
         />
         {!(emojiQuery) ? <>
-          <div className="symbol-set symbol-set-container">
+          <div className="symbol-set symbol-set-container custom-folder-icon-container">
             {Object.entries(EMOTICON_TO_FOLDER_ICON).map(([emoticon, v]) =>
               <div className="EmojiButton custom-folder-icons"
                 onClick={() => { onIconSelect(emoticon) }}>
@@ -652,6 +659,8 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
             const shouldHideHeader = stickerSet.id === TOP_SYMBOL_SET_ID
               || (stickerSet.id === RECENT_SYMBOL_SET_ID && (withDefaultTopicIcons || isStatusPicker));
             const isChatEmojiSet = stickerSet.id === chatEmojiSetId;
+
+            if (stickerSet.id === RECENT_SYMBOL_SET_ID) return <></>
 
             return (
               <StickerSet
@@ -752,7 +761,6 @@ export default memo(withGlobal<OwnProps>(
         },
       },
       recentCustomEmojis: recentCustomEmojiIds,
-      keywordsRegularCustomEmojis: keywordsForAllEmojis,
       reactions: {
         availableReactions,
         recentReactions,
@@ -764,49 +772,11 @@ export default memo(withGlobal<OwnProps>(
 
     // console.log("XE", global)
 
-    check: if (
-      !keywordsForAllEmojis ||
-      !keywordsForAllEmojis.lastUpdate ||
-      !keywordsForAllEmojis.emojiKeywords ||
-      !Object.keys((keywordsForAllEmojis?.emojiKeywords ?? {})).length ||
-      Date.now() - keywordsForAllEmojis.lastUpdate > 10 * 60 * 1000) { //10 mins
-
-      let arr: Record<string, (string | ApiSticker)[]> = emojiKeywords[Object.keys(emojiKeywords)[0]]?.keywords ?? {};
-      for (let [key, doc] of Object.entries(customEmojisById)) {
-        arr_: for (let [keyword, emojis] of Object.values(Object.entries(emojiKeywords[Object.keys(emojiKeywords)[0]]?.keywords ?? {}))) {
-          if (!doc.emoji || !keyword) continue
-
-          if (emojis.includes(doc.emoji)) {
-            if (!arr[keyword]) {
-              arr[keyword] = [doc];
-            } else {
-              arr[keyword]?.push(doc);
-            }
-            break arr_
-          }
-        }
-      }
-
-      if (!Object.keys(arr).length) {
-        break check
-      }
-
-      let newGlobal: GlobalState = {
-        ...getGlobal(),
-        keywordsRegularCustomEmojis: {
-          lastUpdate: Date.now(),
-          emojiKeywords: arr
-        }
-      }
-      setGlobal(newGlobal);
-
-    }
-
     const isSavedMessages = Boolean(chatId && selectIsChatWithSelf(global, chatId));
     const chatFullInfo = chatId ? selectChatFullInfo(global, chatId) : undefined;
 
     return {
-      keywordsForAllEmojis: keywordsForAllEmojis?.emojiKeywords,
+      emojiKeywords,
       customEmojisById: !isStatusPicker ? customEmojisById : undefined,
       recentCustomEmojiIds: !isStatusPicker ? recentCustomEmojiIds : undefined,
       recentStatusEmojis: isStatusPicker ? recentStatusEmojis : undefined,

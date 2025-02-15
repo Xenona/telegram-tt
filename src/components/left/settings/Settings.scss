@@ -112,6 +112,10 @@
       position: absolute;
     }
 
+    .custom-folder-icon-container {
+      margin-top: 0.75rem;
+    }
+
     .SymbolMenu .backdrop {
       left: auto;
       right: 0;
@@ -130,7 +134,45 @@
         right: calc(1.5rem + var(--scrollbar-width));
       }
 
+      .SearchInput {
+        border-radius: var(--border-radius-messages-small);
+        margin-bottom: 0.5rem;
+      }
+
+
       .StickerPicker {
+
+        &-module__header {
+          position: relative;
+          top: 0;
+
+          &.header-hide {
+
+            top: -3rem;
+
+          }
+
+          &.animated-slide {
+            transition: top 0.3s ease;
+          }
+        }
+
+        &-module__main {
+
+          position: relative;
+          top: 0;
+
+          &.main-hide {
+            top: -3rem;
+            height: 100%;
+
+          }
+
+          &.animated-slide {
+            transition: top 0.3s ease, height 0.3s ease;
+          }
+        }
+
         height: 300px;
 
         .categories-emojis {
@@ -144,12 +186,17 @@
           &>div {
             border-radius: 2rem;
             max-width: 2rem;
-            transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
             overflow: hidden;
+
+            &.animated-width{
+
+              transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
+            }
+
 
             &:hover {
               max-width: 18rem;
-              background-color: #f7f7f7;
+              background-color: var(--color-background-selected);
               padding: 0.5rem 0.2rem;
 
             }
