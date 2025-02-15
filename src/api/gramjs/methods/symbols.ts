@@ -299,6 +299,8 @@ export async function searchStickers({ query, hash = '0' }: { query: string; has
     hash: BigInt(hash),
   }));
 
+  // new GramJs.messages.Search
+
   if (!result || result instanceof GramJs.messages.FoundStickerSetsNotModified) {
     return undefined;
   }

@@ -361,6 +361,10 @@ export type GlobalState = {
   defaultStatusIconsId?: string;
   premiumGifts?: ApiStickerSet;
   emojiKeywords: Record<string, EmojiKeywords | undefined>;
+  keywordsRegularCustomEmojis?: {
+    lastUpdate: number;
+    emojiKeywords: Record<string, (string | ApiSticker)[]>;
+  }
 
   collectibleEmojiStatuses?: {
     statuses: ApiEmojiStatusType[];
