@@ -88,7 +88,7 @@ const useEditing = (
   useEffect(() => {
     if (!editedMessage) return undefined;
     return () => {
-      const edited = parseHtmlAsFormattedText(getHtml());
+      const edited = parseHtmlAsFormattedText(getHtml(), false, true);
       const update = edited.text.length ? edited : undefined;
 
       setEditingDraft({
@@ -172,7 +172,7 @@ const useEditing = (
 
   const handleBlur = useLastCallback(() => {
     if (!editedMessage) return;
-    const edited = parseHtmlAsFormattedText(getHtml());
+    const edited = parseHtmlAsFormattedText(getHtml(), false, true);
     const update = edited.text.length ? edited : undefined;
 
     setEditingDraft({
