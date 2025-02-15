@@ -108,7 +108,6 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
   const { isMobile } = useAppLayout();
   const [isOpen, setOpen, setClose] = useFlag();
-  const [handleMouseEnter, handleMouseLeave] = useMouseInside(isOpen, () => { }, undefined, isMobile);
 
   useEffect(() => {
     if (isRemoved) {
@@ -380,11 +379,11 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 }}
                 className="picker-tab"
                 isHidden={!isOpen || !isActive}
-                idPrefix={'emojiii'}
+                idPrefix={'emoji-folder'}
                 loadAndPlay={isOpen}
                 chatId={""}
                 isTranslucent={!isMobile}
-                onCustomEmojiSelect={(e) => { console.log(e) }}
+                onCustomEmojiSelect={(e) => { console.log("XE", e) }}
               />
             </Menu>
 
