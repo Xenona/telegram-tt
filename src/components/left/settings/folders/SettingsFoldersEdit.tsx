@@ -327,12 +327,13 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
         width: rect?.width ?? 0,
         right: rect?.right ?? 0,
       });
-      // console.log("XE", inputCoordinates)
     });
 
     getInputCoordinates()
 
   });
+
+
 
   const possibleIcon = getIconNameByFolder(state.folder);
 
@@ -398,9 +399,11 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 className="button-for-emoji"
                 onClick={() => (isOpen ? setClose() : setOpen())}
               >
-                <Icon
-                  name={getIconNameByFolder(state.folder) ?? "folder-badge"}
-                />
+                 {possibleIcon || !state.folder.emoticon ? (
+                  <Icon name={possibleIcon ?? "folder-badge"} />
+                ) : (
+                  state.folder.emoticon
+                )}
               </Button>
             )}
             <Menu
@@ -429,8 +432,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               }}
             >
               <FolderIconPicker
-                onEmojiSelect={(r) => {
-                  console.log("XE", r);
+                onEmojiSelect={(emoji) => {
+                  dispatch({ type: "setEmoticon", payload: emoji.trim() });
                 }}
                 onCustomEmojiSelect={(e) => {
                   console.log("XE", e);
