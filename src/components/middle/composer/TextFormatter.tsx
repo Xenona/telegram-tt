@@ -358,7 +358,7 @@ const TextFormatter: FC<OwnProps> = ({
     while(clearBlockQuote = fragmentEl.querySelector('blockquote')) {
       clearBlockQuote.replaceWith(...clearBlockQuote.childNodes);
     }
-    document.execCommand('insertHTML', false, `\n<blockquote>${fragmentEl.innerHTML}</blockquote>\n`);
+    document.execCommand('insertHTML', false, `<blockquote class="blockquote">${fragmentEl.innerHTML}</blockquote>`);
     onClose();
   });
 
