@@ -39,7 +39,9 @@ import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
 import buildClassName from '../../../../util/buildClassName';
 import useMouseInside from '../../../../hooks/useMouseInside';
 import FolderIconPicker from '../../../common/FolderIconPicker';
-import { EMOTICON_TO_FOLDER_ICON } from '../../main/ChatFolders';
+import { EMOTICON_TO_FOLDER_ICON,
+  getIconNameByFolder,
+} from '../../main/ChatFolders';
 import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
 import useLastCallback from '../../../../hooks/useLastCallback';
 import { IAnchorPosition } from '../../../../types';
@@ -106,7 +108,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
   const [isIncludedChatsListExpanded, setIsIncludedChatsListExpanded] = useState(false);
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
-  const { isMobile } = useAppLayout();
+
+  const { isMobile, isTablet } = useAppLayout();
   const [isOpen, setOpen, setClose] = useFlag();
 
   useEffect(() => {
@@ -114,11 +117,31 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
       onReset();
     }
   }, [isRemoved, onReset]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputCoordinates, setInputCoordinates] = useState<{
+    x: number;
+    y: number;
+    height: number;
+    width: number;
+    right: number;
+  }>({ x: 0, y: 0, height: 0, width: 0, right: 0 });
 
   useEffect(() => {
     if (isActive && state.folderId && state.folder.isChatList) {
       loadChatlistInvites({ folderId: state.folderId });
     }
+
+    const getInputCoordinates = useLastCallback(() => {
+      const rect = inputRef.current?.getBoundingClientRect();
+      setInputCoordinates({
+        x: rect?.x ?? -10000,
+        y: rect?.y ?? -10000,
+        height: rect?.height ?? 0,
+        width: rect?.width ?? 0,
+        right: rect?.right ?? 0,
+      });
+    });
+    getInputCoordinates();
   }, [isActive, state.folder.isChatList, state.folderId]);
 
   const {
@@ -324,6 +347,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
           <div className='input-with-button'>
             <InputText
+              ref={inputRef}
               className="mb-0"
               label={lang('FilterNameHint')}
               value={state.folder.title.text}
@@ -333,34 +357,46 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               maxLength={12}
             />
 
-            {!isMobile ?
-                <ResponsiveHoverButton
-                  className={buildClassName('button-for-emoji', isOpen && 'activated')}
-                  color="translucent"
-                  onActivate={handleActivateSymbolMenu}
-                  ariaLabel="Choose emoji, sticker or GIF"
-                  isRectangular
-                >
-                  <div ref={triggerRef} className="symbol-menu-trigger" />
-                  <Icon name={`${EMOTICON_TO_FOLDER_ICON[state.folder?.emoticon ?? ""] ?? 'folder-badge'}`} />
-                </ResponsiveHoverButton>
-              :
+            {!isMobile ? (
+              <ResponsiveHoverButton
+                className={buildClassName(
+                  "button-for-emoji",
+                  isOpen && "activated",
+                )}
+                color="translucent"
+                onActivate={handleActivateSymbolMenu}
+                ariaLabel="Choose emoji, sticker or GIF"
+                isRectangular
+              >
+                <div ref={triggerRef} className="symbol-menu-trigger" />
+                <Icon name={getIconNameByFolder(state.folder)} />
+              </ResponsiveHoverButton>
+            ) : (
               <Button
                 round
                 size="smaller"
                 color="translucent"
-                className='button-for-emoji'
-                onClick={() => isOpen ? setClose() : setOpen()}
+                className="button-for-emoji"
+                onClick={() => (isOpen ? setClose() : setOpen())}
               >
-                <Icon name={`${EMOTICON_TO_FOLDER_ICON[state.folder?.emoticon ?? ""] ?? 'folder-badge'}`} />
+                <Icon name={getIconNameByFolder(state.folder)} />
               </Button>
-            }
+            )}
             <Menu
               isOpen={isOpen}
-              onClose={() => { }}
+              onClose={() => {}}
               withPortal={false}
-              className={buildClassName('SymbolMenu')}
-              onCloseAnimationEnd={() => { }}
+              bubbleStyle={`${
+                !isMobile && !isTablet
+                  ? `left: calc(${inputCoordinates.x}px + ${
+                      inputCoordinates.width / 2
+                    }px);`
+                  : `right: calc(1.5rem + var(--scrollbar-width));`
+              } top: calc(${inputCoordinates.y}px + ${
+                inputCoordinates.height
+              }px + 1rem);`}
+              className={buildClassName("SymbolMenu")}
+              onCloseAnimationEnd={() => {}}
               onMouseEnter={!IS_TOUCH_ENV ? handleMouseEnter : undefined}
               onMouseLeave={!IS_TOUCH_ENV ? handleMouseLeave : undefined}
               noCloseOnBackdrop={!IS_TOUCH_ENV}

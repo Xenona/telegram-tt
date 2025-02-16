@@ -218,7 +218,7 @@ export interface ApiChatFolder {
   contacts?: true;
   nonContacts?: true;
   groups?: true;
-  channels?: true;
+  channels?: boolean; // server sends false 
   bots?: true;
   excludeMuted?: true;
   excludeRead?: true;

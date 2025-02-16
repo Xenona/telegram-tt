@@ -124,16 +124,8 @@
 
     .menu-container {
 
-      width: min(82%, calc(24rem + var(--scrollbar-width)));
       position: fixed;
-      top: 50%;
-      translate: 0 -56%;
-      left: 10%;
-
-      @media (max-width: 600px) {
-        left: auto;
-        right: calc(1.5rem + var(--scrollbar-width));
-      }
+      width: min(82%, calc(24rem + var(--scrollbar-width)));
 
       .SearchInput {
         border-radius: var(--border-radius-messages-small);
