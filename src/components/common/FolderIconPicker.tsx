@@ -603,8 +603,8 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
 
       >
         <div className="categories-emojis">
-          <div className={buildClassName('emoji-category-stripe', canAnimate ? "animated-width":'')}>
-            <div>
+          <div className={buildClassName('emoji-category-stripe')}>
+            <div className={canAnimate ? "animated-width":''}>
               {allCategories.slice(1).map(renderCategoryButton)}
             </div>
           </div>
