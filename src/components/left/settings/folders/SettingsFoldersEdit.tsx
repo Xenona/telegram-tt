@@ -39,7 +39,7 @@ import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
 import buildClassName from '../../../../util/buildClassName';
 import useMouseInside from '../../../../hooks/useMouseInside';
 import FolderIconPicker from '../../../common/FolderIconPicker';
-import { EMOTICON_TO_FOLDER_ICON,
+import {
   getIconNameByFolder,
 } from '../../main/ChatFolders';
 import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
@@ -105,6 +105,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
   const isCreating = state.mode === 'create';
   const isEditingChatList = state.folder.isChatList;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [isIncludedChatsListExpanded, setIsIncludedChatsListExpanded] = useState(false);
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
@@ -117,7 +118,6 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
       onReset();
     }
   }, [isRemoved, onReset]);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [inputCoordinates, setInputCoordinates] = useState<{
     x: number;
     y: number;
@@ -131,17 +131,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
       loadChatlistInvites({ folderId: state.folderId });
     }
 
-    const getInputCoordinates = useLastCallback(() => {
-      const rect = inputRef.current?.getBoundingClientRect();
-      setInputCoordinates({
-        x: rect?.x ?? -10000,
-        y: rect?.y ?? -10000,
-        height: rect?.height ?? 0,
-        width: rect?.width ?? 0,
-        right: rect?.right ?? 0,
-      });
-    });
-    getInputCoordinates();
+
   }, [isActive, state.folder.isChatList, state.folderId]);
 
   const {
@@ -326,6 +316,22 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     if (!triggerEl) return;
     const { x, y } = triggerEl.getBoundingClientRect();
     setContextMenuAnchor({ x, y });
+
+    const getInputCoordinates = useLastCallback(() => {
+      const rect = inputRef.current?.getBoundingClientRect();
+
+      setInputCoordinates({
+        x: rect?.x ?? -10000,
+        y: rect?.y ?? -10000,
+        height: rect?.height ?? 0,
+        width: rect?.width ?? 0,
+        right: rect?.right ?? 0,
+      });
+      console.log("XE", inputCoordinates)
+    });
+
+    getInputCoordinates()
+
   });
 
   return (
@@ -409,6 +415,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             >
               <FolderIconPicker
                 onEmojiSelect={(r) => { console.log("XE", r) }}
+                onCustomEmojiSelect={(e) => { console.log("XE", e) }}
                 onIconSelect={(emoticon) => {
                   dispatch({ type: 'setEmoticon', payload: emoticon.trim() });
 
@@ -419,7 +426,6 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 loadAndPlay={isOpen}
                 chatId={""}
                 isTranslucent={!isMobile}
-                onCustomEmojiSelect={(e) => { console.log("XE", e) }}
               />
             </Menu>
 

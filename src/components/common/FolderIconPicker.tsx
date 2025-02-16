@@ -396,10 +396,6 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
     animateHorizontalScroll(header, newLeft);
   }, [areAddedLoaded, activeSetIndex]);
 
-  const handleEmojiSelect = useLastCallback((emoji: ApiSticker) => {
-    onCustomEmojiSelect(emoji);
-  });
-
   function renderCover(stickerSet: StickerSetOrReactionsSetOrRecent, index: number) {
     const firstSticker = stickerSet.stickers?.[0];
     const buttonClassName = buildClassName(
@@ -598,7 +594,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
 
   // eslint-disable-next-line no-null/no-null
   const sharedSearchCanvasRef = useRef<HTMLCanvasElement>(null);
-  // console.log("XE", allCategories)
+
   return (
     <div className={fullClassName}>
       <div
@@ -686,7 +682,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
                 isTranslucent={isTranslucent}
                 onReactionSelect={onReactionSelect}
                 onReactionContext={onReactionContext}
-                onStickerSelect={handleEmojiSelect}
+                onStickerSelect={onCustomEmojiSelect}
                 onContextMenuOpen={onContextMenuOpen}
                 onContextMenuClose={onContextMenuClose}
                 onContextMenuClick={onContextMenuClick}
@@ -724,7 +720,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
                 shouldIgnorePremium={false}
                 sharedCanvasRef={sharedSearchCanvasRef}
                 withTranslucentThumb={isTranslucent}
-                onClick={(e)=>{console.log("XE custom em click", e)}}
+                onClick={onCustomEmojiSelect}
                 clickArg={e}
                 isSelected={false}
                 onUnfaveClick={undefined}
@@ -769,8 +765,6 @@ export default memo(withGlobal<OwnProps>(
       },
       recentEmojis
     } = global;
-
-    // console.log("XE", global)
 
     const isSavedMessages = Boolean(chatId && selectIsChatWithSelf(global, chatId));
     const chatFullInfo = chatId ? selectChatFullInfo(global, chatId) : undefined;
