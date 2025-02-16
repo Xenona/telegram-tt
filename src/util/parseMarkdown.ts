@@ -1,4 +1,8 @@
-import { ApiMessageEntity, ApiMessageEntityTypes } from "../api/types";
+import {
+  ApiFormattedText,
+  ApiMessageEntity,
+  ApiMessageEntityTypes,
+} from "../api/types";
 
 type ParserEntityTypes =
   | ApiMessageEntityTypes.Bold
@@ -214,13 +218,19 @@ function doCodePass(tokens: Token[]): Token[] {
   return res;
 }
 
+type ConsumedInfo = {
+  pos: number;
+  consumed: number;
+};
+
 // Generate entities from tokens while removing unterminated ones
-function tokensToEntities(tokens: Token[]): [ApiMessageEntity[], string] {
+function tokensToEntities(tokens: Token[]): [ApiFormattedText, ConsumedInfo[]] {
   let tokenCount = countTokens(tokens);
   let tokenStarts: Map<ApiMessageEntityTypes, number> = new Map();
 
   let resStr = "";
   let resEnt: ApiMessageEntity[] = [];
+  let resConsumed: ConsumedInfo[] = [];
 
   for (let token of tokens) {
     if (token.type == "entity") {
@@ -242,9 +252,17 @@ function tokensToEntities(tokens: Token[]): [ApiMessageEntity[], string] {
 
         resEnt.push(newt);
 
+        resConsumed.push({
+          pos: resStr.length,
+          consumed: token.str.length,
+        });
         tokenCount.dec(token.entity);
         tokenStarts.delete(token.entity);
       } else if (tokenCount.get(token.entity) >= 2) {
+        resConsumed.push({
+          pos: resStr.length,
+          consumed: token.str.length,
+        });
         tokenCount.dec(token.entity);
         tokenStarts.set(token.entity, resStr.length);
       } else {
@@ -255,13 +273,25 @@ function tokensToEntities(tokens: Token[]): [ApiMessageEntity[], string] {
     }
   }
 
-  let startSize = resStr.length;
-  resStr = resStr.trimStart();
-  let startShift = startSize - resStr.length;
-  resStr = resStr.trimEnd();
+  return [
+    {
+      text: resStr,
+      entities: resEnt,
+    },
+    resConsumed,
+  ];
+}
 
-  if (startSize != resStr.length) {
-    for (let ent of resEnt) {
+function trimMessage(text: ApiFormattedText): ApiFormattedText {
+  let str = text.text;
+  let entities = text.entities ?? [];
+  let startSize = str.length;
+  str = str.trimStart();
+  let startShift = startSize - str.length;
+  str = str.trimEnd();
+
+  if (startSize != str.length) {
+    for (let ent of entities) {
       if (ent.offset < startShift) {
         ent.length = ent.offset + ent.length - startShift;
         ent.offset = 0;
@@ -269,22 +299,62 @@ function tokensToEntities(tokens: Token[]): [ApiMessageEntity[], string] {
         ent.offset -= startShift;
       }
 
-      if (ent.length + ent.offset > resStr.length) {
-        ent.length = resStr.length - ent.offset;
+      if (ent.length + ent.offset > str.length) {
+        ent.length = str.length - ent.offset;
       }
     }
   }
-  console.log(resEnt);
 
-  return [resEnt, resStr];
+  return {
+    text: str,
+    entities,
+  };
 }
 
-export function parseMarkdown(text: string): [string, ApiMessageEntity[]] {
-  let tokens: Token[] = tokenize(text);
-  console.log("PRE", tokens);
-  tokens = doCodePass(tokens);
-  console.log("POST", tokens);
-  let [entities, pureText] = tokensToEntities(tokens);
+function addExternalEntities(
+  text: ApiFormattedText,
+  consumed: ConsumedInfo[],
+  extEnt: ApiMessageEntity[]
+): ApiFormattedText {
+  if (extEnt.length == 0) return text;
 
-  return [pureText, entities];
+  consumed = consumed.sort((a, b) => a.pos - b.pos);
+  extEnt = extEnt.sort((a, b) => a.offset - b.offset);
+
+  for (let ent of extEnt) {
+    let start = ent.offset;
+    let end = ent.offset + ent.length;
+    console.log(start, end)
+    for (let i = 0; i < consumed.length; i++) {
+      if (start >= consumed[i].pos) {
+        start -= Math.min(consumed[i].consumed, start - consumed[i].pos);
+      }
+
+      if (end >= consumed[i].pos) {
+        end -= Math.min(consumed[i].consumed, end - consumed[i].pos);
+      }
+    }
+    text.entities?.push({
+      ...ent,
+      offset: start,
+      length: end - start,
+    });
+  }
+
+  return text;
+}
+
+export function parseMarkdown(
+  text: string,
+  extEnt: ApiMessageEntity[] = []
+): ApiFormattedText {
+  let tokens: Token[] = tokenize(text);
+  tokens = doCodePass(tokens);
+
+  let [fmtText, consumed] = tokensToEntities(tokens);
+
+  fmtText = addExternalEntities(fmtText, consumed, extEnt);
+
+  fmtText = trimMessage(fmtText);
+  return fmtText;
 }

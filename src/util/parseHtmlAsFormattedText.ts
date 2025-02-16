@@ -62,16 +62,17 @@ export default function parseHtmlAsFormattedText(
     recursionDeepness = 1;
     addEntity(node);
   });
+
+  let fmtRes: ApiFormattedText = {
+    text, entities
+  }
   // console.log(JSON.stringify(text))
   if(!skipMarkdown) {
-    [text, entities] = parseMarkdown(text)
+    fmtRes = parseMarkdown(text, entities)
   }
-  // console.log("MAAX", text, entities)
 
-  return {
-    text,
-    entities: entities.length ? entities : undefined,
-  };
+  if(fmtRes.entities?.length == 0) fmtRes.entities = undefined
+  return fmtRes;
 }
 
 export function fixImageContent(fragment: HTMLDivElement) {
