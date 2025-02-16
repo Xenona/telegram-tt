@@ -4,15 +4,15 @@ import React, {
 } from '../../../lib/teact/teact';
 import { getActions, getGlobal, withGlobal } from '../../../global';
 
-import type { ApiChatFolder, ApiChatlistExportedInvite, ApiSession } from '../../../api/types';
+import { type ApiChatFolder, type ApiChatlistExportedInvite, type ApiSession, type ApiSticker } from '../../../api/types';
 import type { GlobalState } from '../../../global/types';
 import type { FolderEditDispatch } from '../../../hooks/reducers/useFoldersReducer';
 import type { LeftColumnContent, SettingsScreens } from '../../../types';
 import type { MenuItemContextAction } from '../../ui/ListItem';
 import type { TabWithProperties } from '../../ui/TabList';
 
-import { ALL_FOLDER_ID } from '../../../config';
-import { selectCanShareFolder, selectTabState } from '../../../global/selectors';
+import { ALL_FOLDER_ID, EMOJI_SIZE_PICKER } from '../../../config';
+import { selectCanAnimateInterface, selectCanShareFolder, selectTabState } from '../../../global/selectors';
 import { selectCurrentLimit } from '../../../global/selectors/limits';
 import buildClassName from '../../../util/buildClassName';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
@@ -33,6 +33,10 @@ import TabList from '../../ui/TabList';
 import Transition from '../../ui/Transition';
 import ChatList from './ChatList';
 import { IconName } from '../../../types/icons';
+import StickerView from '../../common/StickerView';
+import { LOCSTOR_CUSTOM_EMOJI_KEY } from '../settings/folders/SettingsFoldersEdit';
+import Loading from '../../ui/Loading';
+import useAppLayout from '../../../hooks/useAppLayout';
 
 type OwnProps = {
   onSettingsScreenSelect: (screen: SettingsScreens) => void;
@@ -43,6 +47,9 @@ type OwnProps = {
 };
 
 type StateProps = {
+  canAnimate: boolean;
+  customEmojisById: Record<number, ApiSticker>;
+  customEmojiIcons: Record<number, string>;
   chatFoldersById: Record<number, ApiChatFolder>;
   folderInvitesById: Record<number, ApiChatlistExportedInvite[]>;
   orderedFolderIds?: number[];
@@ -99,6 +106,9 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
   foldersDispatch,
   onSettingsScreenSelect,
   onLeftColumnContentChange,
+  customEmojiIcons,
+  canAnimate,
+  customEmojisById,
   chatFoldersById,
   orderedFolderIds,
   activeChatFolder,
@@ -126,8 +136,12 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
     openLimitReachedModal,
   } = getActions();
 
+
+
   // eslint-disable-next-line no-null/no-null
   const transitionRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line no-null/no-null
+  const sharedCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const lang = useLang();
 
@@ -154,7 +168,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
       excludedChatIds: MEMO_EMPTY_ARRAY,
       emoticon: "📁"
     } satisfies ApiChatFolder;
-  }, [orderedFolderIds, lang]);
+  }, [orderedFolderIds, lang, customEmojiIcons, customEmojisById]);
 
   const displayedFolders = useMemo(() => {
     return orderedFolderIds
@@ -166,7 +180,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
         return chatFoldersById[id] || {};
       }).filter(Boolean)
       : undefined;
-  }, [chatFoldersById, allChatsFolder, orderedFolderIds]);
+  }, [chatFoldersById, allChatsFolder, orderedFolderIds, customEmojiIcons, customEmojisById]);
 
   const allChatsFolderIndex = displayedFolders?.findIndex((folder) => folder.id === ALL_FOLDER_ID);
   const isInAllChatsFolder = allChatsFolderIndex === activeChatFolder;
@@ -242,9 +256,49 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
         noCustomEmojiPlayback: folder.noTitleAnimations,
       });
 
+      // @ts-ignore
+      const emoji = customEmojisById[(customEmojiIcons[id])]
+      const {isMobile} = useAppLayout()
+
       return {
         id,
-        title: <>{iconStyle || !folder.emoticon?<i className={iconStyleOrDefault}></i>:<i className='icon as-emoji'>{folder.emoticon}</i>}<div className='tab-name'>{tabText}</div></>,
+        title: (
+          <>
+            {!isMobile && <>
+            {customEmojiIcons[id] ? (
+              <div className='emoji-wrapper'>
+                {emoji ? (
+                  <StickerView
+                    containerRef={ref}
+                    sticker={emoji as any}
+                    isSmall
+                    size={EMOJI_SIZE_PICKER}
+                    shouldLoop
+                    shouldPreloadPreview
+                    noLoad={!true}
+                    noPlay={!true}
+                    noVideoOnMobile
+                    withSharedAnimation
+                    sharedCanvasRef={sharedCanvasRef}
+                    withTranslucentThumb={false}
+                  />
+                ) : (
+                  <Loading className='small-loader'/>
+                )}
+              </div>
+            ) : (
+              <>
+                {iconStyle || !folder.emoticon ? (
+                  <i className={iconStyleOrDefault}></i>
+                ) : (
+                  <i className="icon as-emoji">{folder.emoticon}</i>
+                )}
+              </>
+            )}
+            </>}
+            <div className="tab-name">{tabText}</div>
+          </>
+        ),
         badgeCount: folderCountersById[id]?.chatsCount,
         isBadgeActive: Boolean(folderCountersById[id]?.notificationsCount),
         isBlocked,
@@ -253,7 +307,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
     });
   }, [
     displayedFolders, maxFolders, folderCountersById, lang, chatFoldersById, maxChatLists, folderInvitesById,
-    maxFolderInvites,
+    maxFolderInvites, customEmojiIcons, customEmojisById
   ]);
 
   const handleSwitchTab = useLastCallback((index: number) => {
@@ -412,6 +466,9 @@ export default memo(withGlobal<OwnProps>(
         orderedIds: orderedFolderIds,
         invites: folderInvitesById,
       },
+      customEmojis: {
+        byId: customEmojisById,
+      },
       chats: {
         listIds: {
           archived,
@@ -430,8 +487,23 @@ export default memo(withGlobal<OwnProps>(
     } = global;
     const { shouldSkipHistoryAnimations, activeChatFolder } = selectTabState(global);
     const { storyViewer: { isRibbonShown: isStoryRibbonShown } } = selectTabState(global);
+    const canAnimate = selectCanAnimateInterface(global);
+
+    let customEmojiIcons = {}
+    const storage = localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY);
+    if (storage) {
+      try {
+        customEmojiIcons = JSON.parse(storage);
+      } catch {
+        customEmojiIcons = {}
+        localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}));
+      }
+    }
 
     return {
+      canAnimate,
+      customEmojisById,
+      customEmojiIcons,
       chatFoldersById,
       folderInvitesById,
       orderedFolderIds,
