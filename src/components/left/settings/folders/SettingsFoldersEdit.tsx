@@ -327,7 +327,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
         width: rect?.width ?? 0,
         right: rect?.right ?? 0,
       });
-      console.log("XE", inputCoordinates)
+      // console.log("XE", inputCoordinates)
     });
 
     getInputCoordinates()
