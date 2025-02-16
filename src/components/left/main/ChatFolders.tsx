@@ -72,11 +72,33 @@ export const EMOTICON_TO_FOLDER_ICON: { [key: string]: IconName } = {
   "✅": "comments-sticker",
   "👤": "user-filled",
   "👥": "group-filled",
-  "⭐️": "star-small",
+  "⭐": "star-small",
   "📢": "channel-filled",
   "🤖": "bot",
   "📁": "folder-badge",
 };
+
+export function getIconNameByFolder(folder: ApiChatFolder | Omit<ApiChatFolder, "id" | "description">) {
+  if (folder.emoticon) {
+    return EMOTICON_TO_FOLDER_ICON[folder.emoticon] ?? 'folder-badge';
+  } else {
+    if (folder.excludeRead) { // unread
+      return "chats-badge";
+    }
+    else if (folder.contacts == true && folder.nonContacts == true && folder.channels == false) { // personal
+      return "user-filled";
+    } else if (folder.channels == false && folder.nonContacts == true) { // non-contacts
+      return "user-filled";
+    } else if (folder.channels == false && folder.groups == true) { // groups
+      return "group-filled";
+    } else if (folder.channels == false && folder.contacts == true) { // contacts
+      return "user-filled";
+    } else if (folder.bots == true && folder.channels == false){ // bots
+      return 'bot'
+    }
+  }
+  return 'folder-badge'
+}
 
 const ChatFolders: FC<OwnProps & StateProps> = ({
   foldersDispatch,
@@ -257,8 +279,10 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
         });
       }
 
-      const iconStyle = EMOTICON_TO_FOLDER_ICON[folder.emoticon ?? ""];
-      const iconStyleOrDefault = `${iconStyle ? "icon icon-" + iconStyle : 'icon icon-folder-badge'}`
+      let iconStyle: IconName | undefined = getIconNameByFolder(folder);
+      let iconStyleOrDefault: string;
+
+      iconStyleOrDefault = `${iconStyle ? "icon icon-" + iconStyle : 'icon icon-folder-badge'}`
 
 
       const tabText = renderTextWithEntities({

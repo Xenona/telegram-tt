@@ -33,6 +33,7 @@ type OwnProps =
     id?: string;
     className?: string;
     bubbleClassName?: string;
+    bubbleStyle?: string;
     ariaLabelledBy?: string;
     autoClose?: boolean;
     footer?: string;
@@ -58,6 +59,7 @@ const Menu: FC<OwnProps> = ({
   isOpen,
   id,
   className,
+  bubbleStyle,
   bubbleClassName,
   ariaLabelledBy,
   children,
@@ -157,6 +159,7 @@ const Menu: FC<OwnProps> = ({
         role="presentation"
         ref={bubbleRef}
         className={bubbleFullClassName}
+        style={bubbleStyle}
         onClick={handleClick}
       >
         {children}
