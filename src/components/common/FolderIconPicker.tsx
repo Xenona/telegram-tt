@@ -670,6 +670,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
                 observeIntersectionForShowingItems={observeIntersectionForShowingItems}
                 isNearActive={activeSetIndex >= i - 1 && activeSetIndex <= i + 1}
                 isSavedMessages={isSavedMessages}
+                folderIconPick={true}
                 isStatusPicker={isStatusPicker}
                 isReactionPicker={isReactionPicker}
                 shouldHideHeader={shouldHideHeader}

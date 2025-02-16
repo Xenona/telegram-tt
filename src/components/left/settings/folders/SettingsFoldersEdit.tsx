@@ -334,6 +334,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
   });
 
+  const possibleIcon = getIconNameByFolder(state.folder);
+
   return (
     <div className="settings-fab-wrapper">
       <div className="settings-content no-border custom-scroll">
@@ -346,20 +348,27 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
           />
 
           {isCreating && (
-            <p className="settings-item-description mb-3" dir={lang.isRtl ? 'rtl' : undefined}>
-              {lang('FilterIncludeInfo')}
+            <p
+              className="settings-item-description mb-3"
+              dir={lang.isRtl ? "rtl" : undefined}
+            >
+              {lang("FilterIncludeInfo")}
             </p>
           )}
 
-          <div className='input-with-button'>
+          <div className="input-with-button">
             <InputText
               ref={inputRef}
               className="mb-0"
-              label={lang('FilterNameHint')}
+              label={lang("FilterNameHint")}
               value={state.folder.title.text}
               onChange={handleChange}
               // onKeyDown={}
-              error={state.error && state.error === ERROR_NO_TITLE ? ERROR_NO_TITLE : undefined}
+              error={
+                state.error && state.error === ERROR_NO_TITLE
+                  ? ERROR_NO_TITLE
+                  : undefined
+              }
               maxLength={12}
             />
 
@@ -375,7 +384,11 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 isRectangular
               >
                 <div ref={triggerRef} className="symbol-menu-trigger" />
-                <Icon name={getIconNameByFolder(state.folder)} />
+                {possibleIcon || !state.folder.emoticon ? (
+                  <Icon name={possibleIcon ?? "folder-badge"} />
+                ) : (
+                  state.folder.emoticon
+                )}
               </ResponsiveHoverButton>
             ) : (
               <Button
@@ -385,7 +398,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 className="button-for-emoji"
                 onClick={() => (isOpen ? setClose() : setOpen())}
               >
-                <Icon name={getIconNameByFolder(state.folder)} />
+                <Icon
+                  name={getIconNameByFolder(state.folder) ?? "folder-badge"}
+                />
               </Button>
             )}
             <Menu
@@ -409,38 +424,48 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               noCompact
               // eslint-disable-next-line react/jsx-props-no-spreading
               {...{
-                positionX: 'right',
-                positionY: 'top',
+                positionX: "right",
+                positionY: "top",
               }}
             >
               <FolderIconPicker
-                onEmojiSelect={(r) => { console.log("XE", r) }}
-                onCustomEmojiSelect={(e) => { console.log("XE", e) }}
+                onEmojiSelect={(r) => {
+                  console.log("XE", r);
+                }}
+                onCustomEmojiSelect={(e) => {
+                  console.log("XE", e);
+                }}
                 onIconSelect={(emoticon) => {
-                  dispatch({ type: 'setEmoticon', payload: emoticon.trim() });
-
+                  dispatch({ type: "setEmoticon", payload: emoticon.trim() });
                 }}
                 className="picker-tab"
                 isHidden={!isOpen || !isActive}
-                idPrefix={'emoji-folder'}
+                idPrefix={"emoji-folder"}
                 loadAndPlay={isOpen}
                 chatId={""}
                 isTranslucent={!isMobile}
               />
             </Menu>
-
           </div>
         </div>
 
         {!isOnlyInvites && (
           <div className="settings-item">
             {state.error && state.error === ERROR_NO_CHATS && (
-              <p className="settings-item-description color-danger mb-2" dir={lang.isRtl ? 'rtl' : undefined}>
+              <p
+                className="settings-item-description color-danger mb-2"
+                dir={lang.isRtl ? "rtl" : undefined}
+              >
                 {lang(state.error)}
               </p>
             )}
 
-            <h4 className="settings-item-header mb-3" dir={lang.isRtl ? 'rtl' : undefined}>{lang('FilterInclude')}</h4>
+            <h4
+              className="settings-item-header mb-3"
+              dir={lang.isRtl ? "rtl" : undefined}
+            >
+              {lang("FilterInclude")}
+            </h4>
 
             <ListItem
               className="settings-folders-list-item color-primary"
@@ -448,16 +473,21 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               narrow
               onClick={onAddIncludedChats}
             >
-              {lang('FilterAddChats')}
+              {lang("FilterAddChats")}
             </ListItem>
 
-            {renderChats('included')}
+            {renderChats("included")}
           </div>
         )}
 
         {!isOnlyInvites && !isEditingChatList && (
           <div className="settings-item pt-3">
-            <h4 className="settings-item-header mb-3" dir={lang.isRtl ? 'rtl' : undefined}>{lang('FilterExclude')}</h4>
+            <h4
+              className="settings-item-header mb-3"
+              dir={lang.isRtl ? "rtl" : undefined}
+            >
+              {lang("FilterExclude")}
+            </h4>
 
             <ListItem
               className="settings-folders-list-item color-primary"
@@ -465,16 +495,19 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               narrow
               onClick={onAddExcludedChats}
             >
-              {lang('FilterAddChats')}
+              {lang("FilterAddChats")}
             </ListItem>
 
-            {renderChats('excluded')}
+            {renderChats("excluded")}
           </div>
         )}
 
         <div className="settings-item pt-3">
-          <h4 className="settings-item-header mb-3" dir={lang.isRtl ? 'rtl' : undefined}>
-            {lang('FolderLinkScreen.Title')}
+          <h4
+            className="settings-item-header mb-3"
+            dir={lang.isRtl ? "rtl" : undefined}
+          >
+            {lang("FolderLinkScreen.Title")}
           </h4>
 
           <ListItem
@@ -483,7 +516,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             narrow
             onClick={handleCreateInviteClick}
           >
-            {lang('ChatListFilter.CreateLinkNew')}
+            {lang("ChatListFilter.CreateLinkNew")}
           </ListItem>
 
           {invites?.map((invite) => (
@@ -495,13 +528,18 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               onClick={handleEditInviteClick}
               clickArg={invite.url}
             >
-              <span className="title" dir="auto">{invite.title || invite.url}</span>
+              <span className="title" dir="auto">
+                {invite.title || invite.url}
+              </span>
               <span className="subtitle">
-                {lang('ChatListFilter.LinkLabelChatCount', invite.peerIds.length, 'i')}
+                {lang(
+                  "ChatListFilter.LinkLabelChatCount",
+                  invite.peerIds.length,
+                  "i",
+                )}
               </span>
             </ListItem>
           ))}
-
         </div>
       </div>
 
@@ -509,13 +547,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
         isShown={Boolean(state.isTouched)}
         disabled={state.isLoading}
         onClick={handleSubmit}
-        ariaLabel={state.mode === 'edit' ? 'Save changes' : 'Create folder'}
+        ariaLabel={state.mode === "edit" ? "Save changes" : "Create folder"}
       >
-        {state.isLoading ? (
-          <Spinner color="white" />
-        ) : (
-          <Icon name="check" />
-        )}
+        {state.isLoading ? <Spinner color="white" /> : <Icon name="check" />}
       </FloatingActionButton>
     </div>
   );
