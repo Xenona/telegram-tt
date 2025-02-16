@@ -53,6 +53,7 @@ type OwnProps = {
   isSavedMessages?: boolean;
   isStatusPicker?: boolean;
   isReactionPicker?: boolean;
+  folderIconPick?: boolean;
   isCurrentUserPremium?: boolean;
   shouldHideHeader?: boolean;
   selectedReactionIds?: string[];
@@ -97,6 +98,7 @@ const StickerSet: FC<OwnProps & StateProps> = ({
   favoriteStickers,
   availableReactions,
   isSavedMessages,
+  folderIconPick,
   isStatusPicker,
   isReactionPicker,
   isCurrentUserPremium,
@@ -244,7 +246,7 @@ const StickerSet: FC<OwnProps & StateProps> = ({
     }
   }, [shouldRender, loadStickers, stickerSet]);
 
-  const isLocked = !isSavedMessages && !isCurrentUserPremium && isPremiumSet && !isChatEmojiSet;
+  const isLocked = !folderIconPick && !isSavedMessages && !isCurrentUserPremium && isPremiumSet && !isChatEmojiSet;
 
   const isInstalled = stickerSet.installedDate && !stickerSet.isArchived;
 

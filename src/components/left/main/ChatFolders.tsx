@@ -75,7 +75,7 @@ export const EMOTICON_TO_FOLDER_ICON: { [key: string]: IconName } = {
 
 export function getIconNameByFolder(folder: ApiChatFolder | Omit<ApiChatFolder, "id" | "description">) {
   if (folder.emoticon) {
-    return EMOTICON_TO_FOLDER_ICON[folder.emoticon] ?? 'folder-badge';
+    return EMOTICON_TO_FOLDER_ICON[folder.emoticon];
   } else {
     if (folder.excludeRead) { // unread
       return "chats-badge";
@@ -92,7 +92,7 @@ export function getIconNameByFolder(folder: ApiChatFolder | Omit<ApiChatFolder, 
       return 'bot'
     }
   }
-  return 'folder-badge'
+  return undefined
 }
 
 const ChatFolders: FC<OwnProps & StateProps> = ({
@@ -152,6 +152,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
       title: { text: orderedFolderIds?.[0] === ALL_FOLDER_ID ? lang('FilterAllChatsShort') : lang('FilterAllChats') },
       includedChatIds: MEMO_EMPTY_ARRAY,
       excludedChatIds: MEMO_EMPTY_ARRAY,
+      emoticon: "📁"
     } satisfies ApiChatFolder;
   }, [orderedFolderIds, lang]);
 
@@ -235,7 +236,6 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
 
       iconStyleOrDefault = `${iconStyle ? "icon icon-" + iconStyle : 'icon icon-folder-badge'}`
 
-
       const tabText = renderTextWithEntities({
         text: title.text,
         entities: title.entities,
@@ -244,7 +244,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
 
       return {
         id,
-        title: <><i className={iconStyleOrDefault}></i><div className='tab-name'>{tabText}</div></>,
+        title: <>{iconStyle || !folder.emoticon?<i className={iconStyleOrDefault}></i>:<i className='icon as-emoji'>{folder.emoticon}</i>}<div className='tab-name'>{tabText}</div></>,
         badgeCount: folderCountersById[id]?.chatsCount,
         isBadgeActive: Boolean(folderCountersById[id]?.notificationsCount),
         isBlocked,

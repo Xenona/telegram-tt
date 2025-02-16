@@ -71,6 +71,11 @@
       .icon {
         font-size: 2rem;
 
+        &.as-emoji {
+          line-height: normal;
+          font-size: 1.6rem;
+        }
+
         @media (max-width: 600px) {
           display: none;
         }
