@@ -101,6 +101,10 @@
     position: relative;
     width: 100%;
 
+    &>.Spinner {
+      --spinner-size: 2rem;
+    }
+
     .button-for-emoji {
       font-size: 1.5rem;
       width: 2.35rem;
@@ -110,6 +114,7 @@
       right: 0;
       transform: translate(-15%, -50%);
       position: absolute;
+      padding: 0;
     }
 
     .custom-folder-icon-container {

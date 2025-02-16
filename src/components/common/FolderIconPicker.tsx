@@ -88,6 +88,7 @@ type OwnProps = {
 };
 
 type StateProps = {
+  customEmojiIcons?: Record<number, string>,
   emojiKeywords?: Record<string, EmojiKeywords | undefined>;
   customEmojisById?: Record<string, ApiSticker>;
   recentCustomEmojiIds?: string[];
@@ -753,9 +754,14 @@ export default memo(withGlobal<OwnProps>(
       customEmojis: {
         byId: customEmojisById,
         featuredIds: customEmojiFeaturedIds,
+
         statusRecent: {
           emojis: recentStatusEmojis,
         },
+
+      },
+      chatFolders: {
+        customEmojiIcons,
       },
       recentCustomEmojis: recentCustomEmojiIds,
       reactions: {
@@ -771,6 +777,7 @@ export default memo(withGlobal<OwnProps>(
     const chatFullInfo = chatId ? selectChatFullInfo(global, chatId) : undefined;
 
     return {
+      customEmojiIcons,
       emojiKeywords,
       customEmojisById: !isStatusPicker ? customEmojisById : undefined,
       recentCustomEmojiIds: !isStatusPicker ? recentCustomEmojiIds : undefined,

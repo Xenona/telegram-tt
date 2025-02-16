@@ -68,6 +68,25 @@
 
     .TabList {
 
+      .emoji-wrapper {
+        height:100%;
+        width: 100%;
+      }
+
+      .Spinner {
+        --spinner-size: 2rem;
+      }
+
+      .StickerView-module__thumb {
+        display: none !important;
+      }
+
+      .StickerView-module__media {
+        left: 50%;
+        translate: -50% 16%;
+      }
+
+
       .icon {
         font-size: 2rem;
 

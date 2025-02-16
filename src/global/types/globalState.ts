@@ -270,6 +270,7 @@ export type GlobalState = {
   chatFolders: {
     orderedIds?: number[];
     byId: Record<number, ApiChatFolder>;
+    customEmojiIcons: Record<number, string> // folder-id with special icon -> doc id of the custom emoji
     invites: Record<number, ApiChatlistExportedInvite[]>;
     recommended?: ApiChatFolder[];
   };
