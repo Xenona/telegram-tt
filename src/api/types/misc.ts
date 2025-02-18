@@ -7,6 +7,7 @@ import type { ApiDocument, ApiPhoto, ApiReaction } from './messages';
 import type { ApiPremiumSection } from './payments';
 import type { ApiStarsSubscriptionPricing } from './stars';
 import type { ApiUser } from './users';
+import { Api } from '../../lib/gramjs';
 
 export interface ApiInitialArgs {
   userAgent: string;
@@ -65,8 +66,11 @@ export interface ApiAttachment {
 }
 
 export interface ApiWallpaper {
-  slug: string;
-  document: ApiDocument;
+  settings?: Api.WallPaperSettings;
+  dark: boolean;
+  pattern: boolean;
+  slug?: string;
+  document?: ApiDocument;
 }
 
 export interface ApiSession {

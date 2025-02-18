@@ -1,5 +1,6 @@
 import React, {
   memo, useEffect, useMemo,
+  useRef,
   useState,
 } from '../../lib/teact/teact';
 import { getActions, withGlobal } from '../../global';
@@ -12,6 +13,7 @@ import type {
   MessageListType,
   ThemeKey,
   ThreadId,
+  WallPaperPatternThemeSettings,
 } from '../../types';
 import { MAIN_THREAD_ID } from '../../api/types';
 
@@ -105,6 +107,7 @@ import MiddleSearch from './search/MiddleSearch.async';
 
 import './MiddleColumn.scss';
 import styles from './MiddleColumn.module.scss';
+import { AnimBgRender } from '../../util/renderGradientBackground';
 
 interface OwnProps {
   leftColumnRef: React.RefObject<HTMLDivElement>;
@@ -128,6 +131,7 @@ type StateProps = {
   customBackground?: string;
   backgroundColor?: string;
   patternColor?: string;
+  fill?: WallPaperPatternThemeSettings | undefined;
   isLeftColumnShown?: boolean;
   isRightColumnShown?: boolean;
   isBackgroundBlurred?: boolean;
@@ -189,6 +193,7 @@ function MiddleColumn({
   pinnedMessagesCount,
   customBackground,
   theme,
+  fill,
   backgroundColor,
   patternColor,
   isLeftColumnShown,
@@ -440,6 +445,8 @@ function MiddleColumn({
     customBackground && isBackgroundBlurred && styles.blurred,
     isRightColumnShown && styles.withRightColumn,
     IS_ELECTRON && !(renderingChatId && renderingThreadId) && styles.draggable,
+    fill?.pattern && styles.withPattern,
+
   );
 
   const messagingDisabledClassName = buildClassName(
@@ -491,8 +498,35 @@ function MiddleColumn({
   );
   const withExtraShift = Boolean(isMessagingDisabled || isSelectModeActive);
 
+
+  const bgRef = useRef<HTMLCanvasElement>(null)
+  const animDivRef = useRef<HTMLDivElement>(null);
+
+  const [renderer, setRenderer] = useState<AnimBgRender |null>(null);
+
+
+  useEffect(() => {
+
+    if (bgRef.current && animDivRef.current) {
+
+      const renderer = new AnimBgRender(bgRef.current, animDivRef.current);
+      setRenderer(renderer)
+      renderer.setColors(renderer.transformStringsToColors({
+          first:  fill?.settings.backgroundColor,
+          second:  fill?.settings.secondBackgroundColor,
+          third:  fill?.settings.thirdBackgroundColor,
+          fourth:  fill?.settings.fourthBackgroundColor,
+        }))
+
+     }
+
+      return ()=>renderer?.detach()
+    }, [bgRef, animDivRef, fill])
+
+
   return (
     <div
+      ref={animDivRef}
       id="MiddleColumn"
       className={className}
       onTransitionEnd={handleCssTransitionEnd}
@@ -516,10 +550,30 @@ function MiddleColumn({
           onDoubleClick={resetResize}
         />
       )}
+
       <div
         className={bgClassName}
-        style={customBackgroundValue ? `--custom-background: ${customBackgroundValue}` : undefined}
-      />
+        style={buildStyle(
+          customBackgroundValue && `--custom-background: ${customBackgroundValue}`,
+          fill?.dark && 'background: #000;'
+        )}
+      >
+        <canvas ref={bgRef}
+        style={buildStyle(
+          "z-index: -1",
+          fill?.dark &&
+          `
+            opacity: 0.55;
+            -webkit-mask: center repeat;
+            mask: center repeat;
+            -webkit-mask-size: 400px;
+            mask-size: 400px;
+            -webkit-mask-image: var(--custom-background);
+            mask-image: var(--custom-background);
+          `
+        )}
+        />
+      </div>
       <div id="middle-column-portals" />
       {Boolean(renderingChatId && renderingThreadId) && (
         <>
@@ -733,7 +787,7 @@ export default memo(withGlobal<OwnProps>(
   (global, { isMobile }): StateProps => {
     const theme = selectTheme(global);
     const {
-      isBlurred: isBackgroundBlurred, background: customBackground, backgroundColor, patternColor,
+      isBlurred: isBackgroundBlurred, background: customBackground, backgroundColor, patternColor, fill
     } = selectThemeValues(global, theme) || {};
 
     const {
@@ -749,6 +803,7 @@ export default memo(withGlobal<OwnProps>(
       customBackground,
       backgroundColor,
       patternColor,
+      fill,
       isLeftColumnShown,
       isRightColumnShown: selectIsRightColumnShown(global, isMobile),
       isBackgroundBlurred,

@@ -364,9 +364,6 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   });
 
 
-  console.log("XE", customEmojiSelected)
-
-
   const possibleIcon = getIconNameByFolder(state.folder);
   const ref = useRef<HTMLDivElement>(null)
 
@@ -419,7 +416,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               >
                 <div ref={triggerRef} className="symbol-menu-trigger" />
                 {customEmojiSelected ? (
-                  <div className='AAAA'>
+                  <div>
                     <canvas ref={sharedCanvasRef} className="shared-canvas" />
 
                     <StickerView

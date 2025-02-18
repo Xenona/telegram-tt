@@ -5,7 +5,7 @@ import React, {
 import { getActions, withGlobal } from '../../../global';
 
 import type { ApiWallpaper } from '../../../api/types';
-import type { ThemeKey } from '../../../types';
+import type { ThemeKey, WallPaperPatternThemeSettings } from '../../../types';
 import { SettingsScreens, UPLOADING_WALLPAPER_SLUG } from '../../../types';
 
 import { DARK_THEME_PATTERN_COLOR, DEFAULT_PATTERN_COLOR } from '../../../config';
@@ -32,6 +32,7 @@ type OwnProps = {
 };
 
 type StateProps = {
+  pattern?: WallPaperPatternThemeSettings;
   background?: string;
   isBlurred?: boolean;
   loadedWallpapers?: ApiWallpaper[];
@@ -47,6 +48,7 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
   onScreenSelect,
   onReset,
   background,
+  pattern,
   isBlurred,
   loadedWallpapers,
   theme,
@@ -94,18 +96,47 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
     });
   }, [setThemeSettings, theme]);
 
-  const handleWallPaperSelect = useCallback((slug: string) => {
-    setThemeSettings({ theme: themeRef.current!, background: slug });
-    const currentWallpaper = loadedWallpapers && loadedWallpapers.find((wallpaper) => wallpaper.slug === slug);
-    if (currentWallpaper?.document.thumbnail) {
-      getAverageColor(currentWallpaper.document.thumbnail.dataUri)
-        .then((color) => {
-          const patternColor = getPatternColor(color);
-          const rgbColor = `#${rgb2hex(color)}`;
-          setThemeSettings({ theme: themeRef.current!, backgroundColor: rgbColor, patternColor });
+  const handleWallPaperSelect = useCallback(
+    (slug?: string, fill?: WallPaperPatternThemeSettings) => {
+      setThemeSettings({ theme: themeRef.current!, background: slug, fill });
+      const currentWallpaper =
+        loadedWallpapers &&
+        loadedWallpapers.find((wallpaper) => wallpaper.slug === slug);
+      if (currentWallpaper?.document?.thumbnail) {
+        getAverageColor(currentWallpaper.document.thumbnail.dataUri).then(
+          (color) => {
+            const patternColor = getPatternColor(color);
+            const rgbColor = `#${rgb2hex(color)}`;
+            setThemeSettings({
+              theme: themeRef.current!,
+              backgroundColor: rgbColor,
+              patternColor,
+              fill,
+            });
+          },
+        );
+      } else {
+        const color: [number, number, number] = [
+          fill?.settings.backgroundColor ?? 255,
+          fill?.settings.secondBackgroundColor ??
+            fill?.settings.backgroundColor ??
+            255,
+          fill?.settings.thirdBackgroundColor ??
+            fill?.settings.backgroundColor ??
+            255,
+        ];
+        const patternColor = getPatternColor(color);
+        const rgbColor = `#${rgb2hex(color)}`;
+        setThemeSettings({
+          theme: themeRef.current!,
+          backgroundColor: rgbColor,
+          patternColor,
+          fill,
         });
-    }
-  }, [loadedWallpapers, setThemeSettings]);
+      }
+    },
+    [loadedWallpapers, setThemeSettings],
+  );
 
   const handleWallPaperBlurChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setThemeSettings({ theme: themeRef.current!, isBlurred: e.target.checked });
@@ -119,6 +150,7 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
   });
 
   const isUploading = loadedWallpapers?.[0] && loadedWallpapers[0].slug === UPLOADING_WALLPAPER_SLUG;
+
 
   return (
     <div className="SettingsGeneralBackground settings-content custom-scroll">
@@ -153,12 +185,36 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
 
       {loadedWallpapers ? (
         <div className="settings-wallpapers">
-          {loadedWallpapers.map((wallpaper) => (
+          {loadedWallpapers.map((wallpaper, idx) => (
             <WallpaperTile
-              key={wallpaper.slug}
+              fill={
+                wallpaper.settings
+                  ? {
+                      dark: wallpaper.dark,
+                      pattern: wallpaper.pattern,
+                      settings: wallpaper.settings,
+                    }
+                  : undefined
+              }
+              key={`${wallpaper.slug}_${wallpaper.settings?.backgroundColor}_${wallpaper.settings?.secondBackgroundColor}_${wallpaper.settings?.thirdBackgroundColor}_${wallpaper.settings?.fourthBackgroundColor}_${wallpaper.dark}`}
               wallpaper={wallpaper}
               theme={theme}
-              isSelected={background === wallpaper.slug}
+              isSelected={
+                background === wallpaper.slug &&
+                wallpaper.settings?.backgroundColor ===
+                  pattern?.settings.backgroundColor &&
+                wallpaper.settings?.secondBackgroundColor ===
+                  pattern?.settings.secondBackgroundColor &&
+                wallpaper.settings?.thirdBackgroundColor ===
+                  pattern?.settings.thirdBackgroundColor &&
+                wallpaper.settings?.fourthBackgroundColor ===
+                  pattern?.settings.fourthBackgroundColor &&
+                wallpaper.settings?.CONSTRUCTOR_ID ===
+                  pattern?.settings.CONSTRUCTOR_ID &&
+                wallpaper.settings?.SUBCLASS_OF_ID ===
+                  pattern?.settings.SUBCLASS_OF_ID &&
+                wallpaper.dark === pattern?.dark
+              }
               onClick={handleWallPaperSelect}
             />
           ))}
@@ -173,10 +229,12 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
 export default memo(withGlobal<OwnProps>(
   (global): StateProps => {
     const theme = selectTheme(global);
-    const { background, isBlurred } = selectThemeValues(global, theme) || {};
+    const { background, isBlurred, fill: pattern } = selectThemeValues(global, theme) || {};
+
     const { loadedWallpapers } = global.settings;
 
     return {
+      pattern,
       background,
       isBlurred,
       loadedWallpapers,

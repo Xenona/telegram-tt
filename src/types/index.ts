@@ -41,6 +41,7 @@ import type {
 import type { DC_IDS } from '../config';
 import type { SearchResultKey } from '../util/keys/searchResultKey';
 import type { IconName } from './icons';
+import { Api } from '../lib/gramjs';
 
 export type TextPart = TeactNode;
 
@@ -107,11 +108,18 @@ export type PerformanceType = {
   [key in PerformanceTypeKey]: boolean;
 };
 
+export type WallPaperPatternThemeSettings = {
+  dark: boolean;
+  pattern: boolean;
+  settings: Api.TypeWallPaperSettings;
+};
+
 export interface IThemeSettings {
   background?: string;
   backgroundColor?: string;
   patternColor?: string;
   isBlurred?: boolean;
+  fill?: WallPaperPatternThemeSettings
 }
 
 export type LangCode = (
