@@ -1,5 +1,5 @@
 import BigInt from 'big-integer';
-import { Api as GramJs } from '../../../lib/gramjs';
+import { Api, Api as GramJs } from '../../../lib/gramjs';
 import { RPCError } from '../../../lib/gramjs/errors';
 
 import type { LANG_PACKS } from '../../../config';
@@ -182,19 +182,20 @@ export async function fetchWallpapers() {
 
   const filteredWallpapers = result.wallpapers.filter((wallpaper) => {
     if (
-      !(wallpaper instanceof GramJs.WallPaper)
-      || !(wallpaper.document instanceof GramJs.Document)
-    ) {
+      wallpaper instanceof Api.WallPaper &&
+      wallpaper?.pattern &&
+      !wallpaper.settings
+    )
       return false;
-    }
 
-    return !wallpaper.pattern && wallpaper.document.mimeType !== 'application/x-tgwallpattern';
+    return true;
   }) as GramJs.WallPaper[];
 
   filteredWallpapers.forEach((wallpaper) => {
-    localDb.documents[String(wallpaper.document.id)] = wallpaper.document as GramJs.Document;
+    if (wallpaper.document)
+      localDb.documents[String(wallpaper.document.id)] =
+        wallpaper.document as GramJs.Document;
   });
-
   return {
     wallpapers: filteredWallpapers.map(buildApiWallpaper).filter(Boolean),
   };

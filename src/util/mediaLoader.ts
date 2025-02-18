@@ -18,6 +18,7 @@ import { oggToWav } from './oggToWav';
 import {
   IS_OPUS_SUPPORTED, IS_PROGRESSIVE_SUPPORTED,
 } from './windowEnvironment';
+import { ungzipTGV } from './gzipUncompress';
 
 const asCacheApiType = {
   [ApiMediaFormat.BlobUrl]: cacheApi.Type.Blob,
@@ -136,12 +137,17 @@ async function fetchFromCacheOrRemote(
   if (!MEDIA_CACHE_DISABLED) {
     const cacheName = url.startsWith('avatar') ? MEDIA_CACHE_NAME_AVATARS : MEDIA_CACHE_NAME;
     const cached = await cacheApi.fetch(cacheName, url, asCacheApiType[mediaFormat]!, isHtmlAllowed);
-
     if (cached) {
       let media = cached;
 
       if (cached.type === 'audio/ogg' && !IS_OPUS_SUPPORTED) {
         media = await oggToWav(media);
+      }
+      if (cached.type === "application/x-tgwallpattern") {
+        media = new Blob(
+          [ungzipTGV(new Uint8Array(await media.arrayBuffer()))],
+          { type: "image/svg+xml" },
+        );
       }
 
       const prepared = prepareMedia(media);
@@ -177,6 +183,12 @@ async function fetchFromCacheOrRemote(
     const media = await oggToWav(blob);
     prepared = prepareMedia(media);
     mimeType = media.type;
+  }
+  if (mimeType === 'application/x-tgwallpattern' && remote.dataBlob instanceof Blob) {
+    prepared = prepareMedia(new Blob(
+      [ungzipTGV(new Uint8Array(await remote.dataBlob.arrayBuffer()))],
+      { type: "image/svg+xml" },
+    ));
   }
 
   memoryCache.set(url, prepared);

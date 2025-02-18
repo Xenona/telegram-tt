@@ -4,6 +4,9 @@
   cursor: var(--custom-cursor, pointer);
   position: relative;
 
+  --bg-size: 420px;
+  --bg-background: #000;
+  // bg-image is set from code
   .media-inner,
   &::after {
     position: absolute;
@@ -23,9 +26,31 @@
       position: absolute;
       left: 0;
       top: 0;
+      right: 0;
+      bottom: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .with-pattern {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      mix-blend-mode: soft-light;
+      background: center repeat;
+      background-image: var(--bg-image);
+      opacity: .5;
+    }
+
+    .dark {
+      -webkit-mask: center repeat;
+      mask: center repeat;
+      -webkit-mask-image: var(--bg-image);
+      mask-image: var(--bg-image);
+      opacity: 0.75;
     }
   }
 

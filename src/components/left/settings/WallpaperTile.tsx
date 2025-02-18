@@ -5,7 +5,7 @@ import React, {
 } from '../../../lib/teact/teact';
 
 import type { ApiWallpaper } from '../../../api/types';
-import type { ThemeKey } from '../../../types';
+import type { ThemeKey, WallPaperPatternThemeSettings } from '../../../types';
 import { UPLOADING_WALLPAPER_SLUG } from '../../../types';
 
 import { CUSTOM_BG_CACHE_NAME } from '../../../config';
@@ -22,25 +22,57 @@ import useShowTransitionDeprecated from '../../../hooks/useShowTransitionDepreca
 import ProgressSpinner from '../../ui/ProgressSpinner';
 
 import './WallpaperTile.scss';
+import { PreviewAnimgBgRender } from '../../../util/renderGradientBackground';
 
 type OwnProps = {
   wallpaper: ApiWallpaper;
   theme: ThemeKey;
+  fill?: WallPaperPatternThemeSettings;
   isSelected: boolean;
-  onClick: (slug: string) => void;
+  onClick: (slug?: string, settings?: WallPaperPatternThemeSettings) => void;
 };
 
 const WallpaperTile: FC<OwnProps> = ({
   wallpaper,
   theme,
+  fill,
   isSelected,
   onClick,
 }) => {
   const { slug, document } = wallpaper;
-  const localMediaHash = `wallpaper${document.id!}`;
-  const localBlobUrl = document.previewBlobUrl;
-  const previewBlobUrl = useMedia(`${localMediaHash}?size=m`);
-  const thumbRef = useCanvasBlur(document.thumbnail?.dataUri, Boolean(previewBlobUrl), true);
+  const localMediaHash = `wallpaper${document?.id!}`;
+  const localBlobUrl = document?.previewBlobUrl;
+  const previewBlobUrl = slug ? useMedia(`${localMediaHash}?size=m`) : undefined;
+
+  const thumbRef = useCanvasBlur(document?.thumbnail?.dataUri, Boolean(previewBlobUrl), true);
+
+  const bgRef = useRef<HTMLCanvasElement>(null)
+  const animDivRef = useRef<HTMLDivElement>(null);
+
+  const [renderer, setRenderer] = useState<PreviewAnimgBgRender|null>(null);
+
+  const isGradientWithoutPattern = !fill?.pattern && fill?.settings;
+
+  useEffect(() => {
+
+    if (bgRef.current && animDivRef.current) {
+
+      const renderer = new PreviewAnimgBgRender(bgRef.current, animDivRef.current);
+      setRenderer(renderer)
+      renderer.setColors(renderer.transformStringsToColors({
+          first:  fill?.settings.backgroundColor,
+          second:  fill?.settings.secondBackgroundColor,
+          third:  fill?.settings.thirdBackgroundColor,
+          fourth:  fill?.settings.fourthBackgroundColor,
+        }))
+
+    }
+
+    return ()=>renderer?.detach()
+  }, [bgRef, animDivRef])
+
+
+
   const { transitionClassNames } = useShowTransitionDeprecated(
     Boolean(previewBlobUrl || localBlobUrl),
     undefined,
@@ -49,9 +81,14 @@ const WallpaperTile: FC<OwnProps> = ({
   );
   const isLoadingRef = useRef(false);
   const [isLoadAllowed, setIsLoadAllowed] = useState(false);
-  const {
-    mediaData: fullMedia, loadProgress,
-  } = useMediaWithLoadProgress(localMediaHash, !isLoadAllowed);
+
+  let fullMedia: string|undefined, loadProgress;
+  if (slug) {
+
+    const res =  useMediaWithLoadProgress(localMediaHash, !isLoadAllowed);
+    fullMedia = res.mediaData;
+    loadProgress = res.loadProgress;
+  }
   const wasLoadDisabled = usePreviousDeprecated(isLoadAllowed) === false;
   const { shouldRender: shouldRenderSpinner, transitionClassNames: spinnerClassNames } = useShowTransitionDeprecated(
     (isLoadAllowed && !fullMedia) || slug === UPLOADING_WALLPAPER_SLUG,
@@ -59,15 +96,17 @@ const WallpaperTile: FC<OwnProps> = ({
     wasLoadDisabled,
     'slow',
   );
+
   // To prevent triggering of the effect for useCallback
   const cacheKeyRef = useRef<string>();
   cacheKeyRef.current = theme;
 
   const handleSelect = useCallback(() => {
     (async () => {
+
       const blob = await fetchBlob(fullMedia!);
       await cacheApi.save(CUSTOM_BG_CACHE_NAME, cacheKeyRef.current!, blob);
-      onClick(slug);
+      onClick(slug, fill);
     })();
   }, [fullMedia, onClick, slug]);
 
@@ -80,7 +119,7 @@ const WallpaperTile: FC<OwnProps> = ({
   }, [fullMedia, handleSelect]);
 
   const handleClick = useCallback(() => {
-    if (fullMedia) {
+    if (fullMedia || isGradientWithoutPattern) {
       handleSelect();
     } else {
       isLoadingRef.current = true;
@@ -94,20 +133,35 @@ const WallpaperTile: FC<OwnProps> = ({
   );
 
   return (
-    <div className={className} onClick={handleClick}>
-      <div className="media-inner">
-        <canvas
-          ref={thumbRef}
-          className="thumbnail"
-        />
-        <img
-          src={previewBlobUrl || localBlobUrl}
-          className={buildClassName('full-media', transitionClassNames)}
-          alt=""
-          draggable={false}
-        />
+    <div className={className} onClick={handleClick}
+    style={`--bg-image: url(${previewBlobUrl || localBlobUrl});`}
+    >
+      <div className="media-inner" ref={animDivRef} style={fill?.dark ? 'background: #000;' : ""}
+      >
+        <canvas ref={thumbRef} className="thumbnail" />
+        <canvas ref={bgRef} className={buildClassName("thumbnail", fill?.dark && fill?.pattern && "dark")} />
+        {!fill?.pattern && slug && !fill?.settings && (
+          <img
+            src={previewBlobUrl || localBlobUrl}
+            className={buildClassName("full-media", transitionClassNames)}
+            alt=""
+            draggable={false}
+          />
+        )}
+        {((!fill?.pattern && !slug && fill?.settings) ||
+          (fill?.pattern && slug && fill?.settings)) && (
+          <>
+            <div
+              className={buildClassName("full-media", transitionClassNames, fill?.pattern && "with-pattern")}
+              draggable={false}
+            />
+          </>
+        )}
+
         {shouldRenderSpinner && (
-          <div className={buildClassName('spinner-container', spinnerClassNames)}>
+          <div
+            className={buildClassName("spinner-container", spinnerClassNames)}
+          >
             <ProgressSpinner progress={loadProgress} onClick={handleClick} />
           </div>
         )}
