@@ -1,6 +1,13 @@
-import { RefObject, useRef, useSignal } from "../../../lib/teact/teact";
+import useLastCallback from "../../../hooks/useLastCallback";
+import {
+  RefObject,
+  useEffect,
+  useRef,
+  useSignal,
+} from "../../../lib/teact/teact";
 import { subscribe } from "../../../util/notifications";
 import { Signal } from "../../../util/signals";
+import { RichInputKeyboardListener } from "./Keyboard";
 import { RichEditable } from "./RichEditable";
 
 export type RichInputCtx = {
@@ -10,23 +17,37 @@ export type RichInputCtx = {
 };
 
 export function useRichInput(): RichInputCtx & { ctx: RichInputCtx } {
-  const [getHtml, setHtml] = useSignal("");
   const richEditable: RefObject<RichEditable | null> = useRef(null);
   if (!richEditable.current) {
     richEditable.current = new RichEditable();
-    richEditable.current.subscribeHtml((html: string) => {
-      setHtml(html);
-    })
   }
 
-
   const ctx: RichInputCtx = {
-    getHtml,
+    getHtml: richEditable.current.htmlS,
     setHtml: (v: string) => {
-      console.log("AAAA I am am a set");
+      console.warn("AAAA I am am a set");
     },
     editable: richEditable.current,
   };
 
   return { ...ctx, ctx };
+}
+
+export function useRichInputKeyboardListener(
+  richInputCtx: RichInputCtx,
+  handler: RichInputKeyboardListener
+) {
+  const keydownCallback = useLastCallback(handler.onKeydown);
+
+  useEffect(() => {
+    let ehandler = {
+      ...handler,
+      onKeydown: keydownCallback,
+    };
+    richInputCtx.editable.addKeyboardHandler(ehandler);
+
+    return () => {
+      richInputCtx.editable.removeKeyboardHandler(ehandler);
+    };
+  }, [richInputCtx, keydownCallback]);
 }

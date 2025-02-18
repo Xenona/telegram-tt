@@ -37,8 +37,9 @@ import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
 import TextTimer from '../../ui/TextTimer';
 import TextFormatter from './TextFormatter.async';
-import { RichInputCtx } from '../../common/richinput/useRichInput';
+import { RichInputCtx, useRichInputKeyboardListener } from '../../common/richinput/useRichInput';
 import RichEditableAttachment from '../../common/richinput/RichEditableAttachment';
+import { RichInputKeyboardPriority } from '../../common/richinput/Keyboard';
 
 const CONTEXT_MENU_CLOSE_DELAY_MS = 100;
 // Focus slows down animation, also it breaks transition layout in Chrome
@@ -68,7 +69,6 @@ type OwnProps = {
   shouldSuppressFocus?: boolean;
   shouldSuppressTextFormatter?: boolean;
   canSendPlainText?: boolean;
-  onUpdate: (html: string) => void;
   onSuppressedFocus?: () => void;
   onSend: () => void;
   onScroll?: (event: React.UIEvent<HTMLElement>) => void;
@@ -92,7 +92,7 @@ const TAB_INDEX_PRIORITY_TIMEOUT = 2000;
 const SELECTION_RECALCULATE_DELAY_MS = 260;
 const TEXT_FORMATTER_SAFE_AREA_PX = 140;
 // For some reason Safari inserts `<br>` after user removes text from input
-const SAFARI_BR = '<br>';
+
 const IGNORE_KEYS = [
   'Esc', 'Escape', 'Enter', 'PageUp', 'PageDown', 'Meta', 'Alt', 'Ctrl', 'ArrowDown', 'ArrowUp', 'Control', 'Shift',
 ];
@@ -187,7 +187,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   isSelectModeActive,
   canPlayAnimatedEmojis,
   messageSendKeyCombo,
-  onUpdate,
   onSuppressedFocus,
   onSend,
   onScroll,
@@ -413,12 +412,12 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     document.addEventListener('keydown', handleCloseContextMenu);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+  function handleKeyDown(e: KeyboardEvent) {
     // https://levelup.gitconnected.com/javascript-events-handlers-keyboard-and-load-events-1b3e46a6b0c3#1960
     const { isComposing } = e;
 
-    const html = richInputCtx.getHtml();
-    if (!isComposing && !html && (e.metaKey || e.ctrlKey)) {
+    const empty = richInputCtx.editable.emptyS();
+    if (!isComposing && empty && (e.metaKey || e.ctrlKey)) {
       const targetIndexDelta = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : undefined;
       if (targetIndexDelta) {
         e.preventDefault();
@@ -441,20 +440,24 @@ const MessageInput: FC<OwnProps & StateProps> = ({
         closeTextFormatter();
         onSend();
       } else {
-        insertEnterInsideBlockquote(e)
+        // TODO: Fix blockquote enter
+        // insertEnterInsideBlockquote(e)
       }
-    } else if (!isComposing && e.key === 'ArrowUp' && !html && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    } else if (!isComposing && e.key === 'ArrowUp' && empty && !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       editLastMessage();
     } else {
-      e.target.addEventListener('keyup', processSelectionWithTimeout, { once: true });
+      e.target?.addEventListener('keyup', processSelectionWithTimeout, { once: true });
     }
   }
 
+  useRichInputKeyboardListener(richInputCtx, {
+    priority: RichInputKeyboardPriority.Composer,
+    onKeydown: handleKeyDown,
+  })
+
   function handleChange(e: ChangeEvent<HTMLDivElement>) {
     const { innerHTML, textContent } = e.currentTarget;
-
-    onUpdate(innerHTML === SAFARI_BR ? '' : innerHTML);
 
     // Reset focus on the input to remove any active styling when input is cleared
     if (
@@ -588,7 +591,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     };
   }, [shouldSuppressFocus]);
 
-  const isTouched = useDerivedState(() => Boolean(isActive && richInputCtx.getHtml()), [isActive, richInputCtx.getHtml]);
+  const isTouched = useDerivedState(() => Boolean(isActive && !richInputCtx.editable.emptyS()), [isActive, richInputCtx.editable.emptyS]);
 
   const className = buildClassName(
     'form-control allow-selection',
