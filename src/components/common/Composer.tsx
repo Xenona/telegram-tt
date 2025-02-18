@@ -146,6 +146,7 @@ import useInlineBotTooltip from '../middle/composer/hooks/useInlineBotTooltip';
 import useMentionTooltip from '../middle/composer/hooks/useMentionTooltip';
 import useStickerTooltip from '../middle/composer/hooks/useStickerTooltip';
 import useVoiceRecording from '../middle/composer/hooks/useVoiceRecording';
+import { useRichInput } from './richinput/useRichInput';
 
 import AttachmentModal from '../middle/composer/AttachmentModal.async';
 import AttachMenu from '../middle/composer/AttachMenu';
@@ -419,13 +420,13 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const lang = useOldLang();
 
-  // eslint-disable-next-line no-null/no-null
+  const {getHtml, setHtml, ctx: richInputCtx} = useRichInput();
+
   const inputRef = useRef<HTMLDivElement>(null);
 
   // eslint-disable-next-line no-null/no-null
   const storyReactionRef = useRef<HTMLButtonElement>(null);
 
-  const [getHtml, setHtml] = useSignal('');
   const [isMounted, setIsMounted] = useState(false);
   const getSelectionRange = useGetSelectionRange(editableInputCssSelector);
   const lastMessageSendTimeSeconds = useRef<number>();
@@ -1638,6 +1639,7 @@ const Composer: FC<OwnProps & StateProps> = ({
         />
       )}
       <AttachmentModal
+        richInputCtx={richInputCtx}
         chatId={chatId}
         threadId={threadId}
         canShowCustomSendMenu={canShowCustomSendMenu}
@@ -1827,8 +1829,9 @@ const Composer: FC<OwnProps & StateProps> = ({
               forceDarkTheme={isInStoryViewer}
             />
           )}
+          <div ref={inputRef} />
           <MessageInput
-            ref={inputRef}
+            richInputCtx={richInputCtx}
             id={inputId}
             editableInputId={editableInputId}
             customEmojiPrefix={type}
@@ -1838,7 +1841,6 @@ const Composer: FC<OwnProps & StateProps> = ({
             threadId={threadId}
             isReady={isReady}
             isActive={!hasAttachments}
-            getHtml={getHtml}
             placeholder={
               activeVoiceRecording && windowWidth <= SCREEN_WIDTH_TO_HIDE_PLACEHOLDER
                 ? ''

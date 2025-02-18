@@ -57,10 +57,12 @@ import EmojiTooltip from './EmojiTooltip.async';
 import MentionTooltip from './MentionTooltip';
 import MessageInput from './MessageInput';
 import SymbolMenuButton from './SymbolMenuButton';
+import { RichInputCtx } from '../../common/richinput/useRichInput';
 
 import styles from './AttachmentModal.module.scss';
 
 export type OwnProps = {
+  richInputCtx: RichInputCtx;
   chatId: string;
   threadId: ThreadId;
   attachments: ApiAttachment[];
@@ -109,6 +111,7 @@ const DROP_LEAVE_TIMEOUT_MS = 150;
 const MAX_LEFT_CHARS_TO_SHOW = 100;
 
 const AttachmentModal: FC<OwnProps & StateProps> = ({
+  richInputCtx,
   chatId,
   threadId,
   attachments,
@@ -674,7 +677,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
               forceDarkTheme={forceDarkTheme}
             />
             <MessageInput
-              ref={inputRef}
+              richInputCtx={richInputCtx}
               id={ATTACHMENT_MODAL_INPUT_ID}
               chatId={chatId}
               threadId={threadId}
@@ -682,7 +685,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
               customEmojiPrefix="attachment"
               isReady={isReady}
               isActive={isOpen}
-              getHtml={getHtml}
               editableInputId={EDITABLE_INPUT_MODAL_ID}
               placeholder={lang('AddCaption')}
               onUpdate={onCaptionUpdate}

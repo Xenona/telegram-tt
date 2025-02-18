@@ -37,6 +37,8 @@ import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
 import TextTimer from '../../ui/TextTimer';
 import TextFormatter from './TextFormatter.async';
+import { RichInputCtx } from '../../common/richinput/useRichInput';
+import RichEditableAttachment from '../../common/richinput/RichEditableAttachment';
 
 const CONTEXT_MENU_CLOSE_DELAY_MS = 100;
 // Focus slows down animation, also it breaks transition layout in Chrome
@@ -47,7 +49,7 @@ const SCROLLER_CLASS = 'input-scroller';
 const INPUT_WRAPPER_CLASS = 'message-input-wrapper';
 
 type OwnProps = {
-  ref?: RefObject<HTMLDivElement>;
+  richInputCtx: RichInputCtx;
   id: string;
   chatId: string;
   threadId: ThreadId;
@@ -57,7 +59,6 @@ type OwnProps = {
   editableInputId?: string;
   isReady: boolean;
   isActive: boolean;
-  getHtml: Signal<string>;
   placeholder: string;
   timedPlaceholderLangKey?: string;
   timedPlaceholderDate?: number;
@@ -163,7 +164,7 @@ function insertEnterInsideBlockquote(e: React.KeyboardEvent<HTMLDivElement>) {
 }
 
 const MessageInput: FC<OwnProps & StateProps> = ({
-  ref,
+  richInputCtx,
   id,
   chatId,
   captionLimit,
@@ -173,7 +174,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   editableInputId,
   isReady,
   isActive,
-  getHtml,
   placeholder,
   timedPlaceholderLangKey,
   timedPlaceholderDate,
@@ -203,10 +203,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   } = getActions();
 
   // eslint-disable-next-line no-null/no-null
-  let inputRef = useRef<HTMLDivElement>(null);
-  if (ref) {
-    inputRef = ref;
-  }
+  // let inputRef = richInputCtx.inputRef;
 
   // eslint-disable-next-line no-null/no-null
   const selectionTimeoutRef = useRef<number>(null);
@@ -240,51 +237,53 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     setShouldDisplayTimer(false);
   });
 
-  useInputCustomEmojis(
-    getHtml,
-    inputRef,
-    sharedCanvasRef,
-    sharedCanvasHqRef,
-    absoluteContainerRef,
-    customEmojiPrefix,
-    canPlayAnimatedEmojis,
-    isReady,
-    isActive,
-  );
+  // useInputCustomEmojis(
+  //   richInputCtx.getHtml,
+  //   inputRef,
+  //   sharedCanvasRef,
+  //   sharedCanvasHqRef,
+  //   absoluteContainerRef,
+  //   customEmojiPrefix,
+  //   canPlayAnimatedEmojis,
+  //   isReady,
+  //   isActive,
+  // );
 
   const maxInputHeight = isAttachmentModalInput
     ? MAX_ATTACHMENT_MODAL_INPUT_HEIGHT
     : isStoryInput ? MAX_STORY_MODAL_INPUT_HEIGHT : (isMobile ? 256 : 416);
   const updateInputHeight = useLastCallback((willSend = false) => {
     requestForcedReflow(() => {
-      const scroller = inputRef.current!.closest<HTMLDivElement>(`.${SCROLLER_CLASS}`)!;
-      const currentHeight = Number(scroller.style.height.replace('px', ''));
-      const clone = scrollerCloneRef.current!;
-      const { scrollHeight } = clone;
-      const newHeight = Math.min(scrollHeight, maxInputHeight);
+      // TODO: Improve height handling
 
-      if (newHeight === currentHeight) {
-        return undefined;
-      }
+      // const scroller = inputRef.current!.closest<HTMLDivElement>(`.${SCROLLER_CLASS}`)!;
+      // const currentHeight = Number(scroller.style.height.replace('px', ''));
+      // const clone = scrollerCloneRef.current!;
+      // const { scrollHeight } = clone;
+      // const newHeight = Math.min(scrollHeight, maxInputHeight);
 
-      const isOverflown = scrollHeight > maxInputHeight;
+      // if (newHeight === currentHeight) {
+      //   return undefined;
+      // }
 
-      function exec() {
-        const transitionDuration = Math.round(
-          TRANSITION_DURATION_FACTOR * Math.log(Math.abs(newHeight - currentHeight)),
-        );
-        scroller.style.height = `${newHeight}px`;
-        scroller.style.transitionDuration = `${transitionDuration}ms`;
-        scroller.classList.toggle('overflown', isOverflown);
-      }
+      // const isOverflown = scrollHeight > maxInputHeight;
 
-      if (willSend) {
-        // Delay to next frame to sync with sending animation
-        requestMutation(exec);
-        return undefined;
-      } else {
-        return exec;
-      }
+      // function exec() {
+      //   const transitionDuration = Math.round(
+      //     TRANSITION_DURATION_FACTOR * Math.log(Math.abs(newHeight - currentHeight)),
+      //   );
+      //   scroller.style.height = `${newHeight}px`;
+      //   scroller.style.transitionDuration = `${transitionDuration}ms`;
+      //   scroller.classList.toggle('overflown', isOverflown);
+      // }
+
+      // if (willSend) {
+      //   // Delay to next frame to sync with sending animation
+      //   requestMutation(exec);
+      //   return undefined;
+      // } else {
+      //   return exec;
+      // }
     });
   });
 
@@ -293,29 +292,11 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     updateInputHeight(false);
   }, [isAttachmentModalInput, updateInputHeight]);
 
-  const htmlRef = useRef(getHtml());
-  useLayoutEffect(() => {
-    const html = isActive ? getHtml() : '';
-
-    if (html !== inputRef.current!.innerHTML) {
-      inputRef.current!.innerHTML = html;
-    }
-
-    if (html !== cloneRef.current!.innerHTML) {
-      cloneRef.current!.innerHTML = html;
-    }
-
-    if (html !== htmlRef.current) {
-      htmlRef.current = html;
-
-      updateInputHeight(!html);
-    }
-  }, [getHtml, isActive, updateInputHeight]);
-
   const chatIdRef = useRef(chatId);
   chatIdRef.current = chatId;
+
   const focusInput = useLastCallback(() => {
-    if (!inputRef.current || isNeedPremium) {
+    if (isNeedPremium) {
       return;
     }
 
@@ -324,7 +305,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
       return;
     }
 
-    focusEditableElement(inputRef.current!);
+    richInputCtx.editable.root.focus();
   });
 
   const handleCloseTextFormatter = useLastCallback(() => {
@@ -372,24 +353,24 @@ const MessageInput: FC<OwnProps & StateProps> = ({
       return;
     }
 
-    const selectionRange = window.getSelection()!.getRangeAt(0);
-    const selectionRect = selectionRange.getBoundingClientRect();
-    const scrollerRect = inputRef.current!.closest<HTMLDivElement>(`.${SCROLLER_CLASS}`)!.getBoundingClientRect();
+    // const selectionRange = window.getSelection()!.getRangeAt(0);
+    // const selectionRect = selectionRange.getBoundingClientRect();
+    // const scrollerRect = inputRef.current!.closest<HTMLDivElement>(`.${SCROLLER_CLASS}`)!.getBoundingClientRect();
 
-    let x = (selectionRect.left + selectionRect.width / 2) - scrollerRect.left;
+    // let x = (selectionRect.left + selectionRect.width / 2) - scrollerRect.left;
 
-    if (x < TEXT_FORMATTER_SAFE_AREA_PX) {
-      x = TEXT_FORMATTER_SAFE_AREA_PX;
-    } else if (x > scrollerRect.width - TEXT_FORMATTER_SAFE_AREA_PX) {
-      x = scrollerRect.width - TEXT_FORMATTER_SAFE_AREA_PX;
-    }
+    // if (x < TEXT_FORMATTER_SAFE_AREA_PX) {
+    //   x = TEXT_FORMATTER_SAFE_AREA_PX;
+    // } else if (x > scrollerRect.width - TEXT_FORMATTER_SAFE_AREA_PX) {
+    //   x = scrollerRect.width - TEXT_FORMATTER_SAFE_AREA_PX;
+    // }
 
-    setTextFormatterAnchorPosition({
-      x,
-      y: selectionRect.top - scrollerRect.top,
-    });
+    // setTextFormatterAnchorPosition({
+    //   x,
+    //   y: selectionRect.top - scrollerRect.top,
+    // });
 
-    setSelectedRange(selectionRange);
+    // setSelectedRange(selectionRange);
     openTextFormatter();
   }
 
@@ -436,7 +417,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     // https://levelup.gitconnected.com/javascript-events-handlers-keyboard-and-load-events-1b3e46a6b0c3#1960
     const { isComposing } = e;
 
-    const html = getHtml();
+    const html = richInputCtx.getHtml();
     if (!isComposing && !html && (e.metaKey || e.ctrlKey)) {
       const targetIndexDelta = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : undefined;
       if (targetIndexDelta) {
@@ -485,9 +466,9 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     ) {
       const selection = window.getSelection()!;
       if (selection) {
-        inputRef.current!.blur();
+        richInputCtx.editable.blur();
         selection.removeAllRanges();
-        focusEditableElement(inputRef.current!, true);
+        richInputCtx.editable.focus(true);
       }
     }
   }
@@ -549,7 +530,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
         return;
       }
 
-      const input = inputRef.current!;
+      const input = richInputCtx.editable.root;
       const isSelectionCollapsed = document.getSelection()?.isCollapsed;
 
       if (
@@ -592,7 +573,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   }, [focusInput]);
 
   useEffect(() => {
-    const input = inputRef.current!;
+    const input = richInputCtx.editable.root;
 
     function suppressFocus() {
       input.blur();
@@ -607,11 +588,10 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     };
   }, [shouldSuppressFocus]);
 
-  const isTouched = useDerivedState(() => Boolean(isActive && getHtml()), [isActive, getHtml]);
+  const isTouched = useDerivedState(() => Boolean(isActive && richInputCtx.getHtml()), [isActive, richInputCtx.getHtml]);
 
   const className = buildClassName(
     'form-control allow-selection',
-    isTouched && 'touched',
     shouldSuppressFocus && 'focus-disabled',
   );
 
@@ -625,7 +605,15 @@ const MessageInput: FC<OwnProps & StateProps> = ({
         onClick={!isAttachmentModalInput && !canSendPlainText ? handleClick : undefined}
       >
         <div className={inputScrollerContentClass}>
-          <div
+          <RichEditableAttachment 
+            richInputCtx={richInputCtx} 
+            className={className} 
+            detached={!isActive} 
+            tabIndex={0}
+            placeholder={placeholder}
+            disableEdit={!isAttachmentModalInput && !canSendPlainText}
+          />
+          {/* <div
             ref={inputRef}
             id={editableInputId || EDITABLE_INPUT_ID}
             className={className}
@@ -642,12 +630,13 @@ const MessageInput: FC<OwnProps & StateProps> = ({
             aria-label={placeholder}
             onFocus={!isNeedPremium ? onFocus : undefined}
             onBlur={!isNeedPremium ? onBlur : undefined}
-          />
+          /> */}
           {!forcedPlaceholder && (
             <span
               className={buildClassName(
                 'placeholder-text',
                 !isAttachmentModalInput && !canSendPlainText && 'with-icon',
+                isTouched && 'touched',
                 isNeedPremium && 'is-need-premium',
               )}
               dir="auto"
@@ -685,14 +674,14 @@ const MessageInput: FC<OwnProps & StateProps> = ({
           {captionLimit}
         </div>
       )}
-      <TextFormatter
+      {/* <TextFormatter
         inputRef={inputRef}
         isOpen={isTextFormatterOpen}
         anchorPosition={textFormatterAnchorPosition}
         selectedRange={selectedRange}
         setSelectedRange={setSelectedRange}
         onClose={handleCloseTextFormatter}
-      />
+      /> */}
       {forcedPlaceholder && <span className="forced-placeholder">{renderText(forcedPlaceholder!)}</span>}
     </div>
   );
