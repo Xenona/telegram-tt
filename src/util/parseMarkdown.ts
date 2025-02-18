@@ -1,6 +1,7 @@
 import {
   ApiFormattedText,
   ApiMessageEntity,
+  ApiMessageEntityDefault,
   ApiMessageEntityTypes,
 } from "../api/types";
 
@@ -324,7 +325,7 @@ function addExternalEntities(
   for (let ent of extEnt) {
     let start = ent.offset;
     let end = ent.offset + ent.length;
-    console.log(start, end)
+    console.log(start, end);
     for (let i = 0; i < consumed.length; i++) {
       if (start >= consumed[i].pos) {
         start -= Math.min(consumed[i].consumed, start - consumed[i].pos);
@@ -344,17 +345,96 @@ function addExternalEntities(
   return text;
 }
 
+type FixupEntityTypes =
+  | ApiMessageEntityTypes.Bold
+  | ApiMessageEntityTypes.Italic
+  | ApiMessageEntityTypes.Strike
+  | ApiMessageEntityTypes.Spoiler;
+
+let breakableEntities: FixupEntityTypes[] = [
+  ApiMessageEntityTypes.Bold,
+  ApiMessageEntityTypes.Italic,
+  ApiMessageEntityTypes.Strike,
+  ApiMessageEntityTypes.Spoiler,
+];
+
+// Cleanup entites by removing duplicates and extending
+type FixupToken = {
+  action: "start" | "end";
+  type: FixupEntityTypes;
+};
+
+function fixupEntities(text: ApiFormattedText): ApiFormattedText {
+  let startEntities = text.entities ?? [];
+  let resEntities = [];
+
+  let fixupMap: Map<number, FixupToken[]> = new Map();
+  for (let ent of startEntities) {
+    const start = ent.offset;
+    const end = ent.offset + ent.length;
+
+    let startMarkers = fixupMap.get(start) ?? [];
+    let endMarkers = fixupMap.get(end) ?? [];
+
+    let type = ent.type as FixupEntityTypes;
+    if (breakableEntities.includes(type)) {
+      startMarkers.push({ action: "start", type });
+      endMarkers.push({ action: "end", type });
+    } else {
+      resEntities.push(ent);
+    }
+
+    fixupMap.set(start, startMarkers);
+    fixupMap.set(end, endMarkers);
+  }
+
+  let fixupList = [...fixupMap.entries()];
+  fixupList = fixupList.sort((a, b) => a[0] - b[0]);
+
+  let curState: Map<FixupEntityTypes, number> = new Map();
+  let curEnts: ApiMessageEntityDefault[] = [];
+  for (let [pos, entr] of fixupList) {
+    // End all current entities
+    for (let e of curEnts) {
+      e.length = pos - e.offset;
+      resEntities.push(e);
+    }
+    curEnts = [];
+
+    for (let upd of entr) {
+      let cur = curState.get(upd.type) ?? 0;
+      if (upd.action == "start") {
+        curState.set(upd.type, cur + 1);
+      } else {
+        curState.set(upd.type, cur - 1);
+      }
+    }
+
+    for (let stat of curState.entries()) {
+      curEnts.push({ type: stat[0], offset: pos, length: 0 });
+    }
+  }
+
+  resEntities = resEntities.sort((a, b) => {
+    if (a.offset == b.offset) return b.length - a.length;
+    return a.offset - b.offset;
+  });
+
+  return { text: text.text, entities: resEntities };
+}
+
 export function parseMarkdown(
   text: string,
   extEnt: ApiMessageEntity[] = []
 ): ApiFormattedText {
   let tokens: Token[] = tokenize(text);
   tokens = doCodePass(tokens);
-
   let [fmtText, consumed] = tokensToEntities(tokens);
 
+  console.log(extEnt);
   fmtText = addExternalEntities(fmtText, consumed, extEnt);
-
   fmtText = trimMessage(fmtText);
+  fmtText = fixupEntities(fmtText);
+  console.log(fmtText.entities);
   return fmtText;
 }
