@@ -23,6 +23,8 @@ import ProgressSpinner from '../../ui/ProgressSpinner';
 
 import './WallpaperTile.scss';
 import { PreviewAnimgBgRender } from '../../../util/renderGradientBackground';
+import useMouseInside from '../../../hooks/useMouseInside';
+import { IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 
 type OwnProps = {
   wallpaper: ApiWallpaper;
@@ -46,6 +48,7 @@ const WallpaperTile: FC<OwnProps> = ({
 
   const thumbRef = useCanvasBlur(document?.thumbnail?.dataUri, Boolean(previewBlobUrl), true);
 
+  const mouseRef = useRef<HTMLDivElement>(null)
   const bgRef = useRef<HTMLCanvasElement>(null)
   const animDivRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +104,25 @@ const WallpaperTile: FC<OwnProps> = ({
   const cacheKeyRef = useRef<string>();
   cacheKeyRef.current = theme;
 
+  useEffect(()=>{
+
+    const handleMouse = () => {
+      console.log("XXEhhjhjjhhjhjhj")
+
+      renderer?.nextState();
+    }
+
+    if (mouseRef.current && !IS_TOUCH_ENV) {
+      console.log("XXE")
+      mouseRef.current.addEventListener("mouseenter", handleMouse);
+    }
+
+    return ()=>{
+      mouseRef.current?.removeEventListener('mouseenter', handleMouse)
+    }
+
+  }, [mouseRef,renderer])
+
   const handleSelect = useCallback(() => {
     (async () => {
 
@@ -121,11 +143,12 @@ const WallpaperTile: FC<OwnProps> = ({
   const handleClick = useCallback(() => {
     if (fullMedia || isGradientWithoutPattern) {
       handleSelect();
+      renderer?.nextState();
     } else {
       isLoadingRef.current = true;
       setIsLoadAllowed((isAllowed) => !isAllowed);
     }
-  }, [fullMedia, handleSelect]);
+  }, [fullMedia, handleSelect, renderer]);
 
   const className = buildClassName(
     'WallpaperTile',
@@ -134,6 +157,7 @@ const WallpaperTile: FC<OwnProps> = ({
 
   return (
     <div className={className} onClick={handleClick}
+    ref={mouseRef}
     style={`--bg-image: url(${previewBlobUrl || localBlobUrl});`}
     >
       <div className="media-inner" ref={animDivRef} style={fill?.dark ? 'background: #000;' : ""}
