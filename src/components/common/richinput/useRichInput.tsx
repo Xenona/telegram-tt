@@ -5,7 +5,6 @@ import {
   useRef,
   useSignal,
 } from "../../../lib/teact/teact";
-import { subscribe } from "../../../util/notifications";
 import { Signal } from "../../../util/signals";
 import { RichInputKeyboardListener } from "./Keyboard";
 import { RichEditable } from "./RichEditable";
@@ -49,5 +48,5 @@ export function useRichInputKeyboardListener(
     return () => {
       richInputCtx.editable.removeKeyboardHandler(ehandler);
     };
-  }, [richInputCtx, keydownCallback]);
+  }, [richInputCtx.editable, keydownCallback]);
 }

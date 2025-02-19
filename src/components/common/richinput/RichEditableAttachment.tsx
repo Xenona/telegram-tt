@@ -29,11 +29,10 @@ const RichEditableAttachment: FC<OwnProps> = ({
     const target = attachmentRef.current;
     const editable = richInputCtx.editable;
     editable.attachTo(target);
-
     return () => {
       editable.detachFrom(target);
     };
-  }, [attachmentRef, richInputCtx, detached]);
+  }, [attachmentRef, richInputCtx.editable, detached]);
 
   useEffect(() => {
     if (!attachmentRef.current || !editable.isAttached(attachmentRef.current))

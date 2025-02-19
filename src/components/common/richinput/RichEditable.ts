@@ -1,5 +1,8 @@
+import { ApiFormattedText } from "../../../api/types";
 import focusEditableElement from "../../../util/focusEditableElement";
+import parseHtmlAsFormattedText from "../../../util/parseHtmlAsFormattedText";
 import { createSignal, Signal } from "../../../util/signals";
+import { getTextWithEntitiesAsHtml } from "../helpers/renderTextWithEntities";
 import { RichInputKeyboardListener } from "./Keyboard";
 
 const SAFARI_BR = "<br>";
@@ -39,7 +42,7 @@ export class RichEditable {
       for (const handler of this.keyboardHandlers) {
         handler.onKeydown(e);
       }
-    })
+    });
 
     this.keyboardHandlers = [];
   }
@@ -119,6 +122,30 @@ export class RichEditable {
     this.handleContentUpdate();
   }
 
+  setFormattedText(text: ApiFormattedText | undefined): string {
+    if (!text) {
+      this.clearInput();
+      return "";
+    }
+
+    const html = getTextWithEntitiesAsHtml(text);
+    this.root.innerHTML = html;
+    this.handleContentUpdate();
+    const s = window.getSelection();
+    if (s && this.root.lastChild) {
+      let r = document.createRange();
+      r.setEndAfter(this.root.lastChild);
+      r.setStartAfter(this.root.lastChild);
+      s.removeAllRanges();
+      s.addRange(r);
+    }
+    return html;
+  }
+
+  getFormattedText(formatMarkdown: boolean = true): ApiFormattedText {
+    return parseHtmlAsFormattedText(this.htmlS(), false, true);
+  }
+
   addKeyboardHandler(handler: RichInputKeyboardListener) {
     this.keyboardHandlers.push(handler);
     this.keyboardHandlers = this.keyboardHandlers.sort(
@@ -129,5 +156,4 @@ export class RichEditable {
   removeKeyboardHandler(handler: RichInputKeyboardListener) {
     this.keyboardHandlers = this.keyboardHandlers.filter((h) => h !== handler);
   }
-
 }
