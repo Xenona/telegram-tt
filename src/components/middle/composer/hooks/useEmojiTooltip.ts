@@ -23,6 +23,7 @@ import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
+import { RichInputCtx } from '../../../common/richinput/useRichInput';
 
 interface Library {
   keywords: string[];
@@ -58,8 +59,7 @@ try {
 
 export default function useEmojiTooltip(
   isEnabled: boolean,
-  getHtml: Signal<string>,
-  setHtml: (html: string) => void,
+  richInputCtx: RichInputCtx,
   inputId = EDITABLE_INPUT_ID,
   recentEmojiIds: string[],
   baseEmojiKeywords?: Record<string, string[]>,
@@ -87,12 +87,18 @@ export default function useEmojiTooltip(
   }, [isEnabled]);
 
   const detectEmojiCodeThrottled = useThrottledResolver(() => {
-    const html = getHtml();
-    return isEnabled && html.includes(':') ? prepareForRegExp(html).match(RE_EMOJI_SEARCH)?.[0].trim() : undefined;
-  }, [getHtml, isEnabled], THROTTLE);
+    if(!isEnabled) return undefined;
+    const matchable = richInputCtx.editable.matchableS();
+    if(!matchable || !matchable.includes(':')) return undefined;
+
+    const matches = matchable.match(RE_EMOJI_SEARCH);
+    if(!matches || matches.length === 0) return undefined;
+
+    return matches[matches.length - 1].trim()
+  }, [richInputCtx.editable.matchableS, isEnabled], THROTTLE);
 
   const getEmojiCode = useDerivedSignal(
-    detectEmojiCodeThrottled, [detectEmojiCodeThrottled, getHtml], true,
+    detectEmojiCodeThrottled, [detectEmojiCodeThrottled, richInputCtx.editable.matchableS], true,
   );
 
   const updateFiltered = useLastCallback((emojis: Emoji[]) => {
@@ -112,24 +118,8 @@ export default function useEmojiTooltip(
   });
 
   const insertEmoji = useLastCallback((emoji: string | ApiSticker, isForce = false) => {
-    const html = getHtml();
-    if (!html) return;
-
-    const atIndex = html.lastIndexOf(':', isForce ? html.lastIndexOf(':') - 1 : undefined);
-
-    if (atIndex !== -1) {
-      const emojiHtml = typeof emoji === 'string' ? renderText(emoji, ['emoji_html']) : buildCustomEmojiHtml(emoji);
-      setHtml(`${html.substring(0, atIndex)}${emojiHtml}`);
-
-      const messageInput = inputId === EDITABLE_INPUT_ID
-        ? document.querySelector<HTMLDivElement>(EDITABLE_INPUT_CSS_SELECTOR)!
-        : document.getElementById(inputId) as HTMLDivElement;
-
-      requestNextMutation(() => {
-        focusEditableElement(messageInput, true, true);
-      });
-    }
-
+    const emojiHtml = typeof emoji === 'string' ? renderText(emoji, ['emoji_html']) : buildCustomEmojiHtml(emoji);
+    richInputCtx.editable.insertMatchableHtml(`${emojiHtml}`, (c) => c === ':');
     updateFiltered(MEMO_EMPTY_ARRAY);
   });
 
@@ -140,9 +130,7 @@ export default function useEmojiTooltip(
       return;
     }
 
-    const newShouldAutoInsert = emojiCode.length > 2 && emojiCode.endsWith(':');
-
-    const filter = emojiCode.substring(1, newShouldAutoInsert ? 1 + emojiCode.length - 2 : undefined);
+    const filter = emojiCode.substring(1, undefined);
     let matched: Emoji[] = MEMO_EMPTY_ARRAY;
 
     if (!filter) {
@@ -157,16 +145,12 @@ export default function useEmojiTooltip(
       return;
     }
 
-    if (newShouldAutoInsert) {
-      insertEmoji(matched[0].native, true);
-    } else {
-      updateFiltered(matched);
-    }
+    updateFiltered(matched);
   }, [
     baseEmojiKeywords, byId, getEmojiCode, emojiKeywords, insertEmoji, recentEmojiIds, updateFiltered,
   ]);
 
-  useEffect(unmarkManuallyClosed, [unmarkManuallyClosed, getHtml]);
+  useEffect(unmarkManuallyClosed, [unmarkManuallyClosed, richInputCtx.editable.matchableS]);
 
   return {
     isEmojiTooltipOpen: Boolean(filteredEmojis.length || filteredCustomEmojis.length) && !isManuallyClosed,

@@ -641,8 +641,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   } = useEmojiTooltip(
     Boolean(isReady && isOnActiveTab && (isInStoryViewer || isForCurrentMessageList)
       && shouldSuggestStickers && !hasAttachments),
-    getHtml,
-    setHtml,
+    richInputCtx,
     undefined,
     recentEmojis,
     baseEmojiKeywords,
@@ -673,7 +672,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       && shouldSuggestStickers
       && canSendStickers
       && !hasAttachments),
-    getHtml,
+    richInputCtx,
     stickersForEmoji,
   );
 

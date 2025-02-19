@@ -226,8 +226,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     closeEmojiTooltip,
   } = useEmojiTooltip(
     Boolean(isReady && (isForCurrentMessageList || !isForMessage) && renderingIsOpen),
-    getHtml,
-    onCaptionUpdate,
+    richInputCtx,
     EDITABLE_INPUT_MODAL_ID,
     recentEmojis,
     baseEmojiKeywords,

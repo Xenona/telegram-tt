@@ -122,7 +122,10 @@ const EmojiTooltip: FC<OwnProps> = ({
     isActive: isOpen,
     isHorizontal: true,
     items: listEmojis,
-    shouldRemoveSelectionOnReset: true,
+    shouldStartOnFirstItem: true,
+    shouldRemoveSelectionOnReset: false,
+    noArrowSelectLoop: true,
+    shouldSelectOnTab: true,
     onSelect: handleSelect,
     onClose,
   });
