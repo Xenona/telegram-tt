@@ -624,6 +624,7 @@ function MiddleColumn({
               <div className={footerClassName}>
                 {renderingCanPost && (
                   <Composer
+                    renderer={renderer}
                     type="messageList"
                     chatId={renderingChatId!}
                     threadId={renderingThreadId!}

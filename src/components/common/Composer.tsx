@@ -189,10 +189,12 @@ import PaymentMessageConfirmDialog from './PaymentMessageConfirmDialog';
 import ReactionAnimatedEmoji from './reactions/ReactionAnimatedEmoji';
 
 import './Composer.scss';
+import { AnimBgRender } from '../../util/renderGradientBackground';
 
 type ComposerType = 'messageList' | 'story';
 
 type OwnProps = {
+  renderer: AnimBgRender | null;
   type: ComposerType;
   chatId: string;
   threadId: ThreadId;
@@ -323,6 +325,7 @@ const MOUNT_ANIMATION_DURATION = 430;
 
 const Composer: FC<OwnProps & StateProps> = ({
   type,
+  renderer,
   isOnActiveTab,
   dropAreaState,
   isInScheduledList,
@@ -1771,6 +1774,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   const handleStopEffect = useLastCallback(() => { hideEffectInComposer({ }); });
 
   const onSend = useMemo(() => {
+    renderer?.nextState()
     switch (mainButtonState) {
       case MainButtonState.Edit:
         return handleEditComplete;
