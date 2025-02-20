@@ -167,7 +167,6 @@ export const INITIAL_GLOBAL_STATE: GlobalState = {
 
   chatFolders: {
     byId: {},
-    customEmojiIcons: {},
     invites: {},
   },
 

@@ -34,7 +34,7 @@ import Transition from '../../ui/Transition';
 import ChatList from './ChatList';
 import { IconName } from '../../../types/icons';
 import StickerView from '../../common/StickerView';
-import { DEFAULT_FOLDER_ICON, LOCSTOR_CUSTOM_EMOJI_KEY } from '../settings/folders/SettingsFoldersEdit';
+import { DEFAULT_FOLDER_ICON } from '../settings/folders/SettingsFoldersEdit';
 import useAppLayout from '../../../hooks/useAppLayout';
 import { RefObject } from 'react';
 
@@ -79,6 +79,24 @@ export const EMOTICON_TO_FOLDER_ICON: { [key: string]: IconName } = {
   "🤖": "bot",
   "📁": "folder-badge",
 };
+
+export const LOCSTOR_CUSTOM_EMOJI_KEY = "CustomEmojisForFolders"
+
+export function getLocalStorageFolderIcons():CustomEmojiIconsFolder {
+  let customEmojiIcons:CustomEmojiIconsFolder ={}
+
+  const storage = localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY);
+  if (storage) {
+    try {
+      customEmojiIcons = JSON.parse(storage);
+    } catch {
+      customEmojiIcons = {}
+      localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}));
+    }
+  }
+
+  return customEmojiIcons
+}
 
 export function getIconNameByFolder(folder: ApiChatFolder | Omit<ApiChatFolder, "id" | "description">) {
   if (folder.emoticon) {
@@ -456,14 +474,29 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
 
 export default memo(withGlobal<OwnProps>(
   (global): StateProps => {
+    let customEmojisById = global.customEmojis.byId;
+
+    // we get custom emojis saved in locstor and add them to the global
+    // to make sure it won't get stuck eternally loading the said emoji
+    // on the main screen
+    let customEmojiIcons:CustomEmojiIconsFolder = getLocalStorageFolderIcons();
+
+    for (let folderIds in customEmojiIcons) {
+      let idx = parseInt(folderIds);
+      // this cuts off unicode emojis
+      if (typeof customEmojiIcons[idx] !== 'string') {
+        // saving emojis to global
+        global.customEmojis.byId[customEmojiIcons[idx].id] = customEmojiIcons[idx];
+        customEmojisById[customEmojiIcons[idx].id] =customEmojiIcons[idx];
+      }
+    }
+    setGlobal(global);
+
     const {
       chatFolders: {
         byId: chatFoldersById,
         orderedIds: orderedFolderIds,
         invites: folderInvitesById,
-      },
-      customEmojis: {
-        byId: customEmojisByIdConst,
       },
       chats: {
         listIds: {
@@ -484,31 +517,6 @@ export default memo(withGlobal<OwnProps>(
     const { shouldSkipHistoryAnimations, activeChatFolder } = selectTabState(global);
     const { storyViewer: { isRibbonShown: isStoryRibbonShown } } = selectTabState(global);
     const canAnimate = selectCanAnimateInterface(global);
-
-    let customEmojisById = customEmojisByIdConst;
-
-    let customEmojiIcons:CustomEmojiIconsFolder ={}
-    const storage = localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY);
-    if (storage) {
-      try {
-        customEmojiIcons = JSON.parse(storage);
-      } catch {
-        customEmojiIcons = {}
-        localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}));
-      }
-    }
-
-
-    let g = getGlobal();
-    for (let folderIds in customEmojiIcons) {
-      let idx = parseInt(folderIds);
-      if (typeof customEmojiIcons[idx] !== 'string') {
-
-        g.customEmojis.byId[customEmojiIcons[idx].id] = customEmojiIcons[idx];
-        customEmojisById[customEmojiIcons[idx].id] =customEmojiIcons[idx];
-      }
-    }
-    setGlobal(g);
 
 
     return {
