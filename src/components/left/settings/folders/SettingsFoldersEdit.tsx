@@ -41,12 +41,17 @@ import useMouseInside from '../../../../hooks/useMouseInside';
 import FolderIconPicker from '../../../common/FolderIconPicker';
 import {
   getIconNameByFolder,
+  getLocalStorageFolderIcons,
+  LOCSTOR_CUSTOM_EMOJI_KEY,
 } from '../../main/ChatFolders';
 import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
 import useLastCallback from '../../../../hooks/useLastCallback';
 import { IAnchorPosition } from '../../../../types';
 import StickerView from '../../../common/StickerView';
 import { CustomEmojiIconsFolder } from '../../../../global/types';
+import { requestMeasure } from '../../../../lib/fasterdom/fasterdom';
+import { extractCurrentThemeParams } from '../../../../util/themeStyle';
+import useColorFilter from '../../../../hooks/stickers/useColorFilter';
 
 type OwnProps = {
   state: FoldersState;
@@ -81,7 +86,6 @@ const INITIAL_CHATS_LIMIT = 5;
 export const ERROR_NO_TITLE = 'Please provide a title for this folder.';
 export const ERROR_NO_CHATS = 'ChatList.Filter.Error.Empty';
 
-export const LOCSTOR_CUSTOM_EMOJI_KEY = "CustomEmojisForFolders"
 
 export const DEFAULT_FOLDER_ICON = "📁";
 
@@ -204,18 +208,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     let stickerOrEmojiSelected: string | ApiSticker| undefined = customEmojiSelected ?? customStickerSelected ?? undefined;
 
     if (stickerOrEmojiSelected) {
-      const storage = localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY);
-      let newStorage: CustomEmojiIconsFolder;
-      if (!storage) {
-        newStorage = {};
-      } else {
-        try {
-          newStorage = JSON.parse(storage);
-        } catch {
-          newStorage = {};
-          localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}));
-        }
-      }
+      let newStorage: CustomEmojiIconsFolder = getLocalStorageFolderIcons();
       newStorage[state.folderId ?? -1] = stickerOrEmojiSelected;
       localStorage.setItem(
         LOCSTOR_CUSTOM_EMOJI_KEY,
@@ -383,6 +376,26 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
   const canAnimate = selectCanPlayAnimatedEmojis(getGlobal());
 
+    const [accentColor, setAccentColor] = useState<string|undefined>(undefined);
+    const [textColor, setTextColor] = useState<string|undefined>(undefined);
+
+    useEffect(()=>{
+
+      if (!accentColor || !textColor) {
+        requestMeasure(()=> {
+
+          const theme = extractCurrentThemeParams()
+
+          const accentColor_ = useColorFilter(theme.accent_text_color, true);
+          const textColor_ = useColorFilter(theme.secondary_text_color, true);
+          setAccentColor(accentColor_);
+          setTextColor(textColor_);
+        })
+      }
+
+    }, [accentColor, textColor])
+
+
   return (
     <div className="settings-fab-wrapper"  ref={ref}>
       <div className="settings-content no-border custom-scroll">
@@ -432,7 +445,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               >
                 <div ref={triggerRef} className="symbol-menu-trigger" />
                 {customStickerSelected ? (
-                  <div>
+                  <div
+                  style={customStickerSelected.shouldUseTextColor ? `filter:${isOpen?accentColor:textColor}` : ``}
+                  >
                     <canvas ref={sharedCanvasRef} className="shared-canvas" />
                     <StickerView
                       containerRef={ref}
