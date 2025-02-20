@@ -13,7 +13,6 @@ import useOldLang from '../../../../hooks/useOldLang';
 export default function useAttachmentModal({
   attachments,
   fileSizeLimit,
-  setHtml,
   setAttachments,
   chatId,
   canSendAudios,
@@ -25,7 +24,6 @@ export default function useAttachmentModal({
 }: {
   attachments: ApiAttachment[];
   fileSizeLimit: number;
-  setHtml: (html: string) => void;
   setAttachments: (attachments: ApiAttachment[]) => void;
   chatId: string;
   canSendAudios?: boolean;
@@ -130,7 +128,6 @@ export default function useAttachmentModal({
     shouldSuggestCompression,
     handleAppendFiles,
     handleFileSelect,
-    onCaptionUpdate: setHtml,
     handleClearAttachments,
     handleSetAttachments,
     shouldForceCompression,

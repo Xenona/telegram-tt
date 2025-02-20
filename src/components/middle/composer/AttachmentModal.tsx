@@ -78,7 +78,6 @@ export type OwnProps = {
   shouldForceAsFile?: boolean;
   isForCurrentMessageList?: boolean;
   forceDarkTheme?: boolean;
-  onCaptionUpdate: (html: string) => void;
   onSend: (sendCompressed: boolean, sendGrouped: boolean, isInvertedMedia?: true) => void;
   onFileAppend: (files: File[], isSpoiler?: boolean) => void;
   onAttachmentsUpdate: (attachments: ApiAttachment[]) => void;
@@ -137,7 +136,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
   isForCurrentMessageList,
   forceDarkTheme,
   onAttachmentsUpdate,
-  onCaptionUpdate,
   onSend,
   onFileAppend,
   onClear,

@@ -419,15 +419,12 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const lang = useOldLang();
 
-  const {getHtml, setHtml, ctx: richInputCtx} = useRichInput();
-
-  const inputRef = useRef<HTMLDivElement>(null);
+  const {getHtml, ctx: richInputCtx} = useRichInput();
 
   // eslint-disable-next-line no-null/no-null
   const storyReactionRef = useRef<HTMLButtonElement>(null);
 
   const [isMounted, setIsMounted] = useState(false);
-  const getSelectionRange = useGetSelectionRange(editableInputCssSelector);
   const lastMessageSendTimeSeconds = useRef<number>();
   const prevDropAreaState = usePreviousDeprecated(dropAreaState);
   const { width: windowWidth } = windowSize.get();
@@ -450,7 +447,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const isSentStoryReactionHeart = sentStoryReaction && isSameReaction(sentStoryReaction, HEART_REACTION);
 
-  useEffect(processMessageInputForCustomEmoji, [getHtml]);
+  useEffect(processMessageInputForCustomEmoji, [richInputCtx.editable.htmlS]);
 
   const customEmojiNotificationNumber = useRef(0);
 
@@ -554,12 +551,10 @@ const Composer: FC<OwnProps & StateProps> = ({
     shouldForceAsFile,
     handleAppendFiles,
     handleFileSelect,
-    onCaptionUpdate,
     handleClearAttachments,
     handleSetAttachments,
   } = useAttachmentModal({
     attachments,
-    setHtml,
     setAttachments,
     fileSizeLimit,
     chatId,
@@ -605,10 +600,10 @@ const Composer: FC<OwnProps & StateProps> = ({
   const isEditingRef = useStateRef(Boolean(editingMessage));
   useEffect(() => {
     if (!isForCurrentMessageList || isInStoryViewer) return;
-    if (getHtml() && !isEditingRef.current) {
+    if (richInputCtx.editable.htmlS() && !isEditingRef.current) {
       sendMessageAction({ type: 'typing' });
     }
-  }, [getHtml, isEditingRef, isForCurrentMessageList, isInStoryViewer, sendMessageAction]);
+  }, [richInputCtx.editable.htmlS, isEditingRef, isForCurrentMessageList, isInStoryViewer, sendMessageAction]);
 
   const isAdmin = chat && isChatAdmin(chat);
 
@@ -661,7 +656,6 @@ const Composer: FC<OwnProps & StateProps> = ({
   } = useMentionTooltip(
     Boolean(isInMessageList && isReady && isForCurrentMessageList && !hasAttachments),
     richInputCtx,
-    inputRef,
     groupChatMembers,
     topInlineBotIds,
     currentUserId,
@@ -917,7 +911,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       return;
     }
 
-    const { text, entities } = parseHtmlAsFormattedText(getHtml());
+    const { text, entities } = richInputCtx.editable.getFormattedText(true);
     if (!text && !attachmentsToSend.length) {
       return;
     }
@@ -1007,7 +1001,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       }
     }
 
-    const { text, entities } = parseHtmlAsFormattedText(getHtml());
+    const { text, entities } = richInputCtx.editable.getFormattedText(true);
     if (currentAttachments.length) {
       sendAttachments({
         attachments: currentAttachments,
@@ -1615,7 +1609,6 @@ const Composer: FC<OwnProps & StateProps> = ({
         isForMessage={isInMessageList}
         shouldSchedule={isInScheduledList}
         forceDarkTheme={isInStoryViewer}
-        onCaptionUpdate={onCaptionUpdate}
         onSendSilent={handleSendSilentAttachments}
         onSend={handleSendAttachmentsFromModal}
         onSendScheduled={handleSendScheduledAttachments}
@@ -1791,7 +1784,6 @@ const Composer: FC<OwnProps & StateProps> = ({
               forceDarkTheme={isInStoryViewer}
             />
           )}
-          <div ref={inputRef} />
           <MessageInput
             richInputCtx={richInputCtx}
             id={inputId}

@@ -12,7 +12,6 @@ import { RichEditable } from "./RichEditable";
 export type RichInputCtx = {
   editable: RichEditable;
   getHtml: Signal<string>;
-  setHtml: (s: string) => void;
 };
 
 export function useRichInput(): RichInputCtx & { ctx: RichInputCtx } {
@@ -23,9 +22,6 @@ export function useRichInput(): RichInputCtx & { ctx: RichInputCtx } {
 
   const ctx: RichInputCtx = {
     getHtml: richEditable.current.htmlS,
-    setHtml: (v: string) => {
-      console.warn("AAAA I am am a set");
-    },
     editable: richEditable.current,
   };
 

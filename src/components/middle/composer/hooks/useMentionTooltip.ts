@@ -33,7 +33,6 @@ try {
 export default function useMentionTooltip(
   isEnabled: boolean,
   richInputCtx: RichInputCtx,
-  inputRef: RefObject<HTMLDivElement>,
   groupChatMembers?: ApiChatMember[],
   topInlineBotIds?: string[],
   currentUserId?: string,
@@ -49,7 +48,7 @@ export default function useMentionTooltip(
     const matches = text.match(RE_USERNAME_SEARCH);
     if(!matches || matches.length == 0) return undefined;
     return matches[matches.length - 1].trim();
-  }, [isEnabled, richInputCtx.editable.matchableS, inputRef], THROTTLE);
+  }, [isEnabled, richInputCtx.editable.matchableS], THROTTLE);
 
   const getUsernameTag = useDerivedSignal(
     extractUsernameTagThrottled, [extractUsernameTagThrottled, richInputCtx.editable.matchableS], true,
