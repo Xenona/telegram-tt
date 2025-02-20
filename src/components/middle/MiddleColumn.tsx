@@ -545,7 +545,7 @@ function MiddleColumn({
       >
         <canvas ref={bgRef}
         style={buildStyle(
-          "z-index: -1",
+          !fill && "visibility: hidden;",
           fill?.dark &&
           `
             opacity: 0.55;
