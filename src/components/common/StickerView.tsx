@@ -26,6 +26,7 @@ import OptimizedVideo from '../ui/OptimizedVideo';
 import AnimatedSticker from './AnimatedSticker';
 
 import styles from './StickerView.module.scss';
+import Loading from '../ui/Loading';
 
 type OwnProps = {
   dbg?: boolean;
@@ -40,6 +41,7 @@ type OwnProps = {
   loopLimit?: number;
   shouldLoop?: boolean;
   shouldPreloadPreview?: boolean;
+  widthLoadingCircle?: boolean;
   forceAlways?: boolean;
   forceOnHeavyAnimation?: boolean;
   observeIntersectionForLoading?: ObserveFn;
@@ -65,6 +67,7 @@ const StickerView: FC<OwnProps> = ({
   fullMediaHash,
   fullMediaClassName,
   isSmall,
+  widthLoadingCircle,
   size = STICKER_SIZE,
   customColor,
   loopLimit,
@@ -170,7 +173,9 @@ const StickerView: FC<OwnProps> = ({
         draggable={false}
       />
       {shouldRenderFullMedia && (isLottie ? (
+        <>
         <AnimatedSticker
+          style={`${!isPlayerReady && widthLoadingCircle ? 'visibility: hidden;' : ""}`}
           ref={fullMediaRef as React.RefObject<HTMLDivElement>}
           key={renderId}
           renderId={renderId}
@@ -193,6 +198,8 @@ const StickerView: FC<OwnProps> = ({
           onEnded={onAnimatedStickerLoop}
           color={customColor}
         />
+        {!isPlayerReady && widthLoadingCircle && <Loading/>}
+        </>
       ) : isVideo ? (
         <OptimizedVideo
           ref={fullMediaRef as React.RefObject<HTMLVideoElement>}

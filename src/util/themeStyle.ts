@@ -32,6 +32,7 @@ export function extractCurrentThemeParams(): ApiThemeParameters {
     secondary_bg_color: secondaryBgColor,
     header_bg_color: headerBgColor,
     accent_text_color: accentTextColor,
+    secondary_text_color: secondaryTextColor,
     section_bg_color: sectionBgColor,
     section_header_text_color: sectionHeaderTextColor,
     subtitle_text_color: subtitleTextColor,

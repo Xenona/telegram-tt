@@ -19,10 +19,12 @@ import './TabList.scss';
 export type TabWithProperties = {
   id?: number;
   title: TeactNode;
+  icon?: TeactNode;
   badgeCount?: number;
   isBlocked?: boolean;
   isBadgeActive?: boolean;
   contextActions?: MenuItemContextAction[];
+  shouldUseTextColor:boolean;
 };
 
 type OwnProps = {
@@ -84,8 +86,10 @@ const TabList: FC<OwnProps> = ({
     >
         {tabs.map((tab, i) => (
           <Tab
+            shouldUseTextColor={tab.shouldUseTextColor}
             key={tab.id}
             title={tab.title}
+            icon={tab.icon}
             isActive={i === activeTab}
             isBlocked={tab.isBlocked}
             badgeCount={tab.badgeCount}
