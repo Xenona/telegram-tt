@@ -1,3 +1,4 @@
+import useDynamicColorListener from "../../../hooks/stickers/useDynamicColorListener";
 import { requestMutation } from "../../../lib/fasterdom/fasterdom";
 import React, { FC, memo, useEffect, useRef } from "../../../lib/teact/teact";
 import { RichInputCtx } from "./useRichInput";
@@ -20,6 +21,7 @@ const RichEditableAttachment: FC<OwnProps> = ({
   detached,
 }) => {
   const attachmentRef = useRef<HTMLDivElement>(null);
+  const customColor = useDynamicColorListener(attachmentRef, detached);
   const editable = richInputCtx.editable;
 
   useEffect(() => {
@@ -47,6 +49,15 @@ const RichEditableAttachment: FC<OwnProps> = ({
       });
     });
   }, [editable, attachmentRef, className, disableEdit, placeholder, tabIndex]);
+
+  useEffect(() => {
+    if (!attachmentRef.current || !editable.isAttached(attachmentRef.current))
+      return;
+
+    requestMutation(() => {
+      editable.emojiRenderer.setCustomColor(customColor ?? "");
+    });
+  }, [editable, attachmentRef, customColor]);
 
   return <div ref={attachmentRef}></div>;
 };

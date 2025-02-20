@@ -52,3 +52,13 @@ export default function useBackgroundMode(
 export function isBackgroundModeActive() {
   return !isFocused;
 }
+
+export function addBackgroundModeListener(onBlur: ()=>void, onFocus: ()=>void) {
+  blurCallbacks.addCallback(onBlur);
+  focusCallbacks.addCallback(onFocus);
+
+  return () => {
+    focusCallbacks.removeCallback(onBlur);
+    blurCallbacks.removeCallback(onFocus);
+  };
+}

@@ -4,6 +4,7 @@ import focusEditableElement from "../../../util/focusEditableElement";
 import parseHtmlAsFormattedText from "../../../util/parseHtmlAsFormattedText";
 import { createSignal, Signal } from "../../../util/signals";
 import { getTextWithEntitiesAsHtml } from "../helpers/renderTextWithEntities";
+import { EditableEmojiRender } from "./EditableEmojiRender";
 import { RichInputKeyboardListener } from "./Keyboard";
 
 const SAFARI_BR = "<br>";
@@ -24,7 +25,9 @@ export class RichEditable {
   private disableEdit: boolean;
 
   private keyboardHandlers: RichInputKeyboardListener[];
-  private selectionListener: (() => void);
+  private selectionListener: () => void;
+
+  public emojiRenderer: EditableEmojiRender;
 
   constructor() {
     this.root = document.createElement("div");
@@ -55,6 +58,8 @@ export class RichEditable {
     });
 
     this.keyboardHandlers = [];
+
+    this.emojiRenderer = new EditableEmojiRender(this);
   }
 
   updateRootProps() {
@@ -76,6 +81,10 @@ export class RichEditable {
     el.appendChild(this.root);
 
     document.addEventListener("selectionchange", this.selectionListener);
+
+    this.emojiRenderer.attachTo(el);
+
+    this.handleContentUpdate();
   }
 
   detachFrom(el: HTMLElement) {
@@ -84,10 +93,12 @@ export class RichEditable {
       return;
     }
 
-    el.removeChild(this.root);
-    this.attached = null;
+    this.emojiRenderer.detachFrom(el);
 
     document.removeEventListener("selectionchange", this.selectionListener);
+
+    el.removeChild(this.root);
+    this.attached = null;
   }
 
   isAttached(el?: HTMLElement) {
@@ -124,6 +135,37 @@ export class RichEditable {
     this.root.blur();
   }
 
+  isRangeInside(r: Range) {
+    let parentNode: HTMLElement | null =
+      r.commonAncestorContainer as HTMLElement;
+    let iterations = 1;
+    while (parentNode && parentNode != this.root && iterations < 10) {
+      parentNode = parentNode.parentElement;
+      iterations++;
+    }
+
+    if (parentNode != this.root) {
+      return false;
+    }
+    return true;
+  }
+
+  ensureSelectionInside() {
+    const s = window.getSelection();
+    if (!s) return;
+
+    if (s.rangeCount > 0) {
+      const r = s.getRangeAt(0);
+      if (this.isRangeInside(r)) return;
+    }
+
+    const nr = document.createRange();
+    nr.selectNodeContents(this.root);
+    nr.collapse(false);
+    s.removeAllRanges();
+    s.addRange(nr);
+  }
+
   calculateMatchable(s: Selection, r: Range): string | null {
     if (!s.isCollapsed) return null;
 
@@ -131,15 +173,14 @@ export class RichEditable {
 
     let curNode = r.endContainer;
     if (r.endContainer.nodeType != document.TEXT_NODE && r.endOffset > 0) {
-      let childNode = r.endContainer.childNodes[r.endOffset - 1]
-      if(childNode)
-        curNode = childNode;
+      let childNode = r.endContainer.childNodes[r.endOffset - 1];
+      if (childNode) curNode = childNode;
     }
-    
+
     if (curNode.nodeType != document.TEXT_NODE) {
-      if(curNode.nodeType == document.ELEMENT_NODE) {
+      if (curNode.nodeType == document.ELEMENT_NODE) {
         const curEl = curNode as HTMLElement;
-        if(curEl.tagName == "IMG") {
+        if (curEl.tagName == "IMG") {
           return `IMG_ALT__${curEl.getAttribute("alt")}`;
         }
       }
@@ -155,24 +196,31 @@ export class RichEditable {
     }
 
     let ra = str.slice(startPos, r.endOffset);
-    // console.log("RAA", ra, str, startPos, r.endOffset);
     return ra;
   }
 
   handleSelectionUpdate() {
     const s = window.getSelection();
-    if (s && s.rangeCount > 0) {
-      const r = s?.getRangeAt(0);
-      this.matchableSet(this.calculateMatchable(s, r));
+    const notSelected = !s || s.rangeCount == 0;
+    const r = notSelected ? null : s?.getRangeAt(0);
+
+    if (notSelected || !r || !this.isRangeInside(r)) {
+      this.matchableSet(null);
+      return;
     }
+
+    this.matchableSet(this.calculateMatchable(s, r));
   }
 
   handleContentUpdate() {
+    if (!this.attached) return;
     this.htmlSet(this.root.innerHTML);
     this.emptySet(
       this.root.innerHTML === "" || this.root.innerHTML == SAFARI_BR
     );
+
     this.handleSelectionUpdate();
+    this.emojiRenderer.synchronizeElements();
   }
 
   clearInput() {
@@ -189,6 +237,7 @@ export class RichEditable {
     const html = getTextWithEntitiesAsHtml(text);
     this.root.innerHTML = html;
     this.handleContentUpdate();
+
     const s = window.getSelection();
     if (s && this.root.lastChild) {
       let r = document.createRange();
@@ -216,7 +265,9 @@ export class RichEditable {
   }
 
   execCommand(cmd: string, value?: string) {
+    this.ensureSelectionInside();
     betterExecCommand(this.root, cmd, value);
+    this.handleContentUpdate();
   }
 
   insertMatchableHtml(html: string, matchLimit: (c: string) => boolean) {
@@ -240,11 +291,15 @@ export class RichEditable {
     while (startPos > 0 && !matchLimit(str[startPos])) {
       startPos--;
     }
-    
-    r.setStart(curNode, startPos)
-    r.setEnd(curNode, endPos)
+
+    r.setStart(curNode, startPos);
+    r.setEnd(curNode, endPos);
     s.removeAllRanges();
-    s.addRange(r)
+    s.addRange(r);
     this.execCommand("insertHTML", html);
+  }
+
+  removeLastSymbol() {
+    this.execCommand("delete");
   }
 }

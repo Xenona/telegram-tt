@@ -115,7 +115,6 @@ import windowSize from '../../util/windowSize';
 import applyIosAutoCapitalizationFix from '../middle/composer/helpers/applyIosAutoCapitalizationFix';
 import buildAttachment, { prepareAttachmentsToSend } from '../middle/composer/helpers/buildAttachment';
 import { buildCustomEmojiHtml } from '../middle/composer/helpers/customEmoji';
-import { isSelectionInsideInput } from '../middle/composer/helpers/selection';
 import { getPeerColorClass } from './helpers/peerColor';
 import renderText from './helpers/renderText';
 import { getTextWithEntitiesAsHtml } from './helpers/renderTextWithEntities';
@@ -519,27 +518,8 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const insertHtmlAndUpdateCursor = useLastCallback((newHtml: string, inInputId: string = editableInputId) => {
     if (inInputId === editableInputId && isComposerBlocked) return;
-    const selection = window.getSelection()!;
-    let messageInput: HTMLDivElement;
-    if (inInputId === editableInputId) {
-      messageInput = document.querySelector<HTMLDivElement>(editableInputCssSelector)!;
-    } else {
-      messageInput = document.getElementById(inInputId) as HTMLDivElement;
-    }
-
-    if (selection.rangeCount) {
-      const selectionRange = selection.getRangeAt(0);
-      if (isSelectionInsideInput(selectionRange, inInputId)) {
-        betterExecCommand(inputRef.current, 'insertHtml', newHtml);
-        return;
-      }
-    }
-
-    // If selection is outside of input, set cursor at the end of input
-    requestNextMutation(() => {
-      focusEditableElement(messageInput);
-      betterExecCommand(inputRef.current, 'insertHtml', newHtml);
-    });
+    
+    richInputCtx.editable.execCommand('insertHtml', newHtml);
   });
 
   const insertTextAndUpdateCursor = useLastCallback((
@@ -1343,25 +1323,15 @@ const Composer: FC<OwnProps & StateProps> = ({
   useEffect(() => {
     if (!isComposerBlocked) return;
 
-    setHtml('');
-  }, [isComposerBlocked, setHtml, attachments]);
+    richInputCtx.editable.clearInput()
+  }, [isComposerBlocked, richInputCtx.editable, attachments]);
 
   const insertTextAndUpdateCursorAttachmentModal = useLastCallback((text: string) => {
     insertTextAndUpdateCursor(text, EDITABLE_INPUT_MODAL_ID);
   });
 
   const removeSymbol = useLastCallback((inInputId = editableInputId) => {
-    const selection = window.getSelection()!;
-
-    if (selection.rangeCount) {
-      const selectionRange = selection.getRangeAt(0);
-      if (isSelectionInsideInput(selectionRange, inInputId)) {
-        betterExecCommand(inputRef.current, 'delete');
-        return;
-      }
-    }
-
-    setHtml(deleteLastCharacterOutsideSelection(getHtml()));
+    richInputCtx.editable.removeLastSymbol()
   });
 
   const removeSymbolAttachmentModal = useLastCallback(() => {
