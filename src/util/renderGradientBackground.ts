@@ -1,3 +1,5 @@
+import { requestMutation } from "../lib/fasterdom/fasterdom";
+
 export type AnimBgColor = [number, number, number, number];
 export type AnimBgColorPoints = [
   AnimBgColor,
@@ -125,10 +127,12 @@ class BaseAnimBgRender {
 
     if (this.container) {
       this.resObserver = new ResizeObserver((e) => {
-        this.canvas.width = e[0]?.contentRect?.width ?? 50;
-        this.canvas.height = e[0]?.contentRect?.height ?? 50;
-        this.syncState();
-        this.render();
+        requestMutation(() => {
+          this.canvas.width = e[0]?.contentRect?.width ?? 50;
+          this.canvas.height = e[0]?.contentRect?.height ?? 50;
+          this.syncState();
+          this.render();
+        })
       });
       this.resObserver.observe(this.container);
     } else {
@@ -147,7 +151,6 @@ class BaseAnimBgRender {
 
   public setColors(colors: AnimBgColorPoints) {
     this.colors = colors;
-    console.log("XE colors")
     this.syncState();
     this.render();
   }
@@ -265,8 +268,10 @@ export class AnimBgRender extends BaseAnimBgRender {
     if (!(this.canvas instanceof OffscreenCanvas))
       throw new Error("Can render bitmap only offscreen");
 
-    this.canvas.width = width;
-    this.canvas.height = height;
+      requestMutation(() => {
+        this.canvas.width = width;
+        this.canvas.height = height;
+      })
     this.curPos = pos;
     this.colors = colors;
     this.syncState();
