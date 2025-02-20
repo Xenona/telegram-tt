@@ -177,6 +177,8 @@
 "LoginRegisterFirstNamePlaceholder" = "First Name";
 "LoginRegisterLastNamePlaceholder" = "Last Name";
 "Next" = "Next";
+"NoEmojiFound" = "No emoji found";
+"SearchEmoji" = "Search Emoji";
 "LoginSelectCountryTitle" = "Country";
 "MenuAddAccount" = "Add Account";
 "CountryNone" = "Country not found";

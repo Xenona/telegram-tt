@@ -630,7 +630,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
 
           )}
           // lang pack should have a proper key
-          placeholder={lang('Search Emoji')}
+          placeholder={lang('SearchEmoji')}
           onChange={handleEmojiSearchQueryChange}
         />
         {!(emojiQuery) ? <>
@@ -738,7 +738,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
 
             ))
           }
-        </div> : <p>not found</p>)}
+        </div> : <p>{lang("NoEmojiFound")}</p>)}
       </div>
     </div>
   );
