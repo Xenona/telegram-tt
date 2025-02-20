@@ -3,6 +3,7 @@ import { betterExecCommand } from "../../../util/execCommand";
 import focusEditableElement from "../../../util/focusEditableElement";
 import parseHtmlAsFormattedText from "../../../util/parseHtmlAsFormattedText";
 import { createSignal, Signal } from "../../../util/signals";
+import { preparePastedHtml } from "../../middle/composer/helpers/cleanHtml";
 import { getTextWithEntitiesAsHtml } from "../helpers/renderTextWithEntities";
 import { EditableEmojiRender } from "./EditableEmojiRender";
 import { RichInputKeyboardListener } from "./Keyboard";
@@ -13,6 +14,13 @@ export const IMG_ALT_MATCHABLE_MARKER = "IMG_ALT__";
 
 export type SelectionState = {
   collapsed: boolean;
+};
+
+export type PasteCtx = {
+  editable: RichEditable;
+  text: ApiFormattedText;
+  html: string;
+  items: DataTransferItemList;
 };
 
 export class RichEditable {
@@ -32,6 +40,8 @@ export class RichEditable {
 
   private keyboardHandlers: RichInputKeyboardListener[];
   private selectionListener: () => void;
+  private pasteHandlers: ((p: PasteCtx) => void)[];
+  private pasteListener: (e: ClipboardEvent) => void;
 
   public emojiRenderer: EditableEmojiRender;
 
@@ -49,6 +59,12 @@ export class RichEditable {
       null
     );
 
+    this.keyboardHandlers = [];
+    this.pasteHandlers = [];
+
+    this.selectionListener = () => this.handleSelectionUpdate();
+    this.pasteListener = (e) => this.handlePaste(e);
+
     this.root.addEventListener("click", () => {
       this.focus();
     });
@@ -57,8 +73,6 @@ export class RichEditable {
       this.handleContentUpdate();
     });
 
-    this.selectionListener = () => this.handleSelectionUpdate();
-
     this.root.addEventListener("keydown", (e) => {
       for (const handler of this.keyboardHandlers) {
         handler.onKeydown(e);
@@ -66,12 +80,10 @@ export class RichEditable {
       this.handleSelectionUpdate();
     });
 
-    this.keyboardHandlers = [];
-
     this.emojiRenderer = new EditableEmojiRender(this);
   }
 
-  updateRootProps() {
+  private updateRootProps() {
     if (this.disableEdit) {
       this.root.contentEditable = "false";
     } else {
@@ -81,7 +93,7 @@ export class RichEditable {
     this.root.dir = "auto";
   }
 
-  attachTo(el: HTMLElement) {
+  public attachTo(el: HTMLElement) {
     if (this.attached) {
       throw new Error("Tried to attach when already attached");
     }
@@ -90,13 +102,14 @@ export class RichEditable {
     el.appendChild(this.root);
 
     document.addEventListener("selectionchange", this.selectionListener);
+    document.addEventListener("paste", this.pasteListener);
 
     this.emojiRenderer.attachTo(el);
 
     this.handleContentUpdate();
   }
 
-  detachFrom(el: HTMLElement) {
+  public detachFrom(el: HTMLElement) {
     if (!this.attached) {
       console.warn("Tried to detach when not attached");
       return;
@@ -105,17 +118,18 @@ export class RichEditable {
     this.emojiRenderer.detachFrom(el);
 
     document.removeEventListener("selectionchange", this.selectionListener);
+    document.removeEventListener("paste", this.pasteListener);
 
     el.removeChild(this.root);
     this.attached = null;
   }
 
-  isAttached(el?: HTMLElement) {
+  public isAttached(el?: HTMLElement) {
     if (el) return this.attached === el;
     return this.attached !== null;
   }
 
-  applyRootProperties(props: {
+  public applyRootProperties(props: {
     className?: string;
     disableEdit?: boolean;
     placeholder?: string;
@@ -136,15 +150,15 @@ export class RichEditable {
     this.updateRootProps();
   }
 
-  focus(force?: boolean, forcePlaceCaretAtEnd?: boolean) {
+  public focus(force?: boolean, forcePlaceCaretAtEnd?: boolean) {
     focusEditableElement(this.root, force, forcePlaceCaretAtEnd);
   }
 
-  blur() {
+  public blur() {
     this.root.blur();
   }
 
-  isRangeInside(r: Range) {
+  private isRangeInside(r: Range) {
     let parentNode: HTMLElement | null =
       r.commonAncestorContainer as HTMLElement;
     let iterations = 1;
@@ -159,7 +173,7 @@ export class RichEditable {
     return true;
   }
 
-  ensureSelectionInside() {
+  private ensureSelectionInside() {
     const s = window.getSelection();
     if (!s) return;
 
@@ -175,7 +189,7 @@ export class RichEditable {
     s.addRange(nr);
   }
 
-  calculateMatchable(s: Selection, r: Range): string | null {
+  private calculateMatchable(s: Selection, r: Range): string | null {
     if (!s.isCollapsed) return null;
 
     // TODO: Check not inside code block
@@ -208,7 +222,7 @@ export class RichEditable {
     return ra;
   }
 
-  handleSelectionUpdate() {
+  private handleSelectionUpdate() {
     const s = window.getSelection();
     const notSelected = !s || s.rangeCount == 0;
     const r = notSelected ? null : s?.getRangeAt(0);
@@ -222,10 +236,10 @@ export class RichEditable {
     this.matchableSet(this.calculateMatchable(s, r));
     this.selectionSet({
       collapsed: s.isCollapsed,
-    })
+    });
   }
 
-  handleContentUpdate() {
+  private handleContentUpdate() {
     if (!this.attached) return;
     this.htmlSet(this.root.innerHTML);
     this.emptySet(
@@ -236,12 +250,12 @@ export class RichEditable {
     this.emojiRenderer.synchronizeElements();
   }
 
-  clearInput() {
+  public clearInput() {
     this.root.innerHTML = "";
     this.handleContentUpdate();
   }
 
-  setFormattedText(text: ApiFormattedText | undefined): string {
+  public setFormattedText(text: ApiFormattedText | undefined): string {
     if (!text) {
       this.clearInput();
       return "";
@@ -262,29 +276,30 @@ export class RichEditable {
     return html;
   }
 
-  getFormattedText(formatMarkdown: boolean = true): ApiFormattedText {
-    return parseHtmlAsFormattedText(this.htmlS(), false, true);
+  public getFormattedText(formatMarkdown: boolean = true): ApiFormattedText {
+    return parseHtmlAsFormattedText(this.htmlS(), false, !formatMarkdown);
   }
 
-  addKeyboardHandler(handler: RichInputKeyboardListener) {
+  public addKeyboardHandler(handler: RichInputKeyboardListener) {
     this.keyboardHandlers.push(handler);
     this.keyboardHandlers = this.keyboardHandlers.sort(
       (a, b) => b.priority - a.priority
     );
+    return () => this.keyboardHandlers.filter((h) => h !== handler);
   }
 
-  removeKeyboardHandler(handler: RichInputKeyboardListener) {
-    this.keyboardHandlers = this.keyboardHandlers.filter((h) => h !== handler);
+  public addPasteHandler(handler: (p: PasteCtx) => void) {
+    this.pasteHandlers.push(handler);
+    return () => this.pasteHandlers.filter((h) => h !== handler);
   }
 
-  execCommand(cmd: string, value?: string) {
+  public execCommand(cmd: string, value?: string) {
     this.ensureSelectionInside();
     betterExecCommand(this.root, cmd, value);
     this.handleContentUpdate();
   }
 
-  insertMatchableHtml(html: string, matchLimit: (c: string) => boolean) {
-    // console.log("FFF FIN", html);
+  public insertMatchableHtml(html: string, matchLimit: (c: string) => boolean) {
     const s = window.getSelection();
     if (!s || !s.rangeCount) return;
 
@@ -294,22 +309,24 @@ export class RichEditable {
     let endPos = r.endOffset;
     let startPos = r.endOffset;
 
-    if (curNode.nodeType != document.TEXT_NODE && curNode.childNodes[endPos - 1]?.nodeType == document.TEXT_NODE) {
+    if (
+      curNode.nodeType != document.TEXT_NODE &&
+      curNode.childNodes[endPos - 1]?.nodeType == document.TEXT_NODE
+    ) {
       curNode = curNode.childNodes[endPos - 1];
       endPos = curNode.textContent?.length || 0;
       startPos = endPos;
     }
 
-    if (r.startContainer.nodeType == document.TEXT_NODE)  {
+    if (r.startContainer.nodeType == document.TEXT_NODE) {
       const str = curNode.textContent;
       if (!str) return;
 
       while (startPos > 0 && !matchLimit(str[startPos])) {
         startPos--;
       }
-    } else if(r.startContainer.nodeType == document.ELEMENT_NODE) {
-      if(startPos > 0) 
-        startPos--;
+    } else if (r.startContainer.nodeType == document.ELEMENT_NODE) {
+      if (startPos > 0) startPos--;
     }
 
     r.setStart(curNode, startPos);
@@ -319,7 +336,57 @@ export class RichEditable {
     this.execCommand("insertHTML", html);
   }
 
-  removeLastSymbol() {
+  public removeLastSymbol() {
     this.execCommand("delete");
+  }
+
+  public insertFormattedText(text: ApiFormattedText) {
+    const html = getTextWithEntitiesAsHtml(text);
+    this.execCommand("insertHTML", html);
+  }
+
+  private handlePaste(e: ClipboardEvent) {
+    if (!e.clipboardData) {
+      return;
+    }
+
+    console.log("FFF", e.target);
+
+    let curNode: HTMLElement | null = e.target as HTMLElement;
+    while (curNode && curNode !== this.root) {
+      curNode = curNode.parentElement;
+    }
+    if (curNode !== this.root) {
+      return;
+    }
+
+    e.preventDefault();
+
+    if (document.activeElement !== this.root) {
+      return;
+    }
+
+    const pastedText = e.clipboardData.getData("text");
+    const html = e.clipboardData.getData("text/html");
+
+    const pasteCtx: PasteCtx = {
+      editable: this,
+      text: { text: pastedText },
+      html,
+      items: e.clipboardData.items,
+    };
+    if(html) {
+      pasteCtx.text = parseHtmlAsFormattedText(preparePastedHtml(html), undefined, true);
+      // TODO: This is needed to handle paste from vscode, but damn is this stupid
+      if(!pasteCtx.text.entities?.length) {
+        pasteCtx.text = { text: pastedText };
+      }
+    }
+
+    for (const pasteHandler of this.pasteHandlers) {
+      pasteHandler(pasteCtx);
+    }
+
+    this.insertFormattedText(pasteCtx.text);
   }
 }

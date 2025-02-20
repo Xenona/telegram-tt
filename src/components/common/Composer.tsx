@@ -826,7 +826,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   useClipboardPaste(
     isForCurrentMessageList || isInStoryViewer,
-    insertFormattedTextAndUpdateCursor,
+    richInputCtx,
     handleSetAttachments,
     setNextText,
     editingMessage,

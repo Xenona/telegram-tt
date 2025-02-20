@@ -7,7 +7,7 @@ import {
 } from "../../../lib/teact/teact";
 import { Signal } from "../../../util/signals";
 import { RichInputKeyboardListener } from "./Keyboard";
-import { RichEditable } from "./RichEditable";
+import { PasteCtx, RichEditable } from "./RichEditable";
 
 export type RichInputCtx = {
   editable: RichEditable;
@@ -35,14 +35,23 @@ export function useRichInputKeyboardListener(
   const keydownCallback = useLastCallback(handler.onKeydown);
 
   useEffect(() => {
-    let ehandler = {
+    return richInputCtx.editable.addKeyboardHandler({
       ...handler,
       onKeydown: keydownCallback,
-    };
-    richInputCtx.editable.addKeyboardHandler(ehandler);
+    });
+  }, [richInputCtx.editable, keydownCallback]);
+}
 
-    return () => {
-      richInputCtx.editable.removeKeyboardHandler(ehandler);
-    };
+export function useRichInputPasteHandler(
+  richInputCtx: RichInputCtx,
+  handler: (p: PasteCtx) => void,
+  enable = true
+) {
+  const keydownCallback = useLastCallback(handler);
+
+  useEffect(() => {
+    if(!enable) return () => {};
+
+    return richInputCtx.editable.addPasteHandler(keydownCallback);
   }, [richInputCtx.editable, keydownCallback]);
 }

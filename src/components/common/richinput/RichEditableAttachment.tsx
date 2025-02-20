@@ -12,6 +12,8 @@ type OwnProps = {
   richInputCtx: RichInputCtx;
 };
 
+let nextAttach: (() => void) | null = null;
+
 const RichEditableAttachment: FC<OwnProps> = ({
   richInputCtx,
   className,
@@ -28,11 +30,21 @@ const RichEditableAttachment: FC<OwnProps> = ({
     if (!attachmentRef.current) return;
     if (detached) return;
 
-    const target = attachmentRef.current;
     const editable = richInputCtx.editable;
-    editable.attachTo(target);
+    const target = attachmentRef.current;
+    
+    if(editable.isAttached()) {
+      nextAttach = () => {
+        editable.attachTo(target);
+      }
+    } else {
+      editable.attachTo(target);
+    }
+
     return () => {
       editable.detachFrom(target);
+      nextAttach?.();
+      nextAttach = null;
     };
   }, [attachmentRef, richInputCtx.editable, detached]);
 

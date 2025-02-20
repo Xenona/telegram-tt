@@ -607,7 +607,11 @@ const MessageInput: FC<OwnProps & StateProps> = ({
         onScroll={onScroll}
         onClick={!isAttachmentModalInput && !canSendPlainText ? handleClick : undefined}
       >
-        <div className={inputScrollerContentClass}>
+        <div className={inputScrollerContentClass}
+         onMouseDown={handleMouseDown}
+         onContextMenu={IS_ANDROID ? handleAndroidContextMenu : undefined}
+         onTouchCancel={IS_ANDROID ? processSelectionWithTimeout : undefined}
+        >
           <RichEditableAttachment 
             richInputCtx={richInputCtx} 
             className={className} 
@@ -616,24 +620,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
             placeholder={placeholder}
             disableEdit={!isAttachmentModalInput && !canSendPlainText}
           />
-          {/* <div
-            ref={inputRef}
-            id={editableInputId || EDITABLE_INPUT_ID}
-            className={className}
-            contentEditable={isAttachmentModalInput || canSendPlainText}
-            role="textbox"
-            dir="auto"
-            tabIndex={0}
-            onClick={focusInput}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            onMouseDown={handleMouseDown}
-            onContextMenu={IS_ANDROID ? handleAndroidContextMenu : undefined}
-            onTouchCancel={IS_ANDROID ? processSelectionWithTimeout : undefined}
-            aria-label={placeholder}
-            onFocus={!isNeedPremium ? onFocus : undefined}
-            onBlur={!isNeedPremium ? onBlur : undefined}
-          /> */}
           {!forcedPlaceholder && (
             <span
               className={buildClassName(

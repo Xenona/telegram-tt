@@ -249,7 +249,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
   } = useMentionTooltip(
     Boolean(isReady && isForCurrentMessageList && renderingIsOpen),
     richInputCtx,
-    inputRef,
     groupChatMembers,
     undefined,
     currentUserId,
