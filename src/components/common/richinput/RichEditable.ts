@@ -11,6 +11,10 @@ const SAFARI_BR = "<br>";
 const WHITESPACE_RE = /\s/;
 export const IMG_ALT_MATCHABLE_MARKER = "IMG_ALT__";
 
+export type SelectionState = {
+  collapsed: boolean;
+};
+
 export class RichEditable {
   public root: HTMLDivElement;
 
@@ -20,6 +24,8 @@ export class RichEditable {
   private emptySet: (empty: boolean) => void;
   public matchableS: Signal<string | null>;
   private matchableSet: (matchable: string | null) => void;
+  public selectionS: Signal<SelectionState | null>;
+  private selectionSet: (selection: SelectionState | null) => void;
 
   private attached: HTMLElement | null;
   private disableEdit: boolean;
@@ -39,6 +45,9 @@ export class RichEditable {
     [this.htmlS, this.htmlSet] = createSignal("");
     [this.emptyS, this.emptySet] = createSignal(true);
     [this.matchableS, this.matchableSet] = createSignal<string | null>(null);
+    [this.selectionS, this.selectionSet] = createSignal<SelectionState | null>(
+      null
+    );
 
     this.root.addEventListener("click", () => {
       this.focus();
@@ -206,10 +215,14 @@ export class RichEditable {
 
     if (notSelected || !r || !this.isRangeInside(r)) {
       this.matchableSet(null);
+      this.selectionSet(null);
       return;
     }
 
     this.matchableSet(this.calculateMatchable(s, r));
+    this.selectionSet({
+      collapsed: s.isCollapsed,
+    })
   }
 
   handleContentUpdate() {
@@ -271,25 +284,32 @@ export class RichEditable {
   }
 
   insertMatchableHtml(html: string, matchLimit: (c: string) => boolean) {
+    // console.log("FFF FIN", html);
     const s = window.getSelection();
     if (!s || !s.rangeCount) return;
 
     const r = s.getRangeAt(0);
 
-    let curNode = r.startContainer;
-    if (r.startContainer.nodeType != document.TEXT_NODE) {
-      curNode = r.startContainer.childNodes[r.startOffset];
+    let curNode = r.endContainer;
+    let endPos = r.endOffset;
+    let startPos = r.endOffset;
+
+    if (curNode.nodeType != document.TEXT_NODE && curNode.childNodes[endPos - 1]?.nodeType == document.TEXT_NODE) {
+      curNode = curNode.childNodes[endPos - 1];
+      endPos = curNode.textContent?.length || 0;
+      startPos = endPos;
     }
 
-    if (r.startContainer.nodeType != document.TEXT_NODE) return null;
+    if (r.startContainer.nodeType == document.TEXT_NODE)  {
+      const str = curNode.textContent;
+      if (!str) return;
 
-    const str = curNode.textContent;
-    if (!str) return;
-
-    const endPos = r.endOffset;
-    let startPos = r.endOffset;
-    while (startPos > 0 && !matchLimit(str[startPos])) {
-      startPos--;
+      while (startPos > 0 && !matchLimit(str[startPos])) {
+        startPos--;
+      }
+    } else if(r.startContainer.nodeType == document.ELEMENT_NODE) {
+      if(startPos > 0) 
+        startPos--;
     }
 
     r.setStart(curNode, startPos);

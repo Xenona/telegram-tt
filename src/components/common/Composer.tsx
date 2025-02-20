@@ -635,10 +635,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   } = useCustomEmojiTooltip(
     Boolean(isReady && isOnActiveTab && (isInStoryViewer || isForCurrentMessageList)
       && shouldSuggestCustomEmoji && !hasAttachments),
-    getHtml,
-    setHtml,
-    getSelectionRange,
-    inputRef,
+    richInputCtx,
     customEmojiForEmoji,
   );
 
@@ -663,9 +660,7 @@ const Composer: FC<OwnProps & StateProps> = ({
     mentionFilteredUsers,
   } = useMentionTooltip(
     Boolean(isInMessageList && isReady && isForCurrentMessageList && !hasAttachments),
-    getHtml,
-    setHtml,
-    getSelectionRange,
+    richInputCtx,
     inputRef,
     groupChatMembers,
     topInlineBotIds,
@@ -1146,7 +1141,7 @@ const Composer: FC<OwnProps & StateProps> = ({
         focusEditableElement(messageInput, true);
       });
     }
-  }, [editableInputId, requestedDraft, resetOpenChatWithDraft, setHtml]);
+  }, [editableInputId, requestedDraft, resetOpenChatWithDraft, richInputCtx.editable]);
 
   useEffect(() => {
     if (requestedDraftFiles?.length) {

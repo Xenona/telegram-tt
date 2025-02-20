@@ -1,6 +1,6 @@
 // Improvements, utils and workarounds for execCommand api
 
-import { forceMutation } from "../lib/fasterdom/stricterdom";
+import { requestMutation } from "../lib/fasterdom/fasterdom";
 
 const EX_FIX = "for-exec-command-fix";
 
@@ -25,10 +25,10 @@ export function betterExecCommand(
   const inpArr = [];
   if (input) inpArr.push(input);
     
-  forceMutation(() => {
+  requestMutation(() => {
     input?.classList.add("for-exec-command-fix");
     document.execCommand('styleWithCss', false, 'false');
     document.execCommand(command, false, value);
     input?.classList.remove("for-exec-command-fix");
-  }, inpArr);
+  });
 }

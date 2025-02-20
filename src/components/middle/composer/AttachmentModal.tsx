@@ -239,10 +239,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     closeCustomEmojiTooltip,
   } = useCustomEmojiTooltip(
     Boolean(isReady && (isForCurrentMessageList || !isForMessage) && renderingIsOpen && shouldSuggestCustomEmoji),
-    getHtml,
-    onCaptionUpdate,
-    getSelectionRange,
-    inputRef,
+    richInputCtx,
     customEmojiForEmoji,
   );
 
@@ -253,9 +250,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     mentionFilteredUsers,
   } = useMentionTooltip(
     Boolean(isReady && isForCurrentMessageList && renderingIsOpen),
-    getHtml,
-    onCaptionUpdate,
-    getSelectionRange,
+    richInputCtx,
     inputRef,
     groupChatMembers,
     undefined,

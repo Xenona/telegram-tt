@@ -18,6 +18,7 @@ import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
+import { RichInputCtx } from '../../../common/richinput/useRichInput';
 
 const THROTTLE = 300;
 
@@ -31,9 +32,7 @@ try {
 
 export default function useMentionTooltip(
   isEnabled: boolean,
-  getHtml: Signal<string>,
-  setHtml: (html: string) => void,
-  getSelectionRange: Signal<Range | undefined>,
+  richInputCtx: RichInputCtx,
   inputRef: RefObject<HTMLDivElement>,
   groupChatMembers?: ApiChatMember[],
   topInlineBotIds?: string[],
@@ -41,23 +40,24 @@ export default function useMentionTooltip(
 ) {
   const [filteredUsers, setFilteredUsers] = useState<ApiUser[] | undefined>();
   const [isManuallyClosed, markManuallyClosed, unmarkManuallyClosed] = useFlag(false);
-
+  
   const extractUsernameTagThrottled = useThrottledResolver(() => {
-    const html = getHtml();
-    if (!isEnabled || !getSelectionRange()?.collapsed || !html.includes('@')) return undefined;
+    const text = richInputCtx.editable.matchableS();
+    if (!isEnabled || !richInputCtx.editable.selectionS()?.collapsed) return undefined
+    if (!text || !text.includes('@')) return undefined;
 
-    const htmlBeforeSelection = getHtmlBeforeSelection(inputRef.current!);
-
-    return prepareForRegExp(htmlBeforeSelection).match(RE_USERNAME_SEARCH)?.[0].trim();
-  }, [isEnabled, getHtml, getSelectionRange, inputRef], THROTTLE);
+    const matches = text.match(RE_USERNAME_SEARCH);
+    if(!matches || matches.length == 0) return undefined;
+    return matches[matches.length - 1].trim();
+  }, [isEnabled, richInputCtx.editable.matchableS, inputRef], THROTTLE);
 
   const getUsernameTag = useDerivedSignal(
-    extractUsernameTagThrottled, [extractUsernameTagThrottled, getHtml, getSelectionRange], true,
+    extractUsernameTagThrottled, [extractUsernameTagThrottled, richInputCtx.editable.matchableS], true,
   );
 
   const getWithInlineBots = useDerivedSignal(() => {
-    return isEnabled && getHtml().startsWith('@');
-  }, [getHtml, isEnabled]);
+    return isEnabled && richInputCtx.editable.htmlS().startsWith('@');
+  }, [richInputCtx.editable.htmlS, isEnabled]);
 
   useEffect(() => {
     const usernameTag = getUsernameTag();
@@ -103,41 +103,21 @@ export default function useMentionTooltip(
     const mainUsername = getMainUsername(user);
     const userFirstOrLastName = getUserFirstOrLastName(user) || '';
     const htmlToInsert = mainUsername
-      ? `@${mainUsername}`
+      ? `@${mainUsername} `
       : `<a
           class="text-entity-link"
           data-entity-type="${ApiMessageEntityTypes.MentionName}"
           data-user-id="${user.id}"
           contenteditable="false"
           dir="auto"
-        >${userFirstOrLastName}</a>`;
+        >${userFirstOrLastName}</a> `;
 
-    const inputEl = inputRef.current!;
-    const htmlBeforeSelection = getHtmlBeforeSelection(inputEl);
-    const fixedHtmlBeforeSelection = cleanWebkitNewLines(htmlBeforeSelection);
-    const atIndex = fixedHtmlBeforeSelection.lastIndexOf('@');
-    const shiftCaretPosition = (mainUsername ? mainUsername.length + 1 : userFirstOrLastName.length)
-      - (fixedHtmlBeforeSelection.length - atIndex);
-
-    if (atIndex !== -1) {
-      const newHtml = `${fixedHtmlBeforeSelection.substr(0, atIndex)}${htmlToInsert}&nbsp;`;
-      const htmlAfterSelection = cleanWebkitNewLines(inputEl.innerHTML).substring(fixedHtmlBeforeSelection.length);
-      const caretPosition = getCaretPosition(inputEl);
-      setHtml(`${newHtml}${htmlAfterSelection}`);
-
-      requestNextMutation(() => {
-        const newCaretPosition = caretPosition + shiftCaretPosition + 1;
-        focusEditableElement(inputEl, forceFocus);
-        if (newCaretPosition >= 0) {
-          setCaretPosition(inputEl, newCaretPosition);
-        }
-      });
-    }
+    richInputCtx.editable.insertMatchableHtml(htmlToInsert, c => c == '@');
 
     setFilteredUsers(undefined);
   });
 
-  useEffect(unmarkManuallyClosed, [unmarkManuallyClosed, getHtml]);
+  useEffect(unmarkManuallyClosed, [unmarkManuallyClosed, richInputCtx.editable.htmlS]);
 
   return {
     isMentionTooltipOpen: Boolean(filteredUsers?.length && !isManuallyClosed),
@@ -147,8 +127,3 @@ export default function useMentionTooltip(
   };
 }
 
-// Webkit replaces the line break with the `<div><br /></div>` or `<div></div>` code.
-// It is necessary to clean the html to a single form before processing.
-function cleanWebkitNewLines(html: string) {
-  return html.replace(/<div>(<br>|<br\s?\/>)?<\/div>/gi, '<br>');
-}
