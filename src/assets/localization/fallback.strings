@@ -170,6 +170,8 @@
 "LoginRegisterFirstNamePlaceholder" = "First Name";
 "LoginRegisterLastNamePlaceholder" = "Last Name";
 "Next" = "Next";
+"NoEmojiFound" = "No emoji found";
+"SearchEmoji" = "Search Emoji";
 "LoginSelectCountryTitle" = "Country";
 "CountryNone" = "Country not found";
 "VoipGroupVoiceChat" = "Video Chat";
