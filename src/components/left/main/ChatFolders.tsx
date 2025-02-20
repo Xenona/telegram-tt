@@ -35,7 +35,6 @@ import ChatList from './ChatList';
 import { IconName } from '../../../types/icons';
 import StickerView from '../../common/StickerView';
 import { DEFAULT_FOLDER_ICON, LOCSTOR_CUSTOM_EMOJI_KEY } from '../settings/folders/SettingsFoldersEdit';
-import Loading from '../../ui/Loading';
 import useAppLayout from '../../../hooks/useAppLayout';
 import { RefObject } from 'react';
 
@@ -262,39 +261,39 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
       const {isMobile} = useAppLayout()
 
       return {
+        shouldUseTextColor: customEmoji?.shouldUseTextColor ?? false,
         id,
+        icon: (<> {!isMobile && <>
+          {customEmoji ? (
+            <div className='emoji-wrapper'>
+                <>
+                  <StickerView
+                  containerRef={ref}
+                  sticker={customEmoji}
+                  size={EMOJI_SIZE_PICKER}
+                  shouldLoop
+                  widthLoadingCircle
+                  shouldPreloadPreview
+                  noLoad={!true}
+                  noPlay={!canAnimate}
+                  noVideoOnMobile
+                  withTranslucentThumb={false}
+                  />
+                {/* <Loading className='small-loader'/> */}
+                </>
+            </div>
+          ) : (
+            <>
+              {iconStyle || !folder.emoticon  ? (
+                <i className={iconStyleOrDefault}></i>
+              ) : (
+                <i className="icon as-emoji">{folder.emoticon}</i>
+              )}
+            </>
+          )}
+          </>}</>),
         title: (
-          <>
-            {!isMobile && <>
-            {customEmoji ? (
-              <div className='emoji-wrapper'>
-                  <>
-                    <StickerView
-                    containerRef={ref}
-                    sticker={customEmoji}
-                    size={EMOJI_SIZE_PICKER}
-                    shouldLoop
-                    shouldPreloadPreview
-                    noLoad={!true}
-                    noPlay={!canAnimate}
-                    noVideoOnMobile
-                    withTranslucentThumb={false}
-                    />
-                  {/* <Loading className='small-loader'/> */}
-                  </>
-              </div>
-            ) : (
-              <>
-                {iconStyle || !folder.emoticon  ? (
-                  <i className={iconStyleOrDefault}></i>
-                ) : (
-                  <i className="icon as-emoji">{folder.emoticon}</i>
-                )}
-              </>
-            )}
-            </>}
             <div className="tab-name">{tabText}</div>
-          </>
         ),
         badgeCount: folderCountersById[id]?.chatsCount,
         isBadgeActive: Boolean(folderCountersById[id]?.notificationsCount),
