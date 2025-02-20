@@ -2,7 +2,7 @@ import type { FC } from '../../../../lib/teact/teact';
 import React, {
   memo, useCallback, useEffect, useMemo, useRef, useState,
 } from '../../../../lib/teact/teact';
-import { getActions, getGlobal, withGlobal } from '../../../../global';
+import { getActions, getGlobal, setGlobal, withGlobal } from '../../../../global';
 
 import type { ApiChatlistExportedInvite, ApiSticker } from '../../../../api/types';
 import type {
@@ -10,9 +10,9 @@ import type {
   FoldersState,
 } from '../../../../hooks/reducers/useFoldersReducer';
 
-import { EMOJI_SIZE_PICKER, STICKER_SIZE_FOLDER_SETTINGS, STICKER_SIZE_INLINE_DESKTOP_FACTOR } from '../../../../config';
+import { EMOJI_SIZE_PICKER, STICKER_SIZE_FOLDER_SETTINGS } from '../../../../config';
 import { isUserId } from '../../../../global/helpers';
-import { selectCanShareFolder } from '../../../../global/selectors';
+import { selectCanPlayAnimatedEmojis, selectCanShareFolder } from '../../../../global/selectors';
 import { selectCurrentLimit } from '../../../../global/selectors/limits';
 import { findIntersectionWithSet } from '../../../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../../../util/memo';
@@ -46,6 +46,7 @@ import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
 import useLastCallback from '../../../../hooks/useLastCallback';
 import { IAnchorPosition } from '../../../../types';
 import StickerView from '../../../common/StickerView';
+import { CustomEmojiIconsFolder } from '../../../../global/types';
 
 type OwnProps = {
   state: FoldersState;
@@ -62,7 +63,8 @@ type OwnProps = {
 };
 
 type StateProps = {
-  customSticker: ApiSticker;
+  customSticker?: ApiSticker;
+  customEmoji?: string;
   loadedActiveChatIds?: string[];
   loadedArchivedChatIds?: string[];
   invites?: ApiChatlistExportedInvite[];
@@ -81,6 +83,8 @@ export const ERROR_NO_CHATS = 'ChatList.Filter.Error.Empty';
 
 export const LOCSTOR_CUSTOM_EMOJI_KEY = "CustomEmojisForFolders"
 
+export const DEFAULT_FOLDER_ICON = "📁";
+
 const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   state,
   dispatch,
@@ -93,6 +97,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   isRemoved,
   onBack,
   customSticker,
+  customEmoji,
   loadedActiveChatIds,
   isOnlyInvites,
   loadedArchivedChatIds,
@@ -114,7 +119,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   const sharedCanvasRef  = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const [customEmojiSelected, setCustomEmojiSelected] = useState<ApiSticker|undefined>(customSticker);
+  const [customStickerSelected, setCustomStickerSelected] = useState<ApiSticker|undefined>(customSticker);
+  const [customEmojiSelected, setCustomEmojiSelected] = useState<string|undefined>(customEmoji);
 
   const [isIncludedChatsListExpanded, setIsIncludedChatsListExpanded] = useState(false);
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
@@ -195,26 +201,34 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   const handleSubmit = useCallback(() => {
     dispatch({ type: 'setIsLoading', payload: true });
 
-    if (customEmojiSelected) {
+    let stickerOrEmojiSelected: string | ApiSticker| undefined = customEmojiSelected ?? customStickerSelected ?? undefined;
 
-
-        const storage = localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY);
-        let newStorage: Record<number, string>;
-        if (!storage) {
-          newStorage = {}
-        } else {
+    if (stickerOrEmojiSelected) {
+      const storage = localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY);
+      let newStorage: CustomEmojiIconsFolder;
+      if (!storage) {
+        newStorage = {};
+      } else {
         try {
           newStorage = JSON.parse(storage);
         } catch {
-          newStorage = {}
-          localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}))
+          newStorage = {};
+          localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}));
         }
       }
-      newStorage[state.folderId ?? -1] = customEmojiSelected.id;
-      localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify(newStorage))
+      newStorage[state.folderId ?? -1] = stickerOrEmojiSelected;
+      localStorage.setItem(
+        LOCSTOR_CUSTOM_EMOJI_KEY,
+        JSON.stringify(newStorage),
+      );
+
+      if (customStickerSelected) {
+        let g = getGlobal();
+        g.customEmojis.byId[customStickerSelected.id] = customStickerSelected;
+        setGlobal(g);
+      }
     }
 
-    // console.log("XE", sticker, state.folderId);
 
     onSaveFolder(() => {
       setTimeout(() => {
@@ -367,6 +381,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   const possibleIcon = getIconNameByFolder(state.folder);
   const ref = useRef<HTMLDivElement>(null)
 
+  const canAnimate = selectCanPlayAnimatedEmojis(getGlobal());
+
   return (
     <div className="settings-fab-wrapper"  ref={ref}>
       <div className="settings-content no-border custom-scroll">
@@ -415,18 +431,17 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               isRectangular
               >
                 <div ref={triggerRef} className="symbol-menu-trigger" />
-                {customEmojiSelected ? (
+                {customStickerSelected ? (
                   <div>
                     <canvas ref={sharedCanvasRef} className="shared-canvas" />
-
                     <StickerView
                       containerRef={ref}
-                      sticker={customEmojiSelected}
+                      sticker={customStickerSelected}
                       size={EMOJI_SIZE_PICKER}
                       shouldLoop
                       shouldPreloadPreview
                       noLoad={!true}
-                      noPlay={!true}
+                      noPlay={!canAnimate}
                       noVideoOnMobile
                       withSharedAnimation
                       sharedCanvasRef={sharedCanvasRef}
@@ -481,18 +496,22 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             >
               <FolderIconPicker
                 onEmojiSelect={(emoji) => {
-                  setCustomEmojiSelected(undefined);
+                  setCustomStickerSelected(undefined);
+                  setCustomEmojiSelected(emoji.trim())
                   dispatch({ type: "setEmoticon", payload: emoji.trim() });
                 }}
                 onCustomEmojiSelect={(sticker) => {
-                  setCustomEmojiSelected(sticker);
+                  setCustomStickerSelected(sticker);
+                  setCustomEmojiSelected(undefined)
+
                   dispatch({
                     type: "setEmoticon",
-                    payload: (sticker.emoji ?? "📁").trim(),
+                    payload: (sticker.emoji ?? DEFAULT_FOLDER_ICON  ).trim(),
                   });
                 }}
                 onIconSelect={(emoticon) => {
-                  setCustomEmojiSelected(undefined);
+                  setCustomStickerSelected(undefined);
+                  setCustomEmojiSelected(emoticon.trim())
                   dispatch({ type: "setEmoticon", payload: emoticon.trim() });
                 }}
                 className="picker-tab"
@@ -618,10 +637,13 @@ export default memo(withGlobal<OwnProps>(
     const { byId, invites } = global.chatFolders;
     const chatListCount = Object.values(byId).reduce((acc, el) => acc + (el.isChatList ? 1 : 0), 0);
 
-    let emojiId = "";
+    let customSticker: ApiSticker | undefined;
+    let customEmoji: string | undefined;
     try {
       if (state.folderId) {
-        emojiId = (JSON.parse(localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY) ?? "") as Record<number, string>)[state.folderId];
+        const possibleEmoji  = ((JSON.parse(localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY) ?? "")) as CustomEmojiIconsFolder)[state.folderId];
+        if (typeof possibleEmoji === 'string') customEmoji = possibleEmoji;
+        else customSticker = possibleEmoji
       }
     } catch {
       localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}))
@@ -629,7 +651,8 @@ export default memo(withGlobal<OwnProps>(
 
 
     return {
-      customSticker: global.customEmojis.byId[emojiId],
+      customSticker: customSticker,
+      customEmoji,
       loadedActiveChatIds: listIds.active,
       loadedArchivedChatIds: listIds.archived,
       invites: state.folderId ? (invites[state.folderId] || MEMO_EMPTY_ARRAY) : undefined,

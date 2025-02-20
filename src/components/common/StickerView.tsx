@@ -28,6 +28,7 @@ import AnimatedSticker from './AnimatedSticker';
 import styles from './StickerView.module.scss';
 
 type OwnProps = {
+  dbg?: boolean;
   containerRef: React.RefObject<HTMLDivElement>;
   sticker: ApiSticker;
   thumbClassName?: string;
@@ -57,6 +58,7 @@ const SHARED_PREFIX = 'shared';
 const STICKER_SIZE = 24;
 
 const StickerView: FC<OwnProps> = ({
+  dbg,
   containerRef,
   sticker,
   thumbClassName,
