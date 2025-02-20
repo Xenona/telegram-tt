@@ -25,6 +25,8 @@ import './WallpaperTile.scss';
 import { PreviewAnimgBgRender } from '../../../util/renderGradientBackground';
 import useMouseInside from '../../../hooks/useMouseInside';
 import { IS_TOUCH_ENV } from '../../../util/windowEnvironment';
+import { selectCanAnimateInterface } from '../../../global/selectors';
+import { getGlobal } from '../../../global';
 
 type OwnProps = {
   wallpaper: ApiWallpaper;
@@ -104,16 +106,15 @@ const WallpaperTile: FC<OwnProps> = ({
   const cacheKeyRef = useRef<string>();
   cacheKeyRef.current = theme;
 
+  const canAnimate = selectCanAnimateInterface(getGlobal());
+
   useEffect(()=>{
 
     const handleMouse = () => {
-      console.log("XXEhhjhjjhhjhjhj")
-
       renderer?.nextState();
     }
 
-    if (mouseRef.current && !IS_TOUCH_ENV) {
-      console.log("XXE")
+    if (mouseRef.current && !IS_TOUCH_ENV && canAnimate) {
       mouseRef.current.addEventListener("mouseenter", handleMouse);
     }
 

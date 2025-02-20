@@ -53,7 +53,7 @@ import StickerSet from './StickerSet';
 import pickerStyles from '../middle/composer/StickerPicker.module.scss';
 import styles from './CustomEmojiPicker.module.scss';
 import { EmojiData, EmojiModule, EmojiRawData, uncompressEmoji } from '../../util/emoji/emoji';
-import { GlobalState } from '../../global/types';
+import { CustomEmojiIconsFolder, GlobalState } from '../../global/types';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
 import { ICONS_BY_CATEGORY, INTERSECTION_THROTTLE, SMOOTH_SCROLL_DISTANCE } from '../middle/composer/EmojiPicker';
 import animateScroll from '../../util/animateScroll';
@@ -88,7 +88,7 @@ type OwnProps = {
 };
 
 type StateProps = {
-  customEmojiIcons?: Record<number, string>,
+  customEmojiIcons?: CustomEmojiIconsFolder,
   emojiKeywords?: Record<string, EmojiKeywords | undefined>;
   customEmojisById?: Record<string, ApiSticker>;
   recentCustomEmojiIds?: string[];
@@ -208,7 +208,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
     }
 
     for(let custEm of Object.values(customEmojisById ?? {})) {
-      if(!custEm.emoji) continue;
+      if(!custEm?.emoji) continue;
 
       let arr = textToEmoji.get(custEm.emoji) ?? []
       arr.push(custEm)
