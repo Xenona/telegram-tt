@@ -73,8 +73,6 @@ type OwnProps = {
   onSend: () => void;
   onScroll?: (event: React.UIEvent<HTMLElement>) => void;
   captionLimit?: number;
-  onFocus?: NoneToVoidFunction;
-  onBlur?: NoneToVoidFunction;
   isNeedPremium?: boolean;
 };
 
@@ -190,8 +188,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   onSuppressedFocus,
   onSend,
   onScroll,
-  onFocus,
-  onBlur,
   isNeedPremium,
 }) => {
   const {

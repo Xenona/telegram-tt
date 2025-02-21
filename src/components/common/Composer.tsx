@@ -1811,8 +1811,6 @@ const Composer: FC<OwnProps & StateProps> = ({
             shouldSuppressTextFormatter={isEmojiTooltipOpen || isMentionTooltipOpen || isInlineBotTooltipOpen}
             onSend={onSend}
             onSuppressedFocus={closeSymbolMenu}
-            onFocus={markInputHasFocus}
-            onBlur={unmarkInputHasFocus}
             isNeedPremium={isNeedPremium}
           />
           {isInMessageList && (
