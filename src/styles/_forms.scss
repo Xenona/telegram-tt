@@ -200,6 +200,12 @@ textarea.form-control {
   padding-bottom: calc(1rem - var(--border-width));
 }
 
+div[contenteditable].form-control {
+  line-height: 1.3125rem;
+  padding-top: calc(0.8125rem - var(--border-width));
+  padding-bottom: calc(1rem - var(--border-width));
+}
+
 .input-group.password-input {
   position: relative;
 

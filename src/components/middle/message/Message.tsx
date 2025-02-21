@@ -118,7 +118,7 @@ import { IS_ANDROID, IS_ELECTRON, IS_TRANSLATION_SUPPORTED } from '../../../util
 import { calculateDimensionsForMessageMedia, getStickerDimensions, REM } from '../../common/helpers/mediaDimensions';
 import { getPeerColorClass } from '../../common/helpers/peerColor';
 import renderText from '../../common/helpers/renderText';
-import { getCustomEmojiSize } from '../composer/helpers/customEmoji';
+import { getCustomEmojiSize } from '../../common/richinput/customEmoji';
 import { buildContentClassName } from './helpers/buildContentClassName';
 import { calculateAlbumLayout } from './helpers/calculateAlbumLayout';
 import getSingularPaidMedia from './helpers/getSingularPaidMedia';

@@ -114,7 +114,7 @@ import { IS_IOS, IS_VOICE_RECORDING_SUPPORTED } from '../../util/windowEnvironme
 import windowSize from '../../util/windowSize';
 import applyIosAutoCapitalizationFix from '../middle/composer/helpers/applyIosAutoCapitalizationFix';
 import buildAttachment, { prepareAttachmentsToSend } from '../middle/composer/helpers/buildAttachment';
-import { buildCustomEmojiHtml } from '../middle/composer/helpers/customEmoji';
+import { buildCustomEmojiHtml } from './richinput/customEmoji';
 import { getPeerColorClass } from './helpers/peerColor';
 import renderText from './helpers/renderText';
 import { getTextWithEntitiesAsHtml } from './helpers/renderTextWithEntities';

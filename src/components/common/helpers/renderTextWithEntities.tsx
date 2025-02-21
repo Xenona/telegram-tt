@@ -10,7 +10,7 @@ import { ApiMessageEntityTypes } from '../../../api/types';
 import buildClassName from '../../../util/buildClassName';
 import { copyTextToClipboard } from '../../../util/clipboard';
 import { oldTranslate } from '../../../util/oldLangProvider';
-import { buildCustomEmojiHtmlFromEntity } from '../../middle/composer/helpers/customEmoji';
+import { buildCustomEmojiHtmlFromEntity } from '../richinput/customEmoji';
 import renderText from './renderText';
 
 import MentionLink from '../../middle/message/MentionLink';

@@ -36,7 +36,7 @@ import useInputCustomEmojis from './hooks/useInputCustomEmojis';
 import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
 import TextTimer from '../../ui/TextTimer';
-import TextFormatter from './TextFormatter.async';
+import TextFormatter from '../../common/richinput/TextFormatter.async';
 import { RichInputCtx, useRichEditableKeyboardListener } from '../../common/richinput/useRichEditable';
 import RichEditableAttachment from '../../common/richinput/RichEditableAttachment';
 import { RichInputKeyboardPriority } from '../../common/richinput/Keyboard';

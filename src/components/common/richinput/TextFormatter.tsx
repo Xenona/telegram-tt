@@ -12,7 +12,7 @@ import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import { ensureProtocol } from '../../../util/ensureProtocol';
 import getKeyFromEvent from '../../../util/getKeyFromEvent';
 import stopEvent from '../../../util/stopEvent';
-import { INPUT_CUSTOM_EMOJI_SELECTOR } from './helpers/customEmoji';
+import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
 import useFlag from '../../../hooks/useFlag';
 import useLastCallback from '../../../hooks/useLastCallback';
@@ -400,7 +400,8 @@ const TextFormatter: FC<OwnProps> = ({
   const [anchorPosition, setAnchorPosition] = useState<IAnchorPosition>();
   
   useEffect(() => {
-    const selectionRange = window.getSelection()!.getRangeAt(0);
+    const selectionRange = richInputCtx.editable.selectionS()?.range;
+    if(!selectionRange) return
     const selectionRect = selectionRange.getBoundingClientRect();
     const rootRect = richInputCtx.editable.root.getBoundingClientRect();
 

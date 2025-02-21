@@ -22,6 +22,8 @@ import RadioGroup from '../../ui/RadioGroup';
 import TextArea from '../../ui/TextArea';
 
 import './PollModal.scss';
+import { useRichInput } from '../../common/richinput/useRichInput';
+import RichInput from '../../common/richinput/RichInput';
 
 export type OwnProps = {
   isOpen: boolean;
@@ -50,15 +52,11 @@ const PollModal: FC<OwnProps> = ({
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [isMultipleAnswers, setIsMultipleAnswers] = useState(false);
   const [isQuizMode, setIsQuizMode] = useState(isQuiz || false);
-  const [solution, setSolution] = useState<string>('');
+  const solutionInputCtx = useRichInput();
   const [correctOption, setCorrectOption] = useState<number | undefined>();
   const [hasErrors, setHasErrors] = useState<boolean>(false);
 
   const lang = useOldLang();
-
-  const handleSolutionChange = useLastCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setSolution(e.target.value);
-  });
 
   const focusInput = useLastCallback((ref: RefObject<HTMLInputElement>) => {
     if (isOpen && ref.current) {
@@ -74,7 +72,7 @@ const PollModal: FC<OwnProps> = ({
       setIsAnonymous(true);
       setIsMultipleAnswers(false);
       setIsQuizMode(isQuiz || false);
-      setSolution('');
+      solutionInputCtx.editable.clearInput();
       setCorrectOption(undefined);
       setHasErrors(false);
     }
@@ -155,8 +153,7 @@ const PollModal: FC<OwnProps> = ({
     };
 
     if (isQuizMode) {
-      const { text, entities } = (solution && parseHtmlAsFormattedText(solution.substring(0, MAX_SOLUTION_LENGTH)))
-        || {};
+      const { text, entities } = solutionInputCtx.editable.getFormattedText(true);
 
       payload.quiz = {
         correctAnswers: [String(correctOption)],
@@ -361,10 +358,12 @@ const PollModal: FC<OwnProps> = ({
         {isQuizMode && (
           <>
             <h3 className="options-header">{lang('lng_polls_solution_title')}</h3>
-            <TextArea
-              value={solution}
-              onChange={handleSolutionChange}
-              noReplaceNewlines
+            <RichInput
+              richInputCtx={solutionInputCtx}
+              placeholder={lang('lng_polls_solution_placeholder')}
+              // value={solution}
+              // onChange={handleSolutionChange}
+              // noReplaceNewlines
             />
             <div className="note">{lang('CreatePoll.ExplanationInfo')}</div>
           </>

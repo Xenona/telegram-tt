@@ -11,7 +11,7 @@ import twemojiRegex from '../../../../lib/twemojiRegex';
 import focusEditableElement from '../../../../util/focusEditableElement';
 import { getHtmlBeforeSelection } from '../../../../util/selection';
 import { IS_EMOJI_SUPPORTED } from '../../../../util/windowEnvironment';
-import { buildCustomEmojiHtml } from '../helpers/customEmoji';
+import { buildCustomEmojiHtml } from '../../../common/richinput/customEmoji';
 
 import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';

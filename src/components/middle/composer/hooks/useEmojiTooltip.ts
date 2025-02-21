@@ -16,7 +16,7 @@ import {
 import { MEMO_EMPTY_ARRAY } from '../../../../util/memo';
 import memoized from '../../../../util/memoized';
 import renderText from '../../../common/helpers/renderText';
-import { buildCustomEmojiHtml } from '../helpers/customEmoji';
+import { buildCustomEmojiHtml } from '../../../common/richinput/customEmoji';
 import { prepareForRegExp } from '../helpers/prepareForRegExp';
 
 import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
