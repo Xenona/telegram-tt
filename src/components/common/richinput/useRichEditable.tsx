@@ -14,7 +14,7 @@ export type RichInputCtx = {
   getHtml: Signal<string>;
 };
 
-export function useRichInput(): RichInputCtx & { ctx: RichInputCtx } {
+export function useRichEditable(): RichInputCtx & { ctx: RichInputCtx } {
   const richEditable: RefObject<RichEditable | null> = useRef(null);
   if (!richEditable.current) {
     richEditable.current = new RichEditable();
@@ -28,7 +28,7 @@ export function useRichInput(): RichInputCtx & { ctx: RichInputCtx } {
   return { ...ctx, ctx };
 }
 
-export function useRichInputKeyboardListener(
+export function useRichEditableKeyboardListener(
   richInputCtx: RichInputCtx,
   handler: RichInputKeyboardListener
 ) {
@@ -42,7 +42,7 @@ export function useRichInputKeyboardListener(
   }, [richInputCtx.editable, keydownCallback]);
 }
 
-export function useRichInputPasteHandler(
+export function useRichEditablePasteHandler(
   richInputCtx: RichInputCtx,
   handler: (p: PasteCtx) => void,
   enable = true

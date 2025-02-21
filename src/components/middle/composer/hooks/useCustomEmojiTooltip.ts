@@ -18,7 +18,7 @@ import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useDerivedState from '../../../../hooks/useDerivedState';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
-import { RichInputCtx } from '../../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const THROTTLE = 300;
 const RE_ENDS_ON_EMOJI = new RegExp(`(${twemojiRegex.source})$`, 'g');

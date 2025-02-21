@@ -19,7 +19,7 @@ import useRunDebounced from '../../../../hooks/useRunDebounced';
 import { useStateRef } from '../../../../hooks/useStateRef';
 import useBackgroundMode from '../../../../hooks/window/useBackgroundMode';
 import useBeforeUnload from '../../../../hooks/window/useBeforeUnload';
-import { RichInputCtx } from '../../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 let isFrozen = false;
 

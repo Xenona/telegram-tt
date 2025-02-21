@@ -13,7 +13,7 @@ import { prepareForRegExp } from '../helpers/prepareForRegExp';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useDerivedState from '../../../../hooks/useDerivedState';
 import useFlag from '../../../../hooks/useFlag';
-import { RichInputCtx } from '../../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const MAX_LENGTH = 8;
 const MAX_UNSUPPORTED_LENGTH = 160;

@@ -23,7 +23,7 @@ import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
-import { RichInputCtx } from '../../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 interface Library {
   keywords: string[];

@@ -57,7 +57,7 @@ import EmojiTooltip from './EmojiTooltip.async';
 import MentionTooltip from './MentionTooltip';
 import MessageInput from './MessageInput';
 import SymbolMenuButton from './SymbolMenuButton';
-import { RichInputCtx } from '../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 import styles from './AttachmentModal.module.scss';
 

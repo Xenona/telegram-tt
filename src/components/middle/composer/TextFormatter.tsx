@@ -26,7 +26,7 @@ import Button from '../../ui/Button';
 import './TextFormatter.scss';
 import { betterExecCommand } from '../../../util/execCommand';
 import { selectAfterNode } from '../../../util/selection';
-import { RichInputCtx } from '../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 export type OwnProps = {
   richInputCtx: RichInputCtx

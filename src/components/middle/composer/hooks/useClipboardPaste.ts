@@ -21,8 +21,8 @@ import getFilesFromDataTransferItems from "../helpers/getFilesFromDataTransferIt
 import useOldLang from "../../../../hooks/useOldLang";
 import {
   RichInputCtx,
-  useRichInputPasteHandler,
-} from "../../../common/richinput/useRichInput";
+  useRichEditablePasteHandler,
+} from "../../../common/richinput/useRichEditable";
 import { PasteCtx } from "../../../common/richinput/RichEditable";
 import { requestNextMutation } from "../../../../lib/fasterdom/fasterdom";
 
@@ -42,7 +42,7 @@ const useClipboardPaste = (
   const { showNotification } = getActions();
   const lang = useOldLang();
 
-  useRichInputPasteHandler(
+  useRichEditablePasteHandler(
     richInputCtx, 
     async (p: PasteCtx) => {
       if (p.text && containsCustomEmoji(p.text) && shouldStripCustomEmoji) {

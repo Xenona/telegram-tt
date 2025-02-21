@@ -19,7 +19,7 @@ import useEffectWithPrevDeps from '../../../../hooks/useEffectWithPrevDeps';
 import useLastCallback from '../../../../hooks/useLastCallback';
 import useBackgroundMode from '../../../../hooks/window/useBackgroundMode';
 import useBeforeUnload from '../../../../hooks/window/useBeforeUnload';
-import { RichInputCtx } from '../../../common/richinput/useRichInput';
+import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const URL_ENTITIES = new Set<string>([ApiMessageEntityTypes.TextUrl, ApiMessageEntityTypes.Url]);
 const DEBOUNCE_MS = 300;

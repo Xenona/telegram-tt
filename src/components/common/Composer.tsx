@@ -145,7 +145,7 @@ import useInlineBotTooltip from '../middle/composer/hooks/useInlineBotTooltip';
 import useMentionTooltip from '../middle/composer/hooks/useMentionTooltip';
 import useStickerTooltip from '../middle/composer/hooks/useStickerTooltip';
 import useVoiceRecording from '../middle/composer/hooks/useVoiceRecording';
-import { useRichInput } from './richinput/useRichInput';
+import { useRichEditable } from './richinput/useRichEditable';
 
 import AttachmentModal from '../middle/composer/AttachmentModal.async';
 import AttachMenu from '../middle/composer/AttachMenu';
@@ -419,7 +419,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const lang = useOldLang();
 
-  const {getHtml, ctx: richInputCtx} = useRichInput();
+  const {getHtml, ctx: richInputCtx} = useRichEditable();
 
   // eslint-disable-next-line no-null/no-null
   const storyReactionRef = useRef<HTMLButtonElement>(null);

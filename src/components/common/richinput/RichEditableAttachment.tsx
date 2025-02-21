@@ -1,7 +1,7 @@
 import useDynamicColorListener from "../../../hooks/stickers/useDynamicColorListener";
 import { requestMutation } from "../../../lib/fasterdom/fasterdom";
 import React, { FC, memo, useEffect, useRef } from "../../../lib/teact/teact";
-import { RichInputCtx } from "./useRichInput";
+import { RichInputCtx } from "./useRichEditable";
 
 type OwnProps = {
   className?: string;

@@ -37,7 +37,7 @@ import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
 import TextTimer from '../../ui/TextTimer';
 import TextFormatter from './TextFormatter.async';
-import { RichInputCtx, useRichInputKeyboardListener } from '../../common/richinput/useRichInput';
+import { RichInputCtx, useRichEditableKeyboardListener } from '../../common/richinput/useRichEditable';
 import RichEditableAttachment from '../../common/richinput/RichEditableAttachment';
 import { RichInputKeyboardPriority } from '../../common/richinput/Keyboard';
 
@@ -381,7 +381,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     return false
   }
 
-  useRichInputKeyboardListener(richInputCtx, {
+  useRichEditableKeyboardListener(richInputCtx, {
     priority: RichInputKeyboardPriority.Composer,
     onKeydown: handleKeyDown,
   })
