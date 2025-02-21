@@ -37,6 +37,7 @@
     background: center repeat;
     mix-blend-mode: initial;
     opacity: 1;
+    background-size: cover !important;
   }
   &.customBgImage::before {
     background: var(--custom-background) center repeat !important;
