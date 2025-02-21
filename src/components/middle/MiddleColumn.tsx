@@ -491,19 +491,18 @@ function MiddleColumn({
   const [renderer, setRenderer] = useState<AnimBgRender | null>(null);
 
   useEffect(() => {
-    if (bgRef.current && animDivRef.current) {
-      const renderer2 = new AnimBgRender(bgRef.current, animDivRef.current);
-      setRenderer(renderer2);
-      renderer2.setColors(transformStringsToColors({
-        first: fill?.settings.backgroundColor,
-        second: fill?.settings.secondBackgroundColor,
-        third: fill?.settings.thirdBackgroundColor,
-        fourth: fill?.settings.fourthBackgroundColor,
-      }));
-    }
+    if (!bgRef.current || !animDivRef.current) return () => {};
 
-    return () => renderer?.detach();
-  }, [bgRef, animDivRef, fill, renderer]);
+    const newR = new AnimBgRender(bgRef.current, animDivRef.current);
+    setRenderer(newR);
+    newR.setColors(transformStringsToColors({
+      first: fill?.settings.backgroundColor,
+      second: fill?.settings.secondBackgroundColor,
+      third: fill?.settings.thirdBackgroundColor,
+      fourth: fill?.settings.fourthBackgroundColor,
+    }));
+    return () => newR?.detach();
+  }, [bgRef, animDivRef, fill]);
 
   return (
     <div

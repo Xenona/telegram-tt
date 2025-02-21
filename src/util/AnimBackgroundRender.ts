@@ -144,6 +144,7 @@ export class AnimBgRender extends BaseAnimBgRender {
 
     const gl = this.gl;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.useProgram(this.glState.prog);
     gl.uniform2fv(this.glState.resolutionLoc, [
       gl.canvas.width,
       gl.canvas.height,
@@ -169,6 +170,7 @@ export class AnimBgRender extends BaseAnimBgRender {
 
     const gl = this.gl;
     const { posBuf, transitionFactorLoc } = this.glState;
+    gl.useProgram(this.glState.prog);
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
     gl.uniform1f(
       transitionFactorLoc,

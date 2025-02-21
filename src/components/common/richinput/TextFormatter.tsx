@@ -394,7 +394,8 @@ const TextFormatter: FC<OwnProps> = ({
 
   useEffect(() => {
     const selectionRange = richInputCtx.editable.selectionS()?.range;
-    if (!selectionRange) return;
+    if (!selectionRange || !isOpen) return;
+
     const selectionRect = selectionRange.getBoundingClientRect();
     const rootRect = richInputCtx.editable.root.getBoundingClientRect();
 
@@ -410,7 +411,7 @@ const TextFormatter: FC<OwnProps> = ({
       x,
       y: selectionRect.top - rootRect.top,
     });
-  }, [richInputCtx.editable, richInputCtx.editable.root, richInputCtx.editable.selectionS]);
+  }, [richInputCtx.editable, richInputCtx.editable.root, richInputCtx.editable.selectionS, isOpen]);
 
   const style = anchorPosition
     ? `left: ${anchorPosition.x}px; top: ${anchorPosition.y}px;--text-formatter-left: ${anchorPosition.x}px;`

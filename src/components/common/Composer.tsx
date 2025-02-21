@@ -985,6 +985,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       return;
     }
 
+    renderer?.nextState();
     let currentAttachments = attachments;
 
     if (activeVoiceRecording) {
@@ -1518,6 +1519,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   });
 
   const handleSendScheduled = useLastCallback(() => {
+    renderer?.nextState();
     requestCalendar((scheduledAt) => {
       handleMessageSchedule({}, scheduledAt, currentMessageList!);
     });
@@ -1550,7 +1552,6 @@ const Composer: FC<OwnProps & StateProps> = ({
   const handleStopEffect = useLastCallback(() => { hideEffectInComposer({ }); });
 
   const onSend = useMemo(() => {
-    renderer?.nextState();
     switch (mainButtonState) {
       case MainButtonState.Edit:
         return handleEditComplete;
@@ -1559,7 +1560,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       default:
         return handleSend;
     }
-  }, [mainButtonState, handleEditComplete, renderer]);
+  }, [mainButtonState, handleEditComplete]);
 
   const withBotCommands = isChatWithBot && botMenuButton?.type === 'commands' && !editingMessage
     && botCommands !== false && !activeVoiceRecording;
