@@ -117,100 +117,9 @@
       padding: 0;
     }
 
-    .custom-folder-icon-container {
-      margin-top: 0.75rem;
-    }
-
     .SymbolMenu .backdrop {
       left: auto;
       right: 0;
-    }
-
-    .menu-container {
-
-      position: fixed;
-      width: min(82%, calc(24rem + var(--scrollbar-width)));
-
-      .SearchInput {
-        border-radius: var(--border-radius-messages-small);
-        margin-bottom: 0.5rem;
-      }
-
-      .StickerPicker {
-
-        &-module__header {
-          position: relative;
-          top: 0;
-
-          &.header-hide {
-
-            top: -3rem;
-          }
-
-          &.animated-slide {
-            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
-            transition: top 0.3s ease;
-          }
-        }
-
-        &-module__main {
-
-          position: relative;
-          top: 0;
-
-          &.main-hide {
-            top: -3rem;
-            height: 100%;
-          }
-
-          &.animated-slide {
-            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
-            transition: top 0.3s ease, height 0.3s ease;
-          }
-        }
-
-        height: 300px;
-
-        .categories-emojis {
-          display: flex;
-        }
-
-        .emoji-category-stripe {
-          display: flex;
-          align-items: center;
-
-          & > div {
-            border-radius: 2rem;
-            max-width: 2rem;
-            overflow: hidden;
-
-            &.animated-width {
-              /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
-              transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
-            }
-
-            &:hover {
-              max-width: 18rem;
-              background-color: var(--color-background-selected);
-              padding: 0.5rem 0.1875rem;
-            }
-          }
-
-          .symbol-set-button {
-            padding: 0;
-            margin: 0 !important;
-            height: auto;
-
-            &:hover {
-              background-color: transparent;
-            }
-          }
-        }
-
-        .custom-folder-icons {
-          color: var(--color-text-secondary);
-        }
-      }
     }
   }
 }
@@ -501,4 +410,110 @@
 
 .settings-button {
   font-weight: var(--font-weight-semibold);
+}
+
+#portals {
+  .icon-folder-picker {
+    .Menu {
+      position: absolute;
+      z-index: 100000;
+      .backdrop {
+        top: -3rem;
+      }
+    }
+
+    & .menu-container {
+
+      .custom-folder-icon-container {
+        margin-top: 0.75rem;
+      }
+
+      --offset-y: 0;
+      --offset-x: -6.5rem;
+      width: calc(24rem + var(--scrollbar-width));
+
+      // position: fixed;
+
+      .SearchInput {
+        border-radius: var(--border-radius-messages-small);
+        margin-bottom: 0.5rem;
+      }
+
+      .StickerPicker {
+
+        &-module__header {
+          position: relative;
+          top: 0;
+
+          &.header-hide {
+
+            top: -3rem;
+          }
+
+          &.animated-slide {
+            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+            transition: top 0.3s ease;
+          }
+        }
+
+        &-module__main {
+
+          position: relative;
+          top: 0;
+
+          &.main-hide {
+            top: -3rem;
+            height: 100%;
+          }
+
+          &.animated-slide {
+            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+            transition: top 0.3s ease, height 0.3s ease;
+          }
+        }
+
+        height: 300px;
+
+        .categories-emojis {
+          display: flex;
+        }
+
+        .emoji-category-stripe {
+          display: flex;
+          align-items: center;
+
+          & > div {
+            border-radius: 2rem;
+            max-width: 2rem;
+            overflow: hidden;
+
+            &.animated-width {
+              /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+              transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
+            }
+
+            &:hover {
+              max-width: 18rem;
+              background-color: var(--color-background-selected);
+              padding: 0.5rem 0.1875rem;
+            }
+          }
+
+          .symbol-set-button {
+            padding: 0;
+            margin: 0 !important;
+            height: auto;
+
+            &:hover {
+              background-color: transparent;
+            }
+          }
+        }
+
+        .custom-folder-icons {
+          color: var(--color-text-secondary);
+        }
+      }
+    }
+  }
 }
