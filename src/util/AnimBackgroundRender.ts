@@ -33,7 +33,7 @@ export class AnimBgRender extends BaseAnimBgRender {
 
     // @ts-ignore
     this.gl = this.canvas.getContext('webgl');
-    if (!this.gl) {
+    if (!this.gl && this.canvas instanceof HTMLCanvasElement) {
       this.gl = this.canvas.getContext(
       // @ts-ignore
         'experimental-webgl',
@@ -58,8 +58,10 @@ export class AnimBgRender extends BaseAnimBgRender {
     colors: AnimBgColorPoints,
     pos: number = 0,
     transitionProgress: number = 0,
-  ): ImageBitmap {
+  ): ImageBitmap | null {
     if (!(this.canvas instanceof OffscreenCanvas)) throw new Error('Can render bitmap only offscreen');
+    // eslint-disable-next-line no-null/no-null
+    if (!this.gl) return null;
 
     requestMutation(() => {
       this.canvas.width = width;
