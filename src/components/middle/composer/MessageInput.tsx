@@ -95,72 +95,6 @@ const IGNORE_KEYS = [
   'Esc', 'Escape', 'Enter', 'PageUp', 'PageDown', 'Meta', 'Alt', 'Ctrl', 'ArrowDown', 'ArrowUp', 'Control', 'Shift',
 ];
 
-function clearSelection() {
-  const selection = window.getSelection();
-  if (!selection) {
-    return;
-  }
-
-  if (selection.removeAllRanges) {
-    selection.removeAllRanges();
-  } else if (selection.empty) {
-    selection.empty();
-  }
-}
-
-function insertEnterInsideBlockquote(e: React.KeyboardEvent<HTMLDivElement>) {
-  let s = window.getSelection();
-  console.log("MAAA", s)
-  if(s && s.isCollapsed) {
-    let r = s.getRangeAt(0)
-    let noteAnc: Node | null = r.endContainer
-    if (r.endOffset == 0) {
-      let isStart = true
-      while (noteAnc && (!('tagName' in noteAnc) || noteAnc.tagName !== 'BLOCKQUOTE')) {
-        if (noteAnc.previousSibling) {
-          isStart = false
-          break
-        }
-        noteAnc = noteAnc.parentNode
-      }
-      console.log("MAAA", isStart, noteAnc)
-      if(isStart && noteAnc) {
-        s.removeAllRanges()
-        let r = document.createRange()
-        r.setStartBefore(noteAnc)
-        r.setEndBefore(noteAnc)
-        let textNode = document.createTextNode(" ")
-        r.insertNode(textNode)
-        r.collapse(true)
-        s.addRange(r)
-        e.preventDefault();
-        // document.execCommand("insertText", false, "\n")
-      }
-    } else if(r.endOffset == r.endContainer.textContent?.length) {
-      let isEnd = true
-      while (noteAnc && (!('tagName' in noteAnc) || noteAnc.tagName !== 'BLOCKQUOTE')) {
-        if (noteAnc.nextSibling) {
-          isEnd = false
-          break
-        }
-        noteAnc = noteAnc.parentNode
-      }
-      if(isEnd && noteAnc) {
-        s.removeAllRanges()
-        let r = document.createRange()
-        r.setStartAfter(noteAnc)
-        r.setEndAfter(noteAnc)
-        let textNode = document.createTextNode(" ")
-        r.insertNode(textNode)
-        r.collapse(false)
-        s.addRange(r)
-        e.preventDefault();
-        // document.execCommand("insertText", false, "\n")
-      }
-    }
-  }
-}
-
 const MessageInput: FC<OwnProps & StateProps> = ({
   richInputCtx,
   id,
@@ -216,8 +150,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   const lang = useOldLang();
   const isContextMenuOpenRef = useRef(false);
   const [isTextFormatterOpen, openTextFormatter, closeTextFormatter] = useFlag();
-  const [textFormatterAnchorPosition, setTextFormatterAnchorPosition] = useState<IAnchorPosition>();
-  const [selectedRange, setSelectedRange] = useState<Range>();
   const [isTextFormatterDisabled, setIsTextFormatterDisabled] = useState<boolean>(false);
   const { isMobile } = useAppLayout();
   const isMobileDevice = isMobile && (IS_IOS || IS_ANDROID);
@@ -314,8 +246,8 @@ const MessageInput: FC<OwnProps & StateProps> = ({
       return false;
     }
 
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount || isContextMenuOpenRef.current) {
+    const selection = richInputCtx.editable.selectionS();
+    if (!selection) {
       closeTextFormatter();
       if (IS_ANDROID) {
         setIsTextFormatterDisabled(false);
@@ -323,14 +255,12 @@ const MessageInput: FC<OwnProps & StateProps> = ({
       return false;
     }
 
-    const selectionRange = selection.getRangeAt(0);
+    const selectionRange = selection.range;
     const selectedText = selectionRange.toString().trim();
     if (
       shouldSuppressTextFormatter
-      || !isSelectionInsideInput(selectionRange, editableInputId || EDITABLE_INPUT_ID)
       || !selectedText
       || parseEmojiOnlyString(selectedText)
-      || !selectionRange.START_TO_END
     ) {
       closeTextFormatter();
       return false;
@@ -368,6 +298,10 @@ const MessageInput: FC<OwnProps & StateProps> = ({
     // setSelectedRange(selectionRange);
     openTextFormatter();
   }
+
+  useEffect(() => {
+    processSelection();
+  }, [richInputCtx.editable.selectionS()]);
 
   function processSelectionWithTimeout() {
     if (selectionTimeoutRef.current) {
@@ -419,7 +353,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
         e.preventDefault();
 
         replyToNextMessage({ targetIndexDelta });
-        return;
+        return true;
       }
     }
 
@@ -435,16 +369,16 @@ const MessageInput: FC<OwnProps & StateProps> = ({
 
         closeTextFormatter();
         onSend();
-      } else {
-        // TODO: Fix blockquote enter
-        // insertEnterInsideBlockquote(e)
+        return true
       }
     } else if (!isComposing && e.key === 'ArrowUp' && empty && !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       editLastMessage();
+      return true
     } else {
       e.target?.addEventListener('keyup', processSelectionWithTimeout, { once: true });
     }
+    return false
   }
 
   useRichInputKeyboardListener(richInputCtx, {
@@ -659,14 +593,11 @@ const MessageInput: FC<OwnProps & StateProps> = ({
           {captionLimit}
         </div>
       )}
-      {/* <TextFormatter
-        inputRef={inputRef}
+      <TextFormatter
+        richInputCtx={richInputCtx}
         isOpen={isTextFormatterOpen}
-        anchorPosition={textFormatterAnchorPosition}
-        selectedRange={selectedRange}
-        setSelectedRange={setSelectedRange}
         onClose={handleCloseTextFormatter}
-      /> */}
+      />
       {forcedPlaceholder && <span className="forced-placeholder">{renderText(forcedPlaceholder!)}</span>}
     </div>
   );

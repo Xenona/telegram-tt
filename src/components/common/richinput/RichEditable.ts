@@ -5,8 +5,9 @@ import parseHtmlAsFormattedText from "../../../util/parseHtmlAsFormattedText";
 import { createSignal, Signal } from "../../../util/signals";
 import { preparePastedHtml } from "../../middle/composer/helpers/cleanHtml";
 import { getTextWithEntitiesAsHtml } from "../helpers/renderTextWithEntities";
+import { insertEnterInsideBlockquote } from "./blockquoteEnter";
 import { EditableEmojiRender } from "./EditableEmojiRender";
-import { RichInputKeyboardListener } from "./Keyboard";
+import { RichInputKeyboardListener, RichInputKeyboardPriority } from "./Keyboard";
 
 const SAFARI_BR = "<br>";
 const WHITESPACE_RE = /\s/;
@@ -14,6 +15,7 @@ export const IMG_ALT_MATCHABLE_MARKER = "IMG_ALT__";
 
 export type SelectionState = {
   collapsed: boolean;
+  range: Range;
 };
 
 export type PasteCtx = {
@@ -75,12 +77,23 @@ export class RichEditable {
 
     this.root.addEventListener("keydown", (e) => {
       for (const handler of this.keyboardHandlers) {
-        handler.onKeydown(e);
+        if(handler.onKeydown(e)) break;
       }
       this.handleSelectionUpdate();
     });
 
     this.emojiRenderer = new EditableEmojiRender(this);
+
+    this.addKeyboardHandler({
+      priority: RichInputKeyboardPriority.Default,
+      onKeydown: (e) => {
+        if (e.key === "Enter") {
+          insertEnterInsideBlockquote(e)
+          return true;
+        }
+        return false;
+      },
+    })
   }
 
   private updateRootProps() {
@@ -236,6 +249,7 @@ export class RichEditable {
     this.matchableSet(this.calculateMatchable(s, r));
     this.selectionSet({
       collapsed: s.isCollapsed,
+      range: r,
     });
   }
 
@@ -295,7 +309,7 @@ export class RichEditable {
 
   public execCommand(cmd: string, value?: string) {
     this.ensureSelectionInside();
-    betterExecCommand(this.root, cmd, value);
+    betterExecCommand(this.root, this.selectionS()?.range ?? null, cmd, value);
     this.handleContentUpdate();
   }
 

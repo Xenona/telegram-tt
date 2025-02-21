@@ -19,13 +19,19 @@ style.innerHTML = `
 
 export function betterExecCommand(
   input: HTMLElement | null,
+  range: Range | null,
   command: string,
   value?: string
 ) {
   const inpArr = [];
   if (input) inpArr.push(input);
-    
+
   requestMutation(() => {
+    if (range) {
+      window.getSelection()?.removeAllRanges();
+      console.log(range)
+      window.getSelection()?.addRange(range);
+    }
     input?.classList.add("for-exec-command-fix");
     document.execCommand('styleWithCss', false, 'false');
     document.execCommand(command, false, value);

@@ -26,14 +26,12 @@ import Button from '../../ui/Button';
 import './TextFormatter.scss';
 import { betterExecCommand } from '../../../util/execCommand';
 import { selectAfterNode } from '../../../util/selection';
+import { RichInputCtx } from '../../common/richinput/useRichInput';
 
 export type OwnProps = {
+  richInputCtx: RichInputCtx
   isOpen: boolean;
-  anchorPosition?: IAnchorPosition;
-  selectedRange?: Range;
-  setSelectedRange: (range: Range) => void;
   onClose: () => void;
-  inputRef: RefObject<HTMLElement | null>;
 };
 
 interface ISelectedTextFormats {
@@ -60,25 +58,25 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
 };
 const fragmentEl = document.createElement('div');
 
+const TEXT_FORMATTER_SAFE_AREA_PX = 140;
+
 const TextFormatter: FC<OwnProps> = ({
-  isOpen,
-  anchorPosition,
-  selectedRange,
-  setSelectedRange,
+  richInputCtx,
+  isOpen: shouldOpen,
   onClose,
-  inputRef
 }) => {
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
   const linkUrlInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingLink, setIsEditingLink] = useState(false);
+  const isOpen = shouldOpen || isEditingLink;
   const { shouldRender, transitionClassNames } = useShowTransitionDeprecated(isOpen);
   const [isLinkControlOpen, openLinkControl, closeLinkControl] = useFlag();
   const [linkUrl, setLinkUrl] = useState('');
-  const [isEditingLink, setIsEditingLink] = useState(false);
   const [inputClassName, setInputClassName] = useState<string | undefined>();
   const [selectedTextFormats, setSelectedTextFormats] = useState<ISelectedTextFormats>({});
-
+  console.log("FFF", isLinkControlOpen, isOpen, shouldRender)
   useEffect(() => (isOpen ? captureEscKeyListener(onClose) : undefined), [isOpen, onClose]);
   useVirtualBackdrop(
     isOpen,
@@ -88,13 +86,14 @@ const TextFormatter: FC<OwnProps> = ({
   );
 
   useEffect(() => {
+    console.log("XXX", linkUrlInputRef)
     if (isLinkControlOpen) {
       linkUrlInputRef.current!.focus();
     } else {
       setLinkUrl('');
       setIsEditingLink(false);
     }
-  }, [isLinkControlOpen]);
+  }, [isLinkControlOpen, linkUrlInputRef]);
 
   useEffect(() => {
     if (!shouldRender) {
@@ -105,12 +104,13 @@ const TextFormatter: FC<OwnProps> = ({
   }, [closeLinkControl, shouldRender]);
 
   useEffect(() => {
-    if (!isOpen || !selectedRange) {
+    const sel = richInputCtx.editable.selectionS();
+    if (!isOpen || !sel) {
       return;
     }
 
     const selectedFormats: ISelectedTextFormats = {};
-    let { parentElement } = selectedRange.commonAncestorContainer;
+    let { parentElement } = sel.range.commonAncestorContainer;
     while (parentElement && parentElement.id !== EDITABLE_INPUT_ID) {
       const textFormat = TEXT_FORMAT_BY_TAG_NAME[parentElement.tagName];
       if (textFormat) {
@@ -121,32 +121,14 @@ const TextFormatter: FC<OwnProps> = ({
     }
 
     setSelectedTextFormats(selectedFormats);
-  }, [isOpen, selectedRange, openLinkControl]);
+  }, [isOpen, richInputCtx.editable.selectionS, openLinkControl]);
 
-  const restoreSelection = useLastCallback(() => {
-    if (!selectedRange) {
-      return;
-    }
-
-    const selection = window.getSelection();
-    if (selection) {
-      selection.removeAllRanges();
-      selection.addRange(selectedRange);
-    }
-  });
-
-  const updateSelectedRange = useLastCallback(() => {
-    const selection = window.getSelection();
-    if (selection) {
-      setSelectedRange(selection.getRangeAt(0));
-    }
-  });
-
-  const getSelectedText = useLastCallback((shouldDropCustomEmoji?: boolean) => {
-    if (!selectedRange) {
+  const getSelectedHTML = useLastCallback((shouldDropCustomEmoji?: boolean) => {
+    const sel = richInputCtx.editable.selectionS();
+    if (!sel) {
       return undefined;
     }
-    fragmentEl.replaceChildren(selectedRange.cloneContents());
+    fragmentEl.replaceChildren(sel.range.cloneContents());
     if (shouldDropCustomEmoji) {
       fragmentEl.querySelectorAll(INPUT_CUSTOM_EMOJI_SELECTOR).forEach((el) => {
         el.replaceWith(el.getAttribute('alt')!);
@@ -156,11 +138,12 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const getSelectedElement = useLastCallback(() => {
-    if (!selectedRange) {
+    const sel = richInputCtx.editable.selectionS();
+    if (!sel) {
       return undefined;
     }
 
-    return selectedRange.commonAncestorContainer.parentElement;
+    return sel.range.commonAncestorContainer.parentElement;
   });
 
   function updateInputStyles() {
@@ -213,7 +196,7 @@ const TextFormatter: FC<OwnProps> = ({
     if (selectedTextFormats.spoiler) {
       const element = getSelectedElement();
       if (
-        !selectedRange
+        !richInputCtx.editable.selectionS()
         || !element
         || element.dataset.entityType !== ApiMessageEntityTypes.Spoiler
         || !element.textContent
@@ -230,9 +213,10 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedText();
-    document.execCommand(
-      'insertHTML', false, `<span class="spoiler" data-entity-type="${ApiMessageEntityTypes.Spoiler}">${text}</span>`,
+    const text = getSelectedHTML();
+    console.log(window.getSelection()?.getRangeAt(0).cloneRange());
+    richInputCtx.editable.execCommand(
+      'insertHTML', `<span class="spoiler" data-entity-type="${ApiMessageEntityTypes.Spoiler}">${text}</span>`,
     );
     onClose();
   });
@@ -240,8 +224,7 @@ const TextFormatter: FC<OwnProps> = ({
   const handleBoldText = useLastCallback(() => {
     setSelectedTextFormats((selectedFormats) => {
       // Somehow re-applying 'bold' command to already bold text doesn't work
-      betterExecCommand(inputRef.current, 'bold');
-      updateSelectedRange();
+      richInputCtx.editable.execCommand('bold');
       return {
         ...selectedFormats,
         bold: !selectedFormats.bold,
@@ -250,8 +233,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleItalicText = useLastCallback(() => {
-    betterExecCommand(inputRef.current, 'italic');
-    updateSelectedRange();
+    richInputCtx.editable.execCommand('italic');
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
       italic: !selectedFormats.italic,
@@ -259,8 +241,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleUnderlineText = useLastCallback(() => {
-    betterExecCommand(inputRef.current, 'underline');
-    updateSelectedRange();
+    richInputCtx.editable.execCommand('underline');
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
       underline: !selectedFormats.underline,
@@ -268,8 +249,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleStrikethroughText = useLastCallback(() => {
-    betterExecCommand(inputRef.current, 'strikethrough');
-    updateSelectedRange();
+    richInputCtx.editable.execCommand('strikethrough');
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
       strikethrough: !selectedFormats.strikethrough,
@@ -280,7 +260,7 @@ const TextFormatter: FC<OwnProps> = ({
     if(window.getSelection()?.isCollapsed) return;
 
     if (selectedTextFormats.monospace) {
-      betterExecCommand(inputRef.current, 'removeFormat');
+      richInputCtx.editable.execCommand('removeFormat');
       setSelectedTextFormats((selectedFormats) => ({
         ...selectedFormats,
         monospace: false,
@@ -288,17 +268,16 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const previousCode = [...(inputRef.current?.querySelectorAll("code") || [])];
+    const previousCode = [...(richInputCtx.editable.root.querySelectorAll("code") || [])];
     
-    let text = selectedRange?.toString() || '';
+    let text = richInputCtx.editable.selectionS()?.range?.toString() || '';
     if(text.length == 0) text = ''
-    betterExecCommand(
-      inputRef.current,
+    richInputCtx.editable.execCommand(
       "insertHTML",
       `<code class="text-entity-code" dir="auto">${text}</code>`
     );
     
-    const currentCode = inputRef.current?.querySelectorAll("code") || [];
+    const currentCode = richInputCtx.editable.root?.querySelectorAll("code") || [];
     for (let el of currentCode) {
       if (previousCode.includes(el)) continue;
       selectAfterNode(el)
@@ -322,9 +301,8 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedText(true);
-    restoreSelection();
-    betterExecCommand(inputRef.current, 
+    const text = getSelectedHTML(true);
+    richInputCtx.editable.execCommand(
       'insertHTML',
       `<a href=${formattedLinkUrl} class="text-entity-link" dir="auto">${text}</a>`,
     );
@@ -335,7 +313,7 @@ const TextFormatter: FC<OwnProps> = ({
     if (selectedTextFormats.quote) {
       const element = getSelectedElement();
       if (
-        !selectedRange
+        !richInputCtx.editable.selectionS()
         || !element
         || element.tagName !== 'BLOCKQUOTE'
         || !element.textContent
@@ -358,7 +336,7 @@ const TextFormatter: FC<OwnProps> = ({
     while(clearBlockQuote = fragmentEl.querySelector('blockquote')) {
       clearBlockQuote.replaceWith(...clearBlockQuote.childNodes);
     }
-    document.execCommand('insertHTML', false, `<blockquote class="blockquote">${fragmentEl.innerHTML}</blockquote>`);
+    richInputCtx.editable.execCommand('insertHTML', `<blockquote class="blockquote">${fragmentEl.innerHTML}</blockquote>`);
     onClose();
   });
 
@@ -418,6 +396,27 @@ const TextFormatter: FC<OwnProps> = ({
     'TextFormatter-link-url-confirm',
     Boolean(linkUrl.length) && 'shown',
   );
+
+  const [anchorPosition, setAnchorPosition] = useState<IAnchorPosition>();
+  
+  useEffect(() => {
+    const selectionRange = window.getSelection()!.getRangeAt(0);
+    const selectionRect = selectionRange.getBoundingClientRect();
+    const rootRect = richInputCtx.editable.root.getBoundingClientRect();
+
+    let x = (selectionRect.left + selectionRect.width / 2) - rootRect.left;
+
+    if (x < TEXT_FORMATTER_SAFE_AREA_PX) {
+      x = TEXT_FORMATTER_SAFE_AREA_PX;
+    } else if (x > rootRect.width - TEXT_FORMATTER_SAFE_AREA_PX) {
+      x = rootRect.width - TEXT_FORMATTER_SAFE_AREA_PX;
+    }
+
+    setAnchorPosition({
+      x,
+      y: selectionRect.top - rootRect.top,
+    });
+  }, [richInputCtx.editable.root, richInputCtx.editable.selectionS]);
 
   const style = anchorPosition
     ? `left: ${anchorPosition.x}px; top: ${anchorPosition.y}px;--text-formatter-left: ${anchorPosition.x}px;`
