@@ -884,7 +884,7 @@ export type ApiThemeParameters = {
   button_color: string;
   button_text_color: string;
   secondary_bg_color: string;
-  secondary_text_color: string,
+  secondary_text_color: string;
   header_bg_color: string;
   accent_text_color: string;
   section_bg_color: string;

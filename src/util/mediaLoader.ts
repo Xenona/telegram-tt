@@ -141,10 +141,10 @@ async function fetchFromCacheOrRemote(
       if (cached.type === 'audio/ogg' && !IS_OPUS_SUPPORTED) {
         media = await oggToWav(media);
       }
-      if (cached.type === "application/x-tgwallpattern") {
+      if (cached.type === 'application/x-tgwallpattern') {
         media = new Blob(
           [ungzipTGV(new Uint8Array(await media.arrayBuffer()))],
-          { type: "image/svg+xml" },
+          { type: 'image/svg+xml' },
         );
       }
 
@@ -185,7 +185,7 @@ async function fetchFromCacheOrRemote(
   if (mimeType === 'application/x-tgwallpattern' && remote.dataBlob instanceof Blob) {
     prepared = prepareMedia(new Blob(
       [ungzipTGV(new Uint8Array(await remote.dataBlob.arrayBuffer()))],
-      { type: "image/svg+xml" },
+      { type: 'image/svg+xml' },
     ));
   }
 

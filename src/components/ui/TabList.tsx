@@ -7,10 +7,10 @@ import animateHorizontalScroll from '../../util/animateHorizontalScroll';
 import { IS_ANDROID, IS_IOS } from '../../util/browser/windowEnvironment';
 import buildClassName from '../../util/buildClassName';
 
+import useAppLayout from '../../hooks/useAppLayout';
 import useHorizontalScroll from '../../hooks/useHorizontalScroll';
 import useOldLang from '../../hooks/useOldLang';
 import usePreviousDeprecated from '../../hooks/usePreviousDeprecated';
-import useAppLayout from '../../hooks/useAppLayout';
 
 import Tab from './Tab';
 
@@ -24,7 +24,7 @@ export type TabWithProperties = {
   isBlocked?: boolean;
   isBadgeActive?: boolean;
   contextActions?: MenuItemContextAction[];
-  shouldUseTextColor:boolean;
+  shouldUseTextColor? :boolean;
 };
 
 type OwnProps = {
@@ -84,25 +84,25 @@ const TabList: FC<OwnProps> = ({
       ref={containerRef}
       dir={lang.isRtl ? 'rtl' : undefined}
     >
-        {tabs.map((tab, i) => (
-          <Tab
-            shouldUseTextColor={tab.shouldUseTextColor}
-            key={tab.id}
-            title={tab.title}
-            icon={tab.icon}
-            isActive={i === activeTab}
-            isBlocked={tab.isBlocked}
-            badgeCount={tab.badgeCount}
-            isBadgeActive={tab.isBadgeActive}
-            previousActiveTab={previousActiveTab}
-            onClick={onSwitchTab}
-            clickArg={i}
-            contextActions={tab.contextActions}
-            contextRootElementSelector={contextRootElementSelector}
-            className={tabClassName}
-          />
-        ))}
-      </div>
+      {tabs.map((tab, i) => (
+        <Tab
+          shouldUseTextColor={tab?.shouldUseTextColor ?? false}
+          key={tab.id}
+          title={tab.title}
+          icon={tab.icon}
+          isActive={i === activeTab}
+          isBlocked={tab.isBlocked}
+          badgeCount={tab.badgeCount}
+          isBadgeActive={tab.isBadgeActive}
+          previousActiveTab={previousActiveTab}
+          onClick={onSwitchTab}
+          clickArg={i}
+          contextActions={tab.contextActions}
+          contextRootElementSelector={contextRootElementSelector}
+          className={tabClassName}
+        />
+      ))}
+    </div>
   );
 };
 

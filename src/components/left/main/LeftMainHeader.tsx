@@ -251,7 +251,6 @@ const LeftMainHeader: FC<OwnProps & StateProps> = ({
     );
   }, [globalSearchChatId, selectedSearchDate]);
 
-
   return (
     <div className="LeftMainHeader">
       <div id="LeftMainHeader" className="left-header" ref={headerRef}>
@@ -264,7 +263,7 @@ const LeftMainHeader: FC<OwnProps & StateProps> = ({
             oldLang.isRtl && 'rtl',
             shouldHideSearch && oldLang.isRtl && 'right-aligned',
             shouldDisableDropdownMenuTransitionRef.current && oldLang.isRtl && 'disable-transition',
-            !hasMenu ? "white" : ""
+            !hasMenu ? 'white' : '',
           )}
           forceOpen={isBotMenuOpen}
           positionX={shouldHideSearch && oldLang.isRtl ? 'right' : 'left'}

@@ -70,7 +70,7 @@ import type { RegularLangFnParameters } from '../../util/localization';
 import type { SharedState } from './sharedState';
 import type { TabState } from './tabState';
 
-export type CustomEmojiIconsFolder=Record<number, ApiSticker | string>;
+export type CustomEmojiIconsFolder = Record<number, ApiSticker | string>;
 
 export type GlobalState = {
   cacheVersion: number;

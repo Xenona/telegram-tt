@@ -200,6 +200,8 @@ addActionHandler('uploadWallpaper', async (global, actions, payload): Promise<vo
             mimeType: file.type,
             previewBlobUrl,
           },
+          dark: false,
+          pattern: false,
         },
         ...(global.settings.loadedWallpapers || []),
       ],
@@ -224,20 +226,18 @@ addActionHandler('uploadWallpaper', async (global, actions, payload): Promise<vo
     return;
   }
 
-  const withLocalMedia = {
-    ...wallpaper,
-    document: {
-      ...wallpaper.document,
-      previewBlobUrl,
-    },
-  };
-
   global = {
     ...global,
     settings: {
       ...global.settings,
       loadedWallpapers: [
-        withLocalMedia,
+        {
+          ...wallpaper,
+          document: {
+            ...wallpaper.document!,
+            previewBlobUrl,
+          },
+        },
         ...global.settings.loadedWallpapers.slice(1),
       ],
     },

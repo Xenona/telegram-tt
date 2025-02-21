@@ -413,6 +413,7 @@ function buildFolderSummaryFromMainList(
 function buildFolderSummary(folder: ApiChatFolder): FolderSummary {
   return {
     ...folder,
+    channels: folder.channels ? true : undefined,
     orderedPinnedIds: folder.pinnedChatIds,
     excludedChatIds: folder.excludedChatIds ? new Set(folder.excludedChatIds) : undefined,
     includedChatIds: folder.excludedChatIds ? new Set(folder.includedChatIds) : undefined,

@@ -2,56 +2,59 @@ import type { FC } from '../../../../lib/teact/teact';
 import React, {
   memo, useCallback, useEffect, useMemo, useRef, useState,
 } from '../../../../lib/teact/teact';
-import { getActions, getGlobal, setGlobal, withGlobal } from '../../../../global';
+import {
+  getActions, getGlobal, setGlobal, withGlobal,
+} from '../../../../global';
 
-import type { ApiChatlistExportedInvite, ApiSticker } from '../../../../api/types';
+import type { ApiChatlistExportedInvite, ApiSticker, ApiThemeParameters } from '../../../../api/types';
+import type { CustomEmojiIconsFolder } from '../../../../global/types';
 import type {
   FolderEditDispatch,
   FoldersState,
 } from '../../../../hooks/reducers/useFoldersReducer';
+import type { IAnchorPosition } from '../../../../types';
 
 import { EMOJI_SIZE_PICKER, STICKER_SIZE_FOLDER_SETTINGS } from '../../../../config';
+import { requestMeasure } from '../../../../lib/fasterdom/fasterdom';
 import { isUserId } from '../../../../global/helpers';
 import { selectCanPlayAnimatedEmojis, selectCanShareFolder } from '../../../../global/selectors';
 import { selectCurrentLimit } from '../../../../global/selectors/limits';
+import buildClassName from '../../../../util/buildClassName';
 import { findIntersectionWithSet } from '../../../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../../../util/memo';
 import { CUSTOM_PEER_EXCLUDED_CHAT_TYPES, CUSTOM_PEER_INCLUDED_CHAT_TYPES } from '../../../../util/objects/customPeer';
+import { extractCurrentThemeParams } from '../../../../util/themeStyle';
+import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
 import { LOCAL_TGS_URLS } from '../../../common/helpers/animatedAssets';
 
 import { selectChatFilters } from '../../../../hooks/reducers/useFoldersReducer';
+import useColorFilter from '../../../../hooks/stickers/useColorFilter';
+import useAppLayout from '../../../../hooks/useAppLayout';
+import useFlag from '../../../../hooks/useFlag';
 import useHistoryBack from '../../../../hooks/useHistoryBack';
+import useLastCallback from '../../../../hooks/useLastCallback';
+import useMouseInside from '../../../../hooks/useMouseInside';
 import useOldLang from '../../../../hooks/useOldLang';
 
 import AnimatedIconWithPreview from '../../../common/AnimatedIconWithPreview';
+import FolderIconPicker from '../../../common/FolderIconPicker';
 import GroupChatInfo from '../../../common/GroupChatInfo';
 import Icon from '../../../common/icons/Icon';
 import PrivateChatInfo from '../../../common/PrivateChatInfo';
+import StickerView from '../../../common/StickerView';
+import Button from '../../../ui/Button';
 import FloatingActionButton from '../../../ui/FloatingActionButton';
 import InputText from '../../../ui/InputText';
 import ListItem from '../../../ui/ListItem';
-import Spinner from '../../../ui/Spinner';
-import Button from '../../../ui/Button';
-import useAppLayout from '../../../../hooks/useAppLayout';
-import useFlag from '../../../../hooks/useFlag';
 import Menu from '../../../ui/Menu';
-import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
-import buildClassName from '../../../../util/buildClassName';
-import useMouseInside from '../../../../hooks/useMouseInside';
-import FolderIconPicker from '../../../common/FolderIconPicker';
+import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
+import Spinner from '../../../ui/Spinner';
 import {
+  DEFAULT_FOLDER_ICON,
   getIconNameByFolder,
   getLocalStorageFolderIcons,
   LOCSTOR_CUSTOM_EMOJI_KEY,
 } from '../../main/ChatFolders';
-import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
-import useLastCallback from '../../../../hooks/useLastCallback';
-import { IAnchorPosition } from '../../../../types';
-import StickerView from '../../../common/StickerView';
-import { CustomEmojiIconsFolder } from '../../../../global/types';
-import { requestMeasure } from '../../../../lib/fasterdom/fasterdom';
-import { extractCurrentThemeParams } from '../../../../util/themeStyle';
-import useColorFilter from '../../../../hooks/stickers/useColorFilter';
 
 type OwnProps = {
   state: FoldersState;
@@ -86,9 +89,6 @@ const INITIAL_CHATS_LIMIT = 5;
 export const ERROR_NO_TITLE = 'Please provide a title for this folder.';
 export const ERROR_NO_CHATS = 'ChatList.Filter.Error.Empty';
 
-
-export const DEFAULT_FOLDER_ICON = "📁";
-
 const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   state,
   dispatch,
@@ -119,12 +119,15 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
   const isCreating = state.mode === 'create';
   const isEditingChatList = state.folder.isChatList;
+  // eslint-disable-next-line no-null/no-null
   const inputRef = useRef<HTMLInputElement>(null);
-  const sharedCanvasRef  = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line no-null/no-null
+  const sharedCanvasRef = useRef<HTMLCanvasElement>(null);
+  // eslint-disable-next-line no-null/no-null
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [customStickerSelected, setCustomStickerSelected] = useState<ApiSticker|undefined>(customSticker);
-  const [customEmojiSelected, setCustomEmojiSelected] = useState<string|undefined>(customEmoji);
+  const [customStickerSelected, setCustomStickerSelected] = useState<ApiSticker | undefined>(customSticker);
+  const [customEmojiSelected, setCustomEmojiSelected] = useState<string | undefined>(customEmoji);
 
   const [isIncludedChatsListExpanded, setIsIncludedChatsListExpanded] = useState(false);
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
@@ -143,14 +146,14 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     height: number;
     width: number;
     right: number;
-  }>({ x: 0, y: 0, height: 0, width: 0, right: 0 });
+  }>({
+    x: 0, y: 0, height: 0, width: 0, right: 0,
+  });
 
   useEffect(() => {
     if (isActive && state.folderId && state.folder.isChatList) {
       loadChatlistInvites({ folderId: state.folderId });
     }
-
-
   }, [isActive, state.folder.isChatList, state.folderId]);
 
   const {
@@ -205,10 +208,11 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   const handleSubmit = useCallback(() => {
     dispatch({ type: 'setIsLoading', payload: true });
 
-    let stickerOrEmojiSelected: string | ApiSticker| undefined = customEmojiSelected ?? customStickerSelected ?? undefined;
+    const stickerOrEmojiSelected: string | ApiSticker | undefined = customEmojiSelected
+    ?? customStickerSelected ?? undefined;
 
     if (stickerOrEmojiSelected) {
-      let newStorage: CustomEmojiIconsFolder = getLocalStorageFolderIcons();
+      const newStorage: CustomEmojiIconsFolder = getLocalStorageFolderIcons();
       newStorage[state.folderId ?? -1] = stickerOrEmojiSelected;
       localStorage.setItem(
         LOCSTOR_CUSTOM_EMOJI_KEY,
@@ -216,19 +220,18 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
       );
 
       if (customStickerSelected) {
-        let g = getGlobal();
-        g.customEmojis.byId[customStickerSelected.id] = customStickerSelected;
-        setGlobal(g);
+        const global = getGlobal();
+        global.customEmojis.byId[customStickerSelected.id] = customStickerSelected;
+        setGlobal(global);
       }
     }
-
 
     onSaveFolder(() => {
       setTimeout(() => {
         onReset();
       }, SUBMIT_TIMEOUT);
     });
-  }, [dispatch, onSaveFolder, onReset]);
+  }, [dispatch, customEmojiSelected, customStickerSelected, onSaveFolder, state.folderId, onReset]);
 
   const handleCreateInviteClick = useCallback(() => {
     if (!invites) {
@@ -343,9 +346,22 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     );
   }
 
-  const [contextMenuAnchor, setContextMenuAnchor] = useState<IAnchorPosition | undefined>(undefined);
+  const getInputCoordinates = useLastCallback(() => {
+    const rect = inputRef.current?.getBoundingClientRect();
+
+    setInputCoordinates({
+      x: rect?.x ?? -10000,
+      y: rect?.y ?? -10000,
+      height: rect?.height ?? 0,
+      width: rect?.width ?? 0,
+      right: rect?.right ?? 0,
+    });
+  });
+
+  const [, setContextMenuAnchor] = useState<IAnchorPosition | undefined>(undefined);
   const [handleMouseEnter, handleMouseLeave] = useMouseInside(isOpen, setClose, undefined, isMobile);
 
+  // eslint-disable-next-line no-null/no-null
   const triggerRef = useRef<HTMLDivElement>(null);
   const handleActivateSymbolMenu = useLastCallback(() => {
     setOpen();
@@ -354,50 +370,62 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     const { x, y } = triggerEl.getBoundingClientRect();
     setContextMenuAnchor({ x, y });
 
-    const getInputCoordinates = useLastCallback(() => {
-      const rect = inputRef.current?.getBoundingClientRect();
-
-      setInputCoordinates({
-        x: rect?.x ?? -10000,
-        y: rect?.y ?? -10000,
-        height: rect?.height ?? 0,
-        width: rect?.width ?? 0,
-        right: rect?.right ?? 0,
-      });
-    });
-
-    getInputCoordinates()
-
+    getInputCoordinates();
   });
 
-
   const possibleIcon = getIconNameByFolder(state.folder);
-  const ref = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line no-null/no-null
+  const ref = useRef<HTMLDivElement>(null);
 
   const canAnimate = selectCanPlayAnimatedEmojis(getGlobal());
 
-    const [accentColor, setAccentColor] = useState<string|undefined>(undefined);
-    const [textColor, setTextColor] = useState<string|undefined>(undefined);
+  const [theme, setTheme] = useState<ApiThemeParameters | undefined>(undefined);
+  const accentColorTheme = useColorFilter(theme?.accent_text_color ?? '#000000', true);
+  const textColorTheme = useColorFilter(theme?.secondary_text_color ?? '#000000', true);
 
-    useEffect(()=>{
+  useEffect(() => {
+    requestMeasure(() => {
+      const currTheme = extractCurrentThemeParams();
+      setTheme(currTheme);
+    });
+  }, []);
 
-      if (!accentColor || !textColor) {
-        requestMeasure(()=> {
+  const handleClick = useLastCallback(() => {
+    if (isOpen) {
+      setClose();
+    } else {
+      setOpen();
+    }
+  });
 
-          const theme = extractCurrentThemeParams()
+  const handleMenuClose = useLastCallback(() => {
+    setClose();
+  });
 
-          const accentColor_ = useColorFilter(theme.accent_text_color, true);
-          const textColor_ = useColorFilter(theme.secondary_text_color, true);
-          setAccentColor(accentColor_);
-          setTextColor(textColor_);
-        })
-      }
+  const onEmojiSelect = useLastCallback((emoji) => {
+    setCustomStickerSelected(undefined);
+    setCustomEmojiSelected(emoji.trim());
+    dispatch({ type: 'setEmoticon', payload: emoji.trim() });
+  });
 
-    }, [accentColor, textColor])
+  const handleCustomEmojiSelect = useLastCallback((sticker) => {
+    setCustomStickerSelected(sticker);
+    setCustomEmojiSelected(undefined);
 
+    dispatch({
+      type: 'setEmoticon',
+      payload: (sticker.emoji ?? DEFAULT_FOLDER_ICON).trim(),
+    });
+  });
+
+  const handleIconSelect = useLastCallback((emoticon) => {
+    setCustomStickerSelected(undefined);
+    setCustomEmojiSelected(emoticon.trim());
+    dispatch({ type: 'setEmoticon', payload: emoticon.trim() });
+  });
 
   return (
-    <div className="settings-fab-wrapper"  ref={ref}>
+    <div className="settings-fab-wrapper" ref={ref}>
       <div className="settings-content no-border custom-scroll">
         <div className="settings-content-header">
           <AnimatedIconWithPreview
@@ -410,9 +438,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
           {isCreating && (
             <p
               className="settings-item-description mb-3"
-              dir={lang.isRtl ? "rtl" : undefined}
+              dir={lang.isRtl ? 'rtl' : undefined}
             >
-              {lang("FilterIncludeInfo")}
+              {lang('FilterIncludeInfo')}
             </p>
           )}
 
@@ -420,7 +448,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             <InputText
               ref={inputRef}
               className="mb-0"
-              label={lang("FilterNameHint")}
+              label={lang('FilterNameHint')}
               value={state.folder.title.text}
               onChange={handleChange}
               // onKeyDown={}
@@ -434,19 +462,20 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
             {!isMobile ? (
               <ResponsiveHoverButton
-              className={buildClassName(
-                "button-for-emoji",
-                isOpen && "activated",
-              )}
-              color="translucent"
-              onActivate={handleActivateSymbolMenu}
-              ariaLabel="Choose emoji, sticker or GIF"
-              isRectangular
+                className={buildClassName(
+                  'button-for-emoji',
+                  isOpen && 'activated',
+                )}
+                color="translucent"
+                onActivate={handleActivateSymbolMenu}
+                ariaLabel="Choose emoji, sticker or GIF"
+                isRectangular
               >
                 <div ref={triggerRef} className="symbol-menu-trigger" />
                 {customStickerSelected ? (
                   <div
-                  style={customStickerSelected.shouldUseTextColor ? `filter:${isOpen?accentColor:textColor}` : ``}
+                    style={customStickerSelected.shouldUseTextColor ? `filter:${isOpen
+                      ? accentColorTheme : textColorTheme}` : ''}
                   >
                     <canvas ref={sharedCanvasRef} className="shared-canvas" />
                     <StickerView
@@ -464,7 +493,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                     />
                   </div>
                 ) : possibleIcon || !state.folder.emoticon ? (
-                  <Icon name={possibleIcon ?? "folder-badge"} />
+                  <Icon name={possibleIcon ?? 'folder-badge'} />
                 ) : (
                   state.folder.emoticon
                 )}
@@ -475,10 +504,10 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 size="smaller"
                 color="translucent"
                 className="button-for-emoji"
-                onClick={() => (isOpen ? setClose() : setOpen())}
+                onClick={handleClick}
               >
                 {possibleIcon || !state.folder.emoticon ? (
-                  <Icon name={possibleIcon ?? "folder-badge"} />
+                  <Icon name={possibleIcon ?? 'folder-badge'} />
                 ) : (
                   state.folder.emoticon
                 )}
@@ -486,54 +515,37 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             )}
             <Menu
               isOpen={isOpen}
-              onClose={() => {}}
+              onClose={handleMenuClose}
               withPortal={false}
               bubbleStyle={`${
                 !isMobile && !isTablet
                   ? `left: calc(${inputCoordinates.x}px + ${
-                      inputCoordinates.width / 2
-                    }px);`
-                  : `right: calc(1.5rem + var(--scrollbar-width));`
+                    inputCoordinates.width / 2
+                  }px);`
+                  : 'right: calc(1.5rem + var(--scrollbar-width));'
               } top: calc(${inputCoordinates.y}px + ${
                 inputCoordinates.height
               }px + 1rem);`}
-              className={buildClassName("SymbolMenu")}
-              onCloseAnimationEnd={() => {}}
+              className={buildClassName('SymbolMenu')}
               onMouseEnter={!IS_TOUCH_ENV ? handleMouseEnter : undefined}
               onMouseLeave={!IS_TOUCH_ENV ? handleMouseLeave : undefined}
               noCloseOnBackdrop={!IS_TOUCH_ENV}
               noCompact
               // eslint-disable-next-line react/jsx-props-no-spreading
               {...{
-                positionX: "right",
-                positionY: "top",
+                positionX: 'right',
+                positionY: 'top',
               }}
             >
               <FolderIconPicker
-                onEmojiSelect={(emoji) => {
-                  setCustomStickerSelected(undefined);
-                  setCustomEmojiSelected(emoji.trim())
-                  dispatch({ type: "setEmoticon", payload: emoji.trim() });
-                }}
-                onCustomEmojiSelect={(sticker) => {
-                  setCustomStickerSelected(sticker);
-                  setCustomEmojiSelected(undefined)
-
-                  dispatch({
-                    type: "setEmoticon",
-                    payload: (sticker.emoji ?? DEFAULT_FOLDER_ICON  ).trim(),
-                  });
-                }}
-                onIconSelect={(emoticon) => {
-                  setCustomStickerSelected(undefined);
-                  setCustomEmojiSelected(emoticon.trim())
-                  dispatch({ type: "setEmoticon", payload: emoticon.trim() });
-                }}
+                onEmojiSelect={onEmojiSelect}
+                onCustomEmojiSelect={handleCustomEmojiSelect}
+                onIconSelect={handleIconSelect}
                 className="picker-tab"
                 isHidden={!isOpen || !isActive}
-                idPrefix={"emoji-folder"}
+                idPrefix="emoji-folder"
                 loadAndPlay={isOpen}
-                chatId={""}
+                chatId=""
                 isTranslucent={!isMobile}
               />
             </Menu>
@@ -545,7 +557,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             {state.error && state.error === ERROR_NO_CHATS && (
               <p
                 className="settings-item-description color-danger mb-2"
-                dir={lang.isRtl ? "rtl" : undefined}
+                dir={lang.isRtl ? 'rtl' : undefined}
               >
                 {lang(state.error)}
               </p>
@@ -553,9 +565,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
 
             <h4
               className="settings-item-header mb-3"
-              dir={lang.isRtl ? "rtl" : undefined}
+              dir={lang.isRtl ? 'rtl' : undefined}
             >
-              {lang("FilterInclude")}
+              {lang('FilterInclude')}
             </h4>
 
             <ListItem
@@ -564,10 +576,10 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               narrow
               onClick={onAddIncludedChats}
             >
-              {lang("FilterAddChats")}
+              {lang('FilterAddChats')}
             </ListItem>
 
-            {renderChats("included")}
+            {renderChats('included')}
           </div>
         )}
 
@@ -575,9 +587,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
           <div className="settings-item pt-3">
             <h4
               className="settings-item-header mb-3"
-              dir={lang.isRtl ? "rtl" : undefined}
+              dir={lang.isRtl ? 'rtl' : undefined}
             >
-              {lang("FilterExclude")}
+              {lang('FilterExclude')}
             </h4>
 
             <ListItem
@@ -586,19 +598,19 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               narrow
               onClick={onAddExcludedChats}
             >
-              {lang("FilterAddChats")}
+              {lang('FilterAddChats')}
             </ListItem>
 
-            {renderChats("excluded")}
+            {renderChats('excluded')}
           </div>
         )}
 
         <div className="settings-item pt-3">
           <h4
             className="settings-item-header mb-3"
-            dir={lang.isRtl ? "rtl" : undefined}
+            dir={lang.isRtl ? 'rtl' : undefined}
           >
-            {lang("FolderLinkScreen.Title")}
+            {lang('FolderLinkScreen.Title')}
           </h4>
 
           <ListItem
@@ -607,7 +619,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
             narrow
             onClick={handleCreateInviteClick}
           >
-            {lang("ChatListFilter.CreateLinkNew")}
+            {lang('ChatListFilter.CreateLinkNew')}
           </ListItem>
 
           {invites?.map((invite) => (
@@ -624,9 +636,9 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
               </span>
               <span className="subtitle">
                 {lang(
-                  "ChatListFilter.LinkLabelChatCount",
+                  'ChatListFilter.LinkLabelChatCount',
                   invite.peerIds.length,
-                  "i",
+                  'i',
                 )}
               </span>
             </ListItem>
@@ -638,7 +650,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
         isShown={Boolean(state.isTouched)}
         disabled={state.isLoading}
         onClick={handleSubmit}
-        ariaLabel={state.mode === "edit" ? "Save changes" : "Create folder"}
+        ariaLabel={state.mode === 'edit' ? 'Save changes' : 'Create folder'}
       >
         {state.isLoading ? <Spinner color="white" /> : <Icon name="check" />}
       </FloatingActionButton>
@@ -656,17 +668,17 @@ export default memo(withGlobal<OwnProps>(
     let customEmoji: string | undefined;
     try {
       if (state.folderId) {
-        const possibleEmoji  = ((JSON.parse(localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY) ?? "")) as CustomEmojiIconsFolder)[state.folderId];
+        const possibleEmoji = ((JSON.parse(localStorage.getItem(LOCSTOR_CUSTOM_EMOJI_KEY)
+        ?? '')) as CustomEmojiIconsFolder)[state.folderId];
         if (typeof possibleEmoji === 'string') customEmoji = possibleEmoji;
-        else customSticker = possibleEmoji
+        else customSticker = possibleEmoji;
       }
     } catch {
-      localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}))
+      localStorage.setItem(LOCSTOR_CUSTOM_EMOJI_KEY, JSON.stringify({}));
     }
 
-
     return {
-      customSticker: customSticker,
+      customSticker,
       customEmoji,
       loadedActiveChatIds: listIds.active,
       loadedArchivedChatIds: listIds.archived,

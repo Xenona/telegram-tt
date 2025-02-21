@@ -31,7 +31,7 @@ if (DEBUG) {
 const throttleError = throttle((err) => {
   if (showError) {
     // eslint-disable-next-line no-alert
-    // window.alert(getErrorMessage(err));
+    window.alert(getErrorMessage(err));
   } else {
     error = err;
   }

@@ -41,6 +41,7 @@ import type {
   ThemeKey,
   ThreadId,
 } from '../../types';
+import type { AnimBgRender } from '../../util/AnimBackgroundRender';
 import { MAIN_THREAD_ID } from '../../api/types';
 
 import {
@@ -113,6 +114,7 @@ import { processDeepLink } from '../../util/deeplink';
 import { tryParseDeepLink } from '../../util/deepLinkParser';
 import deleteLastCharacterOutsideSelection from '../../util/deleteLastCharacterOutsideSelection';
 import { processMessageInputForCustomEmoji } from '../../util/emoji/customEmojiManager';
+import { betterExecCommand } from '../../util/execCommand';
 import focusEditableElement from '../../util/focusEditableElement';
 import { formatStarsAsIcon } from '../../util/localization/format';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
@@ -189,12 +191,11 @@ import PaymentMessageConfirmDialog from './PaymentMessageConfirmDialog';
 import ReactionAnimatedEmoji from './reactions/ReactionAnimatedEmoji';
 
 import './Composer.scss';
-import { AnimBgRender } from '../../util/renderGradientBackground';
 
 type ComposerType = 'messageList' | 'story';
 
 type OwnProps = {
-  renderer: AnimBgRender | null;
+  renderer?: AnimBgRender | null;
   type: ComposerType;
   chatId: string;
   threadId: ThreadId;
@@ -1774,7 +1775,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   const handleStopEffect = useLastCallback(() => { hideEffectInComposer({ }); });
 
   const onSend = useMemo(() => {
-    renderer?.nextState()
+    renderer?.nextState();
     switch (mainButtonState) {
       case MainButtonState.Edit:
         return handleEditComplete;
@@ -1783,7 +1784,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       default:
         return handleSendWithConfirmation;
     }
-  }, [mainButtonState, handleEditComplete, handleSendWithConfirmation]);
+  }, [mainButtonState, handleEditComplete, handleSendWithConfirmation, renderer]);
 
   const withBotCommands = isChatWithBot && botMenuButton?.type === 'commands' && !editingMessage
     && botCommands !== false && !activeVoiceRecording;

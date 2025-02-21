@@ -1,3 +1,4 @@
+/* eslint-disable no-null/no-null */
 import React, {
   memo, useEffect, useMemo,
   useRef,
@@ -66,6 +67,8 @@ import {
 import {
   IS_ANDROID, IS_ELECTRON, IS_IOS, IS_SAFARI, IS_TRANSLATION_SUPPORTED, MASK_IMAGE_DISABLED,
 } from '../../util/browser/windowEnvironment';
+import { AnimBgRender } from '../../util/AnimBackgroundRender';
+import { transformStringsToColors } from '../../util/BaseAnimBackgroundRender';
 import buildClassName from '../../util/buildClassName';
 import buildStyle from '../../util/buildStyle';
 import captureEscKeyListener from '../../util/captureEscKeyListener';
@@ -107,7 +110,6 @@ import MiddleSearch from './search/MiddleSearch.async';
 
 import './MiddleColumn.scss';
 import styles from './MiddleColumn.module.scss';
-import { AnimBgRender } from '../../util/renderGradientBackground';
 
 interface OwnProps {
   leftColumnRef: React.RefObject<HTMLDivElement>;
@@ -498,31 +500,25 @@ function MiddleColumn({
   );
   const withExtraShift = Boolean(isMessagingDisabled || isSelectModeActive);
 
-
-  const bgRef = useRef<HTMLCanvasElement>(null)
+  const bgRef = useRef<HTMLCanvasElement>(null);
   const animDivRef = useRef<HTMLDivElement>(null);
 
-  const [renderer, setRenderer] = useState<AnimBgRender |null>(null);
-
+  const [renderer, setRenderer] = useState<AnimBgRender | null>(null);
 
   useEffect(() => {
-
     if (bgRef.current && animDivRef.current) {
+      const renderer2 = new AnimBgRender(bgRef.current, animDivRef.current);
+      setRenderer(renderer2);
+      renderer2.setColors(transformStringsToColors({
+        first: fill?.settings.backgroundColor,
+        second: fill?.settings.secondBackgroundColor,
+        third: fill?.settings.thirdBackgroundColor,
+        fourth: fill?.settings.fourthBackgroundColor,
+      }));
+    }
 
-      const renderer = new AnimBgRender(bgRef.current, animDivRef.current);
-      setRenderer(renderer)
-      renderer.setColors(renderer.transformStringsToColors({
-          first:  fill?.settings.backgroundColor,
-          second:  fill?.settings.secondBackgroundColor,
-          third:  fill?.settings.thirdBackgroundColor,
-          fourth:  fill?.settings.fourthBackgroundColor,
-        }))
-
-     }
-
-      return ()=>renderer?.detach()
-    }, [bgRef, animDivRef, fill])
-
+    return () => renderer?.detach();
+  }, [bgRef, animDivRef, fill, renderer]);
 
   return (
     <div
@@ -555,14 +551,15 @@ function MiddleColumn({
         className={bgClassName}
         style={buildStyle(
           customBackgroundValue && `--custom-background: ${customBackgroundValue}`,
-          fill?.dark && 'background: #000;'
+          fill?.dark && 'background: #000;',
         )}
       >
-        <canvas ref={bgRef}
-        style={buildStyle(
-          !fill && "visibility: hidden;",
-          fill?.dark &&
-          `
+        <canvas
+          ref={bgRef}
+          style={buildStyle(
+            !fill && 'visibility: hidden;',
+            fill?.dark
+          && `
             opacity: 0.55;
             -webkit-mask: center repeat;
             mask: center repeat;
@@ -570,8 +567,8 @@ function MiddleColumn({
             mask-size: 400px;
             -webkit-mask-image: var(--custom-background);
             mask-image: var(--custom-background);
-          `
-        )}
+          `,
+          )}
         />
       </div>
       <div id="middle-column-portals" />
@@ -788,7 +785,7 @@ export default memo(withGlobal<OwnProps>(
   (global, { isMobile }): StateProps => {
     const theme = selectTheme(global);
     const {
-      isBlurred: isBackgroundBlurred, background: customBackground, backgroundColor, patternColor, fill
+      isBlurred: isBackgroundBlurred, background: customBackground, backgroundColor, patternColor, fill,
     } = selectThemeValues(global, theme) || {};
 
     const {
