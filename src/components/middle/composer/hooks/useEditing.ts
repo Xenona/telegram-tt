@@ -3,15 +3,13 @@ import { getActions } from '../../../../global';
 
 import type { ApiDraft, ApiFormattedText, ApiMessage } from '../../../../api/types';
 import type { MessageListType, ThreadId } from '../../../../types';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 import { ApiMessageEntityTypes } from '../../../../api/types';
 
 import { EDITABLE_INPUT_CSS_SELECTOR } from '../../../../config';
 import { requestMeasure, requestNextMutation } from '../../../../lib/fasterdom/fasterdom';
 import { hasMessageMedia } from '../../../../global/helpers';
 import focusEditableElement from '../../../../util/focusEditableElement';
-import parseHtmlAsFormattedText from '../../../../util/parseHtmlAsFormattedText';
-import { getTextWithEntitiesAsHtml } from '../../../common/helpers/renderTextWithEntities';
 
 import { useDebouncedResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
@@ -19,7 +17,6 @@ import useEffectWithPrevDeps from '../../../../hooks/useEffectWithPrevDeps';
 import useLastCallback from '../../../../hooks/useLastCallback';
 import useBackgroundMode from '../../../../hooks/window/useBackgroundMode';
 import useBeforeUnload from '../../../../hooks/window/useBeforeUnload';
-import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const URL_ENTITIES = new Set<string>([ApiMessageEntityTypes.TextUrl, ApiMessageEntityTypes.Url]);
 const DEBOUNCE_MS = 300;
@@ -94,6 +91,7 @@ const useEditing = (
         chatId, threadId, type, text: update,
       });
     };
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
   }, [chatId, editedMessage, richInputCtx.editable.htmlS, setEditingDraft, threadId, type]);
 
   const detectLinkDebounced = useDebouncedResolver(() => {
@@ -103,9 +101,12 @@ const useEditing = (
     return !('webPage' in editedMessage.content)
       && editedMessage.content.text?.entities?.some((entity) => URL_ENTITIES.has(entity.type))
       && !(edited.entities?.some((entity) => URL_ENTITIES.has(entity.type)));
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
   }, [editedMessage, richInputCtx.editable.htmlS], DEBOUNCE_MS, true);
 
-  const getShouldResetNoWebPageDebounced = useDerivedSignal(detectLinkDebounced, [detectLinkDebounced, richInputCtx.editable.htmlS], true);
+  const getShouldResetNoWebPageDebounced = useDerivedSignal(detectLinkDebounced,
+    [detectLinkDebounced, richInputCtx.editable.htmlS],
+    true);
 
   useEffectWithPrevDeps(([prevEditedMessage]) => {
     if (!editedMessage || prevEditedMessage?.id !== editedMessage.id) {

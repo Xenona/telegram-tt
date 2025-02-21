@@ -1,48 +1,48 @@
 export function insertEnterInsideBlockquote(e: KeyboardEvent) {
-  let s = window.getSelection();
-  if(s && s.isCollapsed) {
-    let r = s.getRangeAt(0)
-    let noteAnc: Node | null = r.endContainer
-    if (r.endOffset == 0) {
-      let isStart = true
+  const s = window.getSelection();
+  if (s && s.isCollapsed) {
+    const r = s.getRangeAt(0);
+    let noteAnc: Node | null = r.endContainer;
+    if (r.endOffset === 0) {
+      let isStart = true;
       while (noteAnc && (!('tagName' in noteAnc) || noteAnc.tagName !== 'BLOCKQUOTE')) {
         if (noteAnc.previousSibling) {
-          isStart = false
-          break
+          isStart = false;
+          break;
         }
-        noteAnc = noteAnc.parentNode
+        noteAnc = noteAnc.parentNode;
       }
 
-      if(isStart && noteAnc) {
-        s.removeAllRanges()
-        let r = document.createRange()
-        r.setStartBefore(noteAnc)
-        r.setEndBefore(noteAnc)
-        let textNode = document.createTextNode(" ")
-        r.insertNode(textNode)
-        r.collapse(true)
-        s.addRange(r)
+      if (isStart && noteAnc) {
+        s.removeAllRanges();
+        const nr = document.createRange();
+        nr.setStartBefore(noteAnc);
+        nr.setEndBefore(noteAnc);
+        const textNode = document.createTextNode(' ');
+        nr.insertNode(textNode);
+        nr.collapse(true);
+        s.addRange(nr);
         e.preventDefault();
         // document.execCommand("insertText", false, "\n")
       }
-    } else if(r.endOffset == r.endContainer.textContent?.length) {
-      let isEnd = true
+    } else if (r.endOffset === r.endContainer.textContent?.length) {
+      let isEnd = true;
       while (noteAnc && (!('tagName' in noteAnc) || noteAnc.tagName !== 'BLOCKQUOTE')) {
         if (noteAnc.nextSibling) {
-          isEnd = false
-          break
+          isEnd = false;
+          break;
         }
-        noteAnc = noteAnc.parentNode
+        noteAnc = noteAnc.parentNode;
       }
-      if(isEnd && noteAnc) {
-        s.removeAllRanges()
-        let r = document.createRange()
-        r.setStartAfter(noteAnc)
-        r.setEndAfter(noteAnc)
-        let textNode = document.createTextNode(" ")
-        r.insertNode(textNode)
-        r.collapse(false)
-        s.addRange(r)
+      if (isEnd && noteAnc) {
+        s.removeAllRanges();
+        const nr = document.createRange();
+        nr.setStartAfter(noteAnc);
+        nr.setEndAfter(noteAnc);
+        const textNode = document.createTextNode(' ');
+        nr.insertNode(textNode);
+        nr.collapse(false);
+        s.addRange(nr);
         e.preventDefault();
         // document.execCommand("insertText", false, "\n")
       }

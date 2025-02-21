@@ -1,7 +1,11 @@
-import useDynamicColorListener from "../../../hooks/stickers/useDynamicColorListener";
-import { requestMutation } from "../../../lib/fasterdom/fasterdom";
-import React, { FC, memo, useEffect, useRef } from "../../../lib/teact/teact";
-import { RichInputCtx } from "./useRichEditable";
+import type { FC } from '../../../lib/teact/teact';
+import React, { memo, useEffect, useRef } from '../../../lib/teact/teact';
+
+import type { RichInputCtx } from './useRichEditable';
+
+import { requestMutation } from '../../../lib/fasterdom/fasterdom';
+
+import useDynamicColorListener from '../../../hooks/stickers/useDynamicColorListener';
 
 type OwnProps = {
   className?: string;
@@ -12,7 +16,7 @@ type OwnProps = {
   richInputCtx: RichInputCtx;
 };
 
-let nextAttach: (() => void) | null = null;
+let nextAttach: (() => void) | undefined;
 
 const RichEditableAttachment: FC<OwnProps> = ({
   richInputCtx,
@@ -22,35 +26,34 @@ const RichEditableAttachment: FC<OwnProps> = ({
   disableEdit,
   detached,
 }) => {
+  // eslint-disable-next-line no-null/no-null
   const attachmentRef = useRef<HTMLDivElement>(null);
   const customColor = useDynamicColorListener(attachmentRef, detached);
   const editable = richInputCtx.editable;
 
   useEffect(() => {
-    if (!attachmentRef.current) return;
-    if (detached) return;
+    if (!attachmentRef.current || detached) return () => {};
 
-    const editable = richInputCtx.editable;
+    const attEditable = richInputCtx.editable;
     const target = attachmentRef.current;
-    
-    if(editable.isAttached()) {
+
+    if (attEditable.isAttached()) {
       nextAttach = () => {
-        editable.attachTo(target);
-      }
+        attEditable.attachTo(target);
+      };
     } else {
-      editable.attachTo(target);
+      attEditable.attachTo(target);
     }
 
     return () => {
-      editable.detachFrom(target);
+      attEditable.detachFrom(target);
       nextAttach?.();
-      nextAttach = null;
+      nextAttach = undefined;
     };
   }, [attachmentRef, richInputCtx.editable, detached]);
 
   useEffect(() => {
-    if (!attachmentRef.current || !editable.isAttached(attachmentRef.current))
-      return;
+    if (!attachmentRef.current || !editable.isAttached(attachmentRef.current)) return;
 
     requestMutation(() => {
       editable.applyRootProperties({
@@ -63,15 +66,14 @@ const RichEditableAttachment: FC<OwnProps> = ({
   }, [editable, attachmentRef, className, disableEdit, placeholder, tabIndex]);
 
   useEffect(() => {
-    if (!attachmentRef.current || !editable.isAttached(attachmentRef.current))
-      return;
+    if (!attachmentRef.current || !editable.isAttached(attachmentRef.current)) return;
 
     requestMutation(() => {
-      editable.emojiRenderer.setCustomColor(customColor ?? "");
+      editable.emojiRenderer.setCustomColor(customColor ?? '');
     });
   }, [editable, attachmentRef, customColor]);
 
-  return <div ref={attachmentRef}></div>;
+  return <div ref={attachmentRef} />;
 };
 
 export default memo(RichEditableAttachment);

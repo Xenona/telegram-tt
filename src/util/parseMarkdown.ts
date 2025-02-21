@@ -1,9 +1,11 @@
-import {
+import type {
   ApiFormattedText,
   ApiMessageEntity,
   ApiMessageEntityDefault,
+} from '../api/types';
+import {
   ApiMessageEntityTypes,
-} from "../api/types";
+} from '../api/types';
 
 type ParserEntityTypes =
   | ApiMessageEntityTypes.Bold
@@ -14,68 +16,68 @@ type ParserEntityTypes =
   | ApiMessageEntityTypes.Spoiler;
 
 const EntityChar: { [key: string]: ParserEntityTypes | undefined } = {
-  "*": ApiMessageEntityTypes.Bold,
+  '*': ApiMessageEntityTypes.Bold,
   _: ApiMessageEntityTypes.Italic,
-  "~": ApiMessageEntityTypes.Strike,
-  "`": ApiMessageEntityTypes.Code,
-  "|": ApiMessageEntityTypes.Spoiler,
+  '~': ApiMessageEntityTypes.Strike,
+  '`': ApiMessageEntityTypes.Code,
+  '|': ApiMessageEntityTypes.Spoiler,
 };
 
 type Token = (
   | {
-      type: "entity";
-      entity: ApiMessageEntityTypes.Pre;
-      lang?: string;
-    }
+    type: 'entity';
+    entity: ApiMessageEntityTypes.Pre;
+    lang?: string;
+  }
   | {
-      type: "entity";
-      entity: Exclude<ParserEntityTypes, ApiMessageEntityTypes.Pre>;
-    }
-  | { type: "text" }
+    type: 'entity';
+    entity: Exclude<ParserEntityTypes, ApiMessageEntityTypes.Pre>;
+  }
+  | { type: 'text' }
 ) & {
   str: string;
 };
 
 function tokenize(text: string): Token[] {
-  let tokens: Token[] = [];
-  let addFormI = 0;
-  let accum = "";
-  let dumpAccum = () => {
-    if (accum.length)
+  const tokens: Token[] = [];
+  let accum = '';
+  const dumpAccum = () => {
+    if (accum.length) {
       tokens.push({
-        type: "text",
+        type: 'text',
         str: accum,
       });
-    accum = "";
+    }
+    accum = '';
   };
 
   for (let i = 0; i < text.length; i++) {
-    let cur = text[i];
-    let lookAhead = text[i + 1] ?? "";
-    let sLookAhead = text[i + 2] ?? "";
+    const cur = text[i];
+    const lookAhead = text[i + 1] ?? '';
+    const sLookAhead = text[i + 2] ?? '';
 
-    let curEnt = EntityChar[cur];
-    if (curEnt == ApiMessageEntityTypes.Code) {
+    const curEnt = EntityChar[cur];
+    if (curEnt === ApiMessageEntityTypes.Code) {
       dumpAccum();
-      if (lookAhead == "`" && sLookAhead == "`") {
+      if (lookAhead === '`' && sLookAhead === '`') {
         tokens.push({
-          type: "entity",
+          type: 'entity',
           entity: ApiMessageEntityTypes.Pre,
-          str: "```",
+          str: '```',
         });
         i += 2;
       } else {
         tokens.push({
-          type: "entity",
+          type: 'entity',
           entity: ApiMessageEntityTypes.Code,
-          str: "`",
+          str: '`',
         });
       }
     } else if (curEnt) {
-      if (lookAhead == cur) {
+      if (lookAhead === cur) {
         dumpAccum();
         tokens.push({
-          type: "entity",
+          type: 'entity',
           entity: curEnt,
           str: cur + lookAhead,
         });
@@ -98,9 +100,9 @@ function countTokens(tokens: Token[]): {
   dec(entity: ApiMessageEntityTypes, count?: number): void;
   inc(entity: ApiMessageEntityTypes, count?: number): void;
 } {
-  let res: Map<ApiMessageEntityTypes, number> = new Map();
-  for (let token of tokens) {
-    if ("entity" in token) {
+  const res: Map<ApiMessageEntityTypes, number> = new Map();
+  for (const token of tokens) {
+    if ('entity' in token) {
       res.set(token.entity, (res.get(token.entity) ?? 0) + 1);
     }
   }
@@ -120,49 +122,49 @@ function countTokens(tokens: Token[]): {
 }
 
 function getPreLanguage(
-  preContents: string
-): [string | undefined, string] | null {
-  let fullTrim = preContents.trim();
-  if (fullTrim.length == 0) {
-    return null;
+  preContents: string,
+): [string | undefined, string] | undefined {
+  const fullTrim = preContents.trim();
+  if (fullTrim.length === 0) {
+    return undefined;
   }
 
-  let breakPos = preContents.indexOf("\n");
+  const breakPos = preContents.indexOf('\n');
   let lang: string | undefined;
   let rest = fullTrim;
 
-  if (breakPos != -1) {
+  if (breakPos !== -1) {
     lang = preContents.slice(0, breakPos).trim();
     rest = preContents.slice(breakPos + 1);
   }
 
   rest = rest.trim();
-  if (rest.length == 0) {
+  if (rest.length === 0) {
     return [undefined, fullTrim];
   }
 
-  if (lang?.length == 0) lang = undefined;
+  if (lang?.length === 0) lang = undefined;
 
   return [lang, rest];
 }
 
 /// Code pass: Remove all entities inside codeblocks
 function doCodePass(tokens: Token[]): Token[] {
-  let res: Token[] = [];
-  let tokenCount = countTokens(tokens);
+  const res: Token[] = [];
+  const tokenCount = countTokens(tokens);
 
   let currentCode:
-    | ApiMessageEntityTypes.Code
-    | ApiMessageEntityTypes.Pre
-    | null = null;
-  let accum = "";
-  for (let token of tokens) {
-    if (token.type == "entity") {
+  | ApiMessageEntityTypes.Code
+  | ApiMessageEntityTypes.Pre
+  | undefined;
+  let accum = '';
+  for (const token of tokens) {
+    if (token.type === 'entity') {
       let discard = false;
-      if (currentCode == null) {
+      if (currentCode === undefined) {
         if (
-          token.entity == ApiMessageEntityTypes.Pre ||
-          token.entity == ApiMessageEntityTypes.Code
+          token.entity === ApiMessageEntityTypes.Pre
+          || token.entity === ApiMessageEntityTypes.Code
         ) {
           if (tokenCount.get(token.entity) >= 2) {
             currentCode = token.entity;
@@ -174,13 +176,13 @@ function doCodePass(tokens: Token[]): Token[] {
         } else {
           res.push(token);
         }
-      } else if (currentCode == token.entity) {
+      } else if (currentCode === token.entity) {
         tokenCount.dec(token.entity);
 
-        if (currentCode == ApiMessageEntityTypes.Pre) {
-          let langAndRest = getPreLanguage(accum);
+        if (currentCode === ApiMessageEntityTypes.Pre) {
+          const langAndRest = getPreLanguage(accum);
           if (langAndRest) {
-            res.push({ type: "text", str: langAndRest[1] });
+            res.push({ type: 'text', str: langAndRest[1] });
             res.push({
               ...token,
               entity: ApiMessageEntityTypes.Pre,
@@ -189,15 +191,15 @@ function doCodePass(tokens: Token[]): Token[] {
           } else {
             // invalid pre block
             res.pop();
-            res.push({ type: "text", str: "```" + accum + "```" });
+            res.push({ type: 'text', str: `\`\`\`${accum}\`\`\`` });
           }
         } else {
-          res.push({ type: "text", str: accum });
+          res.push({ type: 'text', str: accum });
           res.push(token);
         }
 
-        currentCode = null;
-        accum = "";
+        currentCode = undefined;
+        accum = '';
       } else {
         discard = true;
       }
@@ -207,12 +209,10 @@ function doCodePass(tokens: Token[]): Token[] {
         tokenCount.dec(token.entity);
         accum += token.str;
       }
+    } else if (currentCode === undefined) {
+      res.push(token);
     } else {
-      if (currentCode == null) {
-        res.push(token);
-      } else {
-        accum += token.str;
-      }
+      accum += token.str;
     }
   }
 
@@ -226,27 +226,27 @@ type ConsumedInfo = {
 
 // Generate entities from tokens while removing unterminated ones
 function tokensToEntities(tokens: Token[]): [ApiFormattedText, ConsumedInfo[]] {
-  let tokenCount = countTokens(tokens);
-  let tokenStarts: Map<ApiMessageEntityTypes, number> = new Map();
+  const tokenCount = countTokens(tokens);
+  const tokenStarts: Map<ApiMessageEntityTypes, number> = new Map();
 
-  let resStr = "";
-  let resEnt: ApiMessageEntity[] = [];
-  let resConsumed: ConsumedInfo[] = [];
+  let resStr = '';
+  const resEnt: ApiMessageEntity[] = [];
+  const resConsumed: ConsumedInfo[] = [];
 
-  for (let token of tokens) {
-    if (token.type == "entity") {
+  for (const token of tokens) {
+    if (token.type === 'entity') {
       if (tokenStarts.has(token.entity)) {
         const startPos = tokenStarts.get(token.entity)!;
 
-        let newt: ApiMessageEntity = {
+        const newt: ApiMessageEntity = {
           type: token.entity,
           offset: startPos,
           length: resStr.length - startPos,
         };
 
         if (
-          newt.type == ApiMessageEntityTypes.Pre &&
-          token.entity == ApiMessageEntityTypes.Pre
+          newt.type === ApiMessageEntityTypes.Pre
+          && token.entity === ApiMessageEntityTypes.Pre
         ) {
           newt.language = token.lang;
         }
@@ -285,14 +285,14 @@ function tokensToEntities(tokens: Token[]): [ApiFormattedText, ConsumedInfo[]] {
 
 function trimMessage(text: ApiFormattedText): ApiFormattedText {
   let str = text.text;
-  let entities = text.entities ?? [];
-  let startSize = str.length;
+  const entities = text.entities ?? [];
+  const startSize = str.length;
   str = str.trimStart();
-  let startShift = startSize - str.length;
+  const startShift = startSize - str.length;
   str = str.trimEnd();
 
-  if (startSize != str.length) {
-    for (let ent of entities) {
+  if (startSize !== str.length) {
+    for (const ent of entities) {
       if (ent.offset < startShift) {
         ent.length = ent.offset + ent.length - startShift;
         ent.offset = 0;
@@ -315,17 +315,16 @@ function trimMessage(text: ApiFormattedText): ApiFormattedText {
 function addExternalEntities(
   text: ApiFormattedText,
   consumed: ConsumedInfo[],
-  extEnt: ApiMessageEntity[]
+  extEnt: ApiMessageEntity[],
 ): ApiFormattedText {
-  if (extEnt.length == 0) return text;
+  if (extEnt.length === 0) return text;
 
   consumed = consumed.sort((a, b) => a.pos - b.pos);
   extEnt = extEnt.sort((a, b) => a.offset - b.offset);
 
-  for (let ent of extEnt) {
+  for (const ent of extEnt) {
     let start = ent.offset;
     let end = ent.offset + ent.length;
-    console.log(start, end);
     for (let i = 0; i < consumed.length; i++) {
       if (start >= consumed[i].pos) {
         start -= Math.min(consumed[i].consumed, start - consumed[i].pos);
@@ -351,7 +350,7 @@ type FixupEntityTypes =
   | ApiMessageEntityTypes.Strike
   | ApiMessageEntityTypes.Spoiler;
 
-let breakableEntities: FixupEntityTypes[] = [
+const breakableEntities: FixupEntityTypes[] = [
   ApiMessageEntityTypes.Bold,
   ApiMessageEntityTypes.Italic,
   ApiMessageEntityTypes.Strike,
@@ -360,26 +359,26 @@ let breakableEntities: FixupEntityTypes[] = [
 
 // Cleanup entites by removing duplicates and extending
 type FixupToken = {
-  action: "start" | "end";
+  action: 'start' | 'end';
   type: FixupEntityTypes;
 };
 
 function fixupEntities(text: ApiFormattedText): ApiFormattedText {
-  let startEntities = text.entities ?? [];
+  const startEntities = text.entities ?? [];
   let resEntities = [];
 
-  let fixupMap: Map<number, FixupToken[]> = new Map();
-  for (let ent of startEntities) {
+  const fixupMap: Map<number, FixupToken[]> = new Map();
+  for (const ent of startEntities) {
     const start = ent.offset;
     const end = ent.offset + ent.length;
 
-    let startMarkers = fixupMap.get(start) ?? [];
-    let endMarkers = fixupMap.get(end) ?? [];
+    const startMarkers = fixupMap.get(start) ?? [];
+    const endMarkers = fixupMap.get(end) ?? [];
 
-    let type = ent.type as FixupEntityTypes;
+    const type = ent.type as FixupEntityTypes;
     if (breakableEntities.includes(type)) {
-      startMarkers.push({ action: "start", type });
-      endMarkers.push({ action: "end", type });
+      startMarkers.push({ action: 'start', type });
+      endMarkers.push({ action: 'end', type });
     } else {
       resEntities.push(ent);
     }
@@ -391,32 +390,32 @@ function fixupEntities(text: ApiFormattedText): ApiFormattedText {
   let fixupList = [...fixupMap.entries()];
   fixupList = fixupList.sort((a, b) => a[0] - b[0]);
 
-  let curState: Map<FixupEntityTypes, number> = new Map();
+  const curState: Map<FixupEntityTypes, number> = new Map();
   let curEnts: ApiMessageEntityDefault[] = [];
-  for (let [pos, entr] of fixupList) {
+  for (const [pos, entr] of fixupList) {
     // End all current entities
-    for (let e of curEnts) {
+    for (const e of curEnts) {
       e.length = pos - e.offset;
       resEntities.push(e);
     }
     curEnts = [];
 
-    for (let upd of entr) {
-      let cur = curState.get(upd.type) ?? 0;
-      if (upd.action == "start") {
+    for (const upd of entr) {
+      const cur = curState.get(upd.type) ?? 0;
+      if (upd.action === 'start') {
         curState.set(upd.type, cur + 1);
       } else {
         curState.set(upd.type, cur - 1);
       }
     }
 
-    for (let stat of curState.entries()) {
+    for (const stat of curState.entries()) {
       curEnts.push({ type: stat[0], offset: pos, length: 0 });
     }
   }
 
   resEntities = resEntities.sort((a, b) => {
-    if (a.offset == b.offset) return b.length - a.length;
+    if (a.offset === b.offset) return b.length - a.length;
     return a.offset - b.offset;
   });
 
@@ -425,16 +424,15 @@ function fixupEntities(text: ApiFormattedText): ApiFormattedText {
 
 export function parseMarkdown(
   text: string,
-  extEnt: ApiMessageEntity[] = []
+  extEnt: ApiMessageEntity[] = [],
 ): ApiFormattedText {
   let tokens: Token[] = tokenize(text);
   tokens = doCodePass(tokens);
+  // eslint-disable-next-line prefer-const
   let [fmtText, consumed] = tokensToEntities(tokens);
 
-  console.log(extEnt);
   fmtText = addExternalEntities(fmtText, consumed, extEnt);
   fmtText = trimMessage(fmtText);
   fmtText = fixupEntities(fmtText);
-  console.log(fmtText.entities);
   return fmtText;
 }

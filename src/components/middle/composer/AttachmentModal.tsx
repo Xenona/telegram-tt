@@ -10,6 +10,7 @@ import type {
 import type { GlobalState } from '../../../global/types';
 import type { MessageListType, ThreadId } from '../../../types';
 import type { Signal } from '../../../util/signals';
+import type { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 import {
   BASE_EMOJI_KEYWORD_LANG,
@@ -35,7 +36,6 @@ import useContextMenuHandlers from '../../../hooks/useContextMenuHandlers';
 import useDerivedState from '../../../hooks/useDerivedState';
 import useEffectOnce from '../../../hooks/useEffectOnce';
 import useFlag from '../../../hooks/useFlag';
-import useGetSelectionRange from '../../../hooks/useGetSelectionRange';
 import useLastCallback from '../../../hooks/useLastCallback';
 import useOldLang from '../../../hooks/useOldLang';
 import usePreviousDeprecated from '../../../hooks/usePreviousDeprecated';
@@ -57,7 +57,6 @@ import EmojiTooltip from './EmojiTooltip.async';
 import MentionTooltip from './MentionTooltip';
 import MessageInput from './MessageInput';
 import SymbolMenuButton from './SymbolMenuButton';
-import { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 import styles from './AttachmentModal.module.scss';
 
@@ -157,8 +156,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
 
   // eslint-disable-next-line no-null/no-null
   const mainButtonRef = useRef<HTMLButtonElement | null>(null);
-  // eslint-disable-next-line no-null/no-null
-  const inputRef = useRef<HTMLDivElement>(null);
 
   const hideTimeoutRef = useRef<number>();
   const prevAttachments = usePreviousDeprecated(attachments);
@@ -214,8 +211,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     return [hasOneSpoiler, false];
   }, [renderingAttachments]);
 
-  const getSelectionRange = useGetSelectionRange(`#${EDITABLE_INPUT_MODAL_ID}`);
-
   const {
     isEmojiTooltipOpen,
     filteredEmojis,
@@ -225,7 +220,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
   } = useEmojiTooltip(
     Boolean(isReady && (isForCurrentMessageList || !isForMessage) && renderingIsOpen),
     richInputCtx,
-    EDITABLE_INPUT_MODAL_ID,
     recentEmojis,
     baseEmojiKeywords,
     emojiKeywords,

@@ -1,34 +1,34 @@
-import type { StateHookSetter } from "../../../../lib/teact/teact";
-import { getActions } from "../../../../global";
+import type { StateHookSetter } from '../../../../lib/teact/teact';
+import { getActions } from '../../../../global';
 
 import type {
   ApiAttachment,
   ApiFormattedText,
   ApiMessage,
-} from "../../../../api/types";
+} from '../../../../api/types';
+import type { PasteCtx } from '../../../common/richinput/RichEditable';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
+import { requestNextMutation } from '../../../../lib/fasterdom/fasterdom';
 import {
   canReplaceMessageMedia,
   isUploadingFileSticker,
-} from "../../../../global/helpers";
+} from '../../../../global/helpers';
 import {
   containsCustomEmoji,
   stripCustomEmoji,
-} from "../../../../global/helpers/symbols";
-import buildAttachment from "../helpers/buildAttachment";
-import getFilesFromDataTransferItems from "../helpers/getFilesFromDataTransferItems";
-
-import useOldLang from "../../../../hooks/useOldLang";
+} from '../../../../global/helpers/symbols';
 import {
-  RichInputCtx,
   useRichEditablePasteHandler,
-} from "../../../common/richinput/useRichEditable";
-import { PasteCtx } from "../../../common/richinput/RichEditable";
-import { requestNextMutation } from "../../../../lib/fasterdom/fasterdom";
+} from '../../../common/richinput/useRichEditable';
+import buildAttachment from '../helpers/buildAttachment';
+import getFilesFromDataTransferItems from '../helpers/getFilesFromDataTransferItems';
 
-const TYPE_HTML = "text/html";
-const DOCUMENT_TYPE_WORD = "urn:schemas-microsoft-com:office:word";
-const NAMESPACE_PREFIX_WORD = "xmlns:w";
+import useOldLang from '../../../../hooks/useOldLang';
+
+const TYPE_HTML = 'text/html';
+const DOCUMENT_TYPE_WORD = 'urn:schemas-microsoft-com:office:word';
+const NAMESPACE_PREFIX_WORD = 'xmlns:w';
 
 const useClipboardPaste = (
   isActive: boolean,
@@ -37,13 +37,13 @@ const useClipboardPaste = (
   setNextText: StateHookSetter<ApiFormattedText | undefined>,
   editedMessage: ApiMessage | undefined,
   shouldStripCustomEmoji?: boolean,
-  onCustomEmojiStripped?: VoidFunction
+  onCustomEmojiStripped?: VoidFunction,
 ) => {
   const { showNotification } = getActions();
   const lang = useOldLang();
 
   useRichEditablePasteHandler(
-    richInputCtx, 
+    richInputCtx,
     async (p: PasteCtx) => {
       if (p.text && containsCustomEmoji(p.text) && shouldStripCustomEmoji) {
         p.text = stripCustomEmoji(p.text);
@@ -68,9 +68,8 @@ const useClipboardPaste = (
       try {
         const parser = new DOMParser();
         const parsedDocument = parser.parseFromString(p.html, TYPE_HTML);
-        isWordDocument =
-          parsedDocument.documentElement.getAttribute(NAMESPACE_PREFIX_WORD) ===
-          DOCUMENT_TYPE_WORD;
+        isWordDocument = parsedDocument.documentElement.getAttribute(NAMESPACE_PREFIX_WORD)
+          === DOCUMENT_TYPE_WORD;
       } catch (err: any) {
         // Ignore
       }
@@ -80,16 +79,15 @@ const useClipboardPaste = (
 
       const newAttachments = files
         ? await Promise.all(
-            files.map((file) => buildAttachment(file.name, file))
-          )
+          files.map((file) => buildAttachment(file.name, file)),
+        )
         : [];
-      const canReplace =
-        (editedMessage &&
-          newAttachments?.length &&
-          canReplaceMessageMedia(editedMessage, newAttachments[0])) ||
-        Boolean(hasText);
+      const canReplace = (editedMessage
+          && newAttachments?.length
+          && canReplaceMessageMedia(editedMessage, newAttachments[0]))
+        || Boolean(hasText);
       const isUploadingDocumentSticker = isUploadingFileSticker(
-        newAttachments[0]
+        newAttachments[0],
       );
       const isInAlbum = editedMessage && editedMessage?.groupedId;
 
@@ -97,8 +95,8 @@ const useClipboardPaste = (
         showNotification({
           message: lang(
             isInAlbum
-              ? "lng_edit_media_album_error"
-              : "lng_edit_media_invalid_file"
+              ? 'lng_edit_media_album_error'
+              : 'lng_edit_media_invalid_file',
           ),
         });
         return;
@@ -107,7 +105,7 @@ const useClipboardPaste = (
       if (isInAlbum) {
         shouldSetAttachments = canReplace;
         if (!shouldSetAttachments) {
-          showNotification({ message: lang("lng_edit_media_album_error") });
+          showNotification({ message: lang('lng_edit_media_album_error') });
           return;
         }
       }
@@ -117,12 +115,12 @@ const useClipboardPaste = (
           setAttachments(
             editedMessage
               ? newAttachments
-              : (attachments) => attachments.concat(newAttachments)
+              : (attachments) => attachments.concat(newAttachments),
           );
-        })
+        });
       }
     },
-    isActive
+    isActive,
   );
 };
 

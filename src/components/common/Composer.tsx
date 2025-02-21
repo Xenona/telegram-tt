@@ -1,6 +1,6 @@
 import type { FC } from '../../lib/teact/teact';
 import React, {
-  memo, useEffect, useMemo, useRef, useSignal, useState,
+  memo, useEffect, useMemo, useRef, useState,
 } from '../../lib/teact/teact';
 import { getActions, getGlobal, withGlobal } from '../../global';
 
@@ -103,9 +103,7 @@ import buildClassName from '../../util/buildClassName';
 import { formatMediaDuration, formatVoiceRecordDuration } from '../../util/dates/dateFormat';
 import { processDeepLink } from '../../util/deeplink';
 import { tryParseDeepLink } from '../../util/deepLinkParser';
-import deleteLastCharacterOutsideSelection from '../../util/deleteLastCharacterOutsideSelection';
 import { processMessageInputForCustomEmoji } from '../../util/emoji/customEmojiManager';
-import { betterExecCommand } from '../../util/execCommand';
 import focusEditableElement from '../../util/focusEditableElement';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
 import parseHtmlAsFormattedText from '../../util/parseHtmlAsFormattedText';
@@ -114,10 +112,11 @@ import { IS_IOS, IS_VOICE_RECORDING_SUPPORTED } from '../../util/windowEnvironme
 import windowSize from '../../util/windowSize';
 import applyIosAutoCapitalizationFix from '../middle/composer/helpers/applyIosAutoCapitalizationFix';
 import buildAttachment, { prepareAttachmentsToSend } from '../middle/composer/helpers/buildAttachment';
-import { buildCustomEmojiHtml } from './richinput/customEmoji';
 import { getPeerColorClass } from './helpers/peerColor';
 import renderText from './helpers/renderText';
 import { getTextWithEntitiesAsHtml } from './helpers/renderTextWithEntities';
+import { buildCustomEmojiHtml } from './richinput/customEmoji';
+import { useRichEditable } from './richinput/useRichEditable';
 
 import useInterval from '../../hooks/schedulers/useInterval';
 import useTimeout from '../../hooks/schedulers/useTimeout';
@@ -125,7 +124,6 @@ import useContextMenuHandlers from '../../hooks/useContextMenuHandlers';
 import useDerivedState from '../../hooks/useDerivedState';
 import useEffectWithPrevDeps from '../../hooks/useEffectWithPrevDeps';
 import useFlag from '../../hooks/useFlag';
-import useGetSelectionRange from '../../hooks/useGetSelectionRange';
 import useLastCallback from '../../hooks/useLastCallback';
 import useOldLang from '../../hooks/useOldLang';
 import usePreviousDeprecated from '../../hooks/usePreviousDeprecated';
@@ -145,7 +143,6 @@ import useInlineBotTooltip from '../middle/composer/hooks/useInlineBotTooltip';
 import useMentionTooltip from '../middle/composer/hooks/useMentionTooltip';
 import useStickerTooltip from '../middle/composer/hooks/useStickerTooltip';
 import useVoiceRecording from '../middle/composer/hooks/useVoiceRecording';
-import { useRichEditable } from './richinput/useRichEditable';
 
 import AttachmentModal from '../middle/composer/AttachmentModal.async';
 import AttachMenu from '../middle/composer/AttachMenu';
@@ -419,7 +416,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const lang = useOldLang();
 
-  const {getHtml, ctx: richInputCtx} = useRichEditable();
+  const { getHtml, ctx: richInputCtx } = useRichEditable();
 
   // eslint-disable-next-line no-null/no-null
   const storyReactionRef = useRef<HTMLButtonElement>(null);
@@ -437,7 +434,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   // Prevent Symbol Menu from closing when calendar is open
   const [isSymbolMenuForced, forceShowSymbolMenu, cancelForceShowSymbolMenu] = useFlag();
   const sendMessageAction = useSendMessageAction(chatId, threadId);
-  const [isInputHasFocus, markInputHasFocus, unmarkInputHasFocus] = useFlag();
+  const isInputHasFocus = false; // TODO: FIX
   const [isAttachMenuOpen, onAttachMenuOpen, onAttachMenuClose] = useFlag();
 
   const canMediaBeReplaced = editingMessage && canEditMedia(editingMessage);
@@ -515,7 +512,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const insertHtmlAndUpdateCursor = useLastCallback((newHtml: string, inInputId: string = editableInputId) => {
     if (inInputId === editableInputId && isComposerBlocked) return;
-    
+
     richInputCtx.editable.execCommand('insertHtml', newHtml);
   });
 
@@ -603,7 +600,10 @@ const Composer: FC<OwnProps & StateProps> = ({
     if (richInputCtx.editable.htmlS() && !isEditingRef.current) {
       sendMessageAction({ type: 'typing' });
     }
-  }, [richInputCtx.editable.htmlS, isEditingRef, isForCurrentMessageList, isInStoryViewer, sendMessageAction]);
+  }, [
+    richInputCtx.editable, richInputCtx.editable.htmlS, isEditingRef,
+    isForCurrentMessageList, isInStoryViewer, sendMessageAction,
+  ]);
 
   const isAdmin = chat && isChatAdmin(chat);
 
@@ -617,7 +617,6 @@ const Composer: FC<OwnProps & StateProps> = ({
     Boolean(isReady && isOnActiveTab && (isInStoryViewer || isForCurrentMessageList)
       && shouldSuggestStickers && !hasAttachments),
     richInputCtx,
-    undefined,
     recentEmojis,
     baseEmojiKeywords,
     emojiKeywords,
@@ -1312,19 +1311,19 @@ const Composer: FC<OwnProps & StateProps> = ({
   useEffect(() => {
     if (!isComposerBlocked) return;
 
-    richInputCtx.editable.clearInput()
+    richInputCtx.editable.clearInput();
   }, [isComposerBlocked, richInputCtx.editable, attachments]);
 
   const insertTextAndUpdateCursorAttachmentModal = useLastCallback((text: string) => {
     insertTextAndUpdateCursor(text, EDITABLE_INPUT_MODAL_ID);
   });
 
-  const removeSymbol = useLastCallback((inInputId = editableInputId) => {
-    richInputCtx.editable.removeLastSymbol()
+  const removeSymbol = useLastCallback(() => {
+    richInputCtx.editable.removeLastSymbol();
   });
 
   const removeSymbolAttachmentModal = useLastCallback(() => {
-    removeSymbol(EDITABLE_INPUT_MODAL_ID);
+    removeSymbol();
   });
 
   const handleAllScheduledClick = useLastCallback(() => {

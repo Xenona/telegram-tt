@@ -5,6 +5,6 @@ export enum RichInputKeyboardPriority {
 }
 
 export type RichInputKeyboardListener = {
-  priority: RichInputKeyboardPriority,
-  onKeydown: (event: KeyboardEvent) => boolean,
-}
+  priority: RichInputKeyboardPriority;
+  onKeydown: (event: KeyboardEvent) => boolean;
+};

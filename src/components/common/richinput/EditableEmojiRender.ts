@@ -1,23 +1,25 @@
-import { ApiSticker } from "../../../api/types";
-import { getGlobal } from "../../../global";
-import { selectIsAlwaysHighPriorityEmoji } from "../../../global/selectors";
+import { getGlobal } from '../../../global';
+
+import type { ApiSticker } from '../../../api/types';
+import type { RichEditable } from './RichEditable';
+
+import { requestMutation } from '../../../lib/fasterdom/fasterdom';
+import { ensureRLottie } from '../../../lib/rlottie/RLottie.async';
+import { selectIsAlwaysHighPriorityEmoji } from '../../../global/selectors';
+import AbsoluteVideo from '../../../util/AbsoluteVideo';
+import { getCustomEmojiMediaDataForInput } from '../../../util/emoji/customEmojiManager';
+import { round } from '../../../util/math';
+import { hexToRgb } from '../../../util/switchTheme';
+import { REM } from '../helpers/mediaDimensions';
+
 import {
   addColorFilter,
   removeColorFilter,
-} from "../../../hooks/stickers/useColorFilter";
-import { addBackgroundModeListener } from "../../../hooks/window/useBackgroundMode";
-import { addDevicePixelRatioListener } from "../../../hooks/window/useDevicePixelRatio";
-import { requestMutation } from "../../../lib/fasterdom/fasterdom";
-import { ensureRLottie } from "../../../lib/rlottie/RLottie.async";
-import AbsoluteVideo from "../../../util/AbsoluteVideo";
-import { getCustomEmojiMediaDataForInput } from "../../../util/emoji/customEmojiManager";
-import { round } from "../../../util/math";
-import { hexToRgb } from "../../../util/switchTheme";
-import { REM } from "../helpers/mediaDimensions";
-import type { RichEditable } from "./RichEditable";
+} from '../../../hooks/stickers/useColorFilter';
+import { addBackgroundModeListener } from '../../../hooks/window/useBackgroundMode';
+import { addDevicePixelRatioListener } from '../../../hooks/window/useDevicePixelRatio';
 
 const SIZE = 1.25 * REM;
-const THROTTLE_MS = 300;
 
 type CustomEmojiPlayer = {
   play: () => void;
@@ -30,15 +32,23 @@ let prefixCounter = 0;
 
 export class EditableEmojiRender {
   editable: RichEditable;
+
   prefixId: string;
+
   playersById: Map<string, CustomEmojiPlayer>;
+
   customColor: string;
+
   customColorFilter: string;
 
   sharedCanvas: HTMLCanvasElement;
+
   sharedCanvasHq: HTMLCanvasElement;
+
   absoluteContainer: HTMLDivElement;
+
   resizeObserver: ResizeObserver;
+
   detachCbs: (() => void)[];
 
   canPlayAnimatedEmojis: boolean;
@@ -47,25 +57,25 @@ export class EditableEmojiRender {
     this.editable = editable;
     this.playersById = new Map();
     this.prefixId = `EditableEmojiRender_${prefixCounter++}_`;
-    this.customColor = "";
-    this.customColorFilter = "";
+    this.customColor = '';
+    this.customColorFilter = '';
     // const customColor = useDynamicColorListener(inputRef, !isReady);
     // const colorFilter = useColorFilter(customColor, true);
     // const dpr = useDevicePixelRatio();
     // const playersById = useRef<Map<string, CustomEmojiPlayer>>(new Map());
-    this.sharedCanvas = document.createElement("canvas");
-    this.sharedCanvas.className = "shared-canvas";
-    this.sharedCanvasHq = document.createElement("canvas");
-    this.sharedCanvasHq.className = "shared-canvas";
-    this.absoluteContainer = document.createElement("div");
-    this.absoluteContainer.className = "shared-canvas";
+    this.sharedCanvas = document.createElement('canvas');
+    this.sharedCanvas.className = 'shared-canvas';
+    this.sharedCanvasHq = document.createElement('canvas');
+    this.sharedCanvasHq.className = 'shared-canvas';
+    this.absoluteContainer = document.createElement('div');
+    this.absoluteContainer.className = 'shared-canvas';
 
     this.canPlayAnimatedEmojis = true;
     this.detachCbs = [];
 
-    let throttleId: ReturnType<typeof setTimeout> | null = null;
+    let throttleId: ReturnType<typeof setTimeout> | undefined;
     this.resizeObserver = new ResizeObserver(() => {
-      if (throttleId !== null) return;
+      if (throttleId !== undefined) return;
       throttleId = setTimeout(() => {
         this.synchronizeElements();
       }, 300);
@@ -78,12 +88,12 @@ export class EditableEmojiRender {
     if (this.customColor) removeColorFilter(this.customColor);
     this.customColor = newColor;
 
-    if  (!newColor) return;
+    if (!newColor) return;
     this.customColorFilter = addColorFilter(newColor);
     this.synchronizeElements();
     document.documentElement.style.setProperty(
-      "--input-custom-emoji-filter",
-      this.customColorFilter || "none"
+      '--input-custom-emoji-filter',
+      this.customColorFilter || 'none',
     );
   }
 
@@ -101,17 +111,15 @@ export class EditableEmojiRender {
     const global = getGlobal();
     const playerIdsToClear = new Set(this.playersById.keys());
     const customEmojis = Array.from(
-      this.editable.root.querySelectorAll<HTMLElement>(".custom-emoji")
+      this.editable.root.querySelectorAll<HTMLElement>('.custom-emoji'),
     );
-
-    console.log("customEmojis", customEmojis);
 
     customEmojis.forEach((element) => {
       if (!element.dataset.uniqueId) {
         return;
       }
       const playerId = `${this.prefixId}${element.dataset.uniqueId}${
-        this.customColor || ""
+        this.customColor || ''
       }`;
       const documentId = element.dataset.documentId!;
 
@@ -126,11 +134,11 @@ export class EditableEmojiRender {
       const elementBounds = element.getBoundingClientRect();
       const x = round(
         (elementBounds.left - canvasBounds.left) / canvasBounds.width,
-        4
+        4,
       );
       const y = round(
         (elementBounds.top - canvasBounds.top) / canvasBounds.height,
-        4
+        4,
       );
 
       if (this.playersById.has(playerId)) {
@@ -143,9 +151,8 @@ export class EditableEmojiRender {
       if (!customEmoji) {
         return;
       }
-      const isHq =
-        customEmoji?.stickerSetInfo &&
-        selectIsAlwaysHighPriorityEmoji(global, customEmoji.stickerSetInfo);
+      const isHq = customEmoji?.stickerSetInfo
+        && selectIsAlwaysHighPriorityEmoji(global, customEmoji.stickerSetInfo);
       const renderId = [
         this.prefixId,
         documentId,
@@ -153,7 +160,7 @@ export class EditableEmojiRender {
         window.devicePixelRatio,
       ]
         .filter(Boolean)
-        .join("_");
+        .join('_');
 
       createPlayer({
         customEmoji,
@@ -194,7 +201,7 @@ export class EditableEmojiRender {
 
     const removeBgListener = addBackgroundModeListener(
       () => this.freezeAnimation(),
-      () => requestMutation(() => this.unfreezeAnimation())
+      () => requestMutation(() => this.unfreezeAnimation()),
     );
     this.detachCbs.push(removeBgListener);
 
@@ -257,10 +264,9 @@ async function createPlayer({
   colorFilter?: string;
 }): Promise<CustomEmojiPlayer> {
   if (customEmoji.isLottie) {
-    const color =
-      customEmoji.shouldUseTextColor && textColor
-        ? hexToRgb(textColor)
-        : undefined;
+    const color = customEmoji.shouldUseTextColor && textColor
+      ? hexToRgb(textColor)
+      : undefined;
     const RLottie = await ensureRLottie();
     const lottie = RLottie.init(
       mediaUrl,
@@ -272,7 +278,7 @@ async function createPlayer({
         isLowPriority: !isHq,
       },
       viewId,
-      color ? [color.r, color.g, color.b] : undefined
+      color ? [color.r, color.g, color.b] : undefined,
     );
 
     return {
@@ -286,10 +292,9 @@ async function createPlayer({
   }
 
   if (customEmoji.isVideo) {
-    const style =
-      customEmoji.shouldUseTextColor && colorFilter
-        ? `filter: ${colorFilter};`
-        : undefined;
+    const style = customEmoji.shouldUseTextColor && colorFilter
+      ? `filter: ${colorFilter};`
+      : undefined;
     const absoluteVideo = new AbsoluteVideo(mediaUrl, absoluteContainer, {
       size: SIZE,
       position,
@@ -299,10 +304,9 @@ async function createPlayer({
       play: () => absoluteVideo.play(),
       pause: () => absoluteVideo.pause(),
       destroy: () => absoluteVideo.destroy(),
-      updatePosition: (x: number, y: number) =>
-        absoluteVideo.updatePosition({ x, y }),
+      updatePosition: (x: number, y: number) => absoluteVideo.updatePosition({ x, y }),
     };
   }
 
-  throw new Error("Unsupported custom emoji type");
+  throw new Error('Unsupported custom emoji type');
 }

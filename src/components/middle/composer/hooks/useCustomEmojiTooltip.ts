@@ -1,16 +1,11 @@
-import type { RefObject } from 'react';
 import { useEffect } from '../../../../lib/teact/teact';
 import { getActions } from '../../../../global';
 
 import type { ApiSticker } from '../../../../api/types';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
-import { EMOJI_IMG_REGEX } from '../../../../config';
 import { requestNextMutation } from '../../../../lib/fasterdom/fasterdom';
 import twemojiRegex from '../../../../lib/twemojiRegex';
-import focusEditableElement from '../../../../util/focusEditableElement';
-import { getHtmlBeforeSelection } from '../../../../util/selection';
-import { IS_EMOJI_SUPPORTED } from '../../../../util/windowEnvironment';
 import { buildCustomEmojiHtml } from '../../../common/richinput/customEmoji';
 
 import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
@@ -18,7 +13,6 @@ import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useDerivedState from '../../../../hooks/useDerivedState';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
-import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const THROTTLE = 300;
 const RE_ENDS_ON_EMOJI = new RegExp(`(${twemojiRegex.source})$`, 'g');
@@ -38,9 +32,10 @@ export default function useCustomEmojiTooltip(
     if (!isEnabled || !matchable || !richInputCtx.editable.selectionS()?.collapsed) return undefined;
 
     const emojiMatch = matchable.match(RE_ENDS_ON_EMOJI);
-    if (!emojiMatch || emojiMatch.length == 0) return undefined;
+    if (!emojiMatch || emojiMatch.length === 0) return undefined;
 
     return emojiMatch[emojiMatch.length - 1];
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
   }, [richInputCtx.editable.matchableS, isEnabled], THROTTLE);
 
   const getLastEmoji = useDerivedSignal(
@@ -71,7 +66,7 @@ export default function useCustomEmojiTooltip(
 
     const html = buildCustomEmojiHtml(emoji);
     requestNextMutation(() => {
-      richInputCtx.editable.insertMatchableHtml(html, (c) => lastEmoji.indexOf(c) == -1);
+      richInputCtx.editable.insertMatchableHtml(html, (c) => lastEmoji.indexOf(c) === -1);
     });
   });
 

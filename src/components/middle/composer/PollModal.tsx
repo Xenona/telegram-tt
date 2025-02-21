@@ -8,22 +8,20 @@ import type { ApiNewPoll } from '../../../api/types';
 
 import { requestMeasure, requestNextMutation } from '../../../lib/fasterdom/fasterdom';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
-import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
+import { useRichInput } from '../../common/richinput/useRichInput';
 
 import useLastCallback from '../../../hooks/useLastCallback';
 import useOldLang from '../../../hooks/useOldLang';
 
 import Icon from '../../common/icons/Icon';
+import RichInput from '../../common/richinput/RichInput';
 import Button from '../../ui/Button';
 import Checkbox from '../../ui/Checkbox';
 import InputText from '../../ui/InputText';
 import Modal from '../../ui/Modal';
 import RadioGroup from '../../ui/RadioGroup';
-import TextArea from '../../ui/TextArea';
 
 import './PollModal.scss';
-import { useRichInput } from '../../common/richinput/useRichInput';
-import RichInput from '../../common/richinput/RichInput';
 
 export type OwnProps = {
   isOpen: boolean;
@@ -37,7 +35,6 @@ const MAX_LIST_HEIGHT = 320;
 const MAX_OPTIONS_COUNT = 10;
 const MAX_OPTION_LENGTH = 100;
 const MAX_QUESTION_LENGTH = 255;
-const MAX_SOLUTION_LENGTH = 200;
 
 const PollModal: FC<OwnProps> = ({
   isOpen, isQuiz, shouldBeAnonymous, onSend, onClear,
@@ -76,7 +73,7 @@ const PollModal: FC<OwnProps> = ({
       setCorrectOption(undefined);
       setHasErrors(false);
     }
-  }, [isQuiz, isOpen]);
+  }, [isQuiz, isOpen, solutionInputCtx.editable]);
 
   useEffect(() => focusInput(questionInputRef), [focusInput, isOpen]);
 

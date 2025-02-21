@@ -70,7 +70,7 @@ export default function useColorFilter(color?: string, asValue?: boolean) {
     if (!color) return undefined;
 
     return () => {
-      removeColorFilter(color)
+      removeColorFilter(color);
     };
   }, [color]);
 

@@ -1,17 +1,21 @@
-import { ApiFormattedText } from "../../../api/types";
-import { betterExecCommand } from "../../../util/execCommand";
-import focusEditableElement from "../../../util/focusEditableElement";
-import parseHtmlAsFormattedText from "../../../util/parseHtmlAsFormattedText";
-import { createSignal, Signal } from "../../../util/signals";
-import { preparePastedHtml } from "../../middle/composer/helpers/cleanHtml";
-import { getTextWithEntitiesAsHtml } from "../helpers/renderTextWithEntities";
-import { insertEnterInsideBlockquote } from "./blockquoteEnter";
-import { EditableEmojiRender } from "./EditableEmojiRender";
-import { RichInputKeyboardListener, RichInputKeyboardPriority } from "./Keyboard";
+import type { ApiFormattedText } from '../../../api/types';
+import type { Signal } from '../../../util/signals';
+import type { RichInputKeyboardListener } from './Keyboard';
 
-const SAFARI_BR = "<br>";
+import { betterExecCommand } from '../../../util/execCommand';
+import focusEditableElement from '../../../util/focusEditableElement';
+import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
+import { createSignal } from '../../../util/signals';
+import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
+import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
+import { insertEnterInsideBlockquote } from './blockquoteEnter';
+
+import { EditableEmojiRender } from './EditableEmojiRender';
+import { RichInputKeyboardPriority } from './Keyboard';
+
+const SAFARI_BR = '<br>';
 const WHITESPACE_RE = /\s/;
-export const IMG_ALT_MATCHABLE_MARKER = "IMG_ALT__";
+export const IMG_ALT_MATCHABLE_MARKER = 'IMG_ALT__';
 
 export type SelectionState = {
   collapsed: boolean;
@@ -29,36 +33,47 @@ export class RichEditable {
   public root: HTMLDivElement;
 
   public htmlS: Signal<string>;
-  private htmlSet: (html: string) => void;
-  public emptyS: Signal<boolean>;
-  private emptySet: (empty: boolean) => void;
-  public matchableS: Signal<string | null>;
-  private matchableSet: (matchable: string | null) => void;
-  public selectionS: Signal<SelectionState | null>;
-  private selectionSet: (selection: SelectionState | null) => void;
 
-  private attached: HTMLElement | null;
+  private htmlSet: (html: string) => void;
+
+  public emptyS: Signal<boolean>;
+
+  private emptySet: (empty: boolean) => void;
+
+  public matchableS: Signal<string | undefined>;
+
+  private matchableSet: (matchable: string | undefined) => void;
+
+  public selectionS: Signal<SelectionState | undefined>;
+
+  private selectionSet: (selection: SelectionState | undefined) => void;
+
+  private attached: HTMLElement | undefined;
+
   private disableEdit: boolean;
 
   private keyboardHandlers: RichInputKeyboardListener[];
+
   private selectionListener: () => void;
+
   private pasteHandlers: ((p: PasteCtx) => void)[];
+
   private pasteListener: (e: ClipboardEvent) => void;
 
   public emojiRenderer: EditableEmojiRender;
 
   constructor() {
-    this.root = document.createElement("div");
-    this.attached = null;
+    this.root = document.createElement('div');
+    this.attached = undefined;
 
     this.disableEdit = false;
     this.updateRootProps();
 
-    [this.htmlS, this.htmlSet] = createSignal("");
+    [this.htmlS, this.htmlSet] = createSignal('');
     [this.emptyS, this.emptySet] = createSignal(true);
-    [this.matchableS, this.matchableSet] = createSignal<string | null>(null);
-    [this.selectionS, this.selectionSet] = createSignal<SelectionState | null>(
-      null
+    [this.matchableS, this.matchableSet] = createSignal<string | undefined>(undefined);
+    [this.selectionS, this.selectionSet] = createSignal<SelectionState | undefined>(
+      undefined,
     );
 
     this.keyboardHandlers = [];
@@ -67,17 +82,17 @@ export class RichEditable {
     this.selectionListener = () => this.handleSelectionUpdate();
     this.pasteListener = (e) => this.handlePaste(e);
 
-    this.root.addEventListener("click", () => {
+    this.root.addEventListener('click', () => {
       this.focus();
     });
 
-    this.root.addEventListener("input", () => {
+    this.root.addEventListener('input', () => {
       this.handleContentUpdate();
     });
 
-    this.root.addEventListener("keydown", (e) => {
+    this.root.addEventListener('keydown', (e) => {
       for (const handler of this.keyboardHandlers) {
-        if(handler.onKeydown(e)) break;
+        if (handler.onKeydown(e)) break;
       }
       this.handleSelectionUpdate();
     });
@@ -87,35 +102,35 @@ export class RichEditable {
     this.addKeyboardHandler({
       priority: RichInputKeyboardPriority.Default,
       onKeydown: (e) => {
-        if (e.key === "Enter") {
-          insertEnterInsideBlockquote(e)
+        if (e.key === 'Enter') {
+          insertEnterInsideBlockquote(e);
           return true;
         }
         return false;
       },
-    })
+    });
   }
 
   private updateRootProps() {
     if (this.disableEdit) {
-      this.root.contentEditable = "false";
+      this.root.contentEditable = 'false';
     } else {
-      this.root.contentEditable = "true";
+      this.root.contentEditable = 'true';
     }
-    this.root.role = "textbox";
-    this.root.dir = "auto";
+    this.root.role = 'textbox';
+    this.root.dir = 'auto';
   }
 
   public attachTo(el: HTMLElement) {
     if (this.attached) {
-      throw new Error("Tried to attach when already attached");
+      throw new Error('Tried to attach when already attached');
     }
 
     this.attached = el;
     el.appendChild(this.root);
 
-    document.addEventListener("selectionchange", this.selectionListener);
-    document.addEventListener("paste", this.pasteListener);
+    document.addEventListener('selectionchange', this.selectionListener);
+    document.addEventListener('paste', this.pasteListener);
 
     this.emojiRenderer.attachTo(el);
 
@@ -124,22 +139,23 @@ export class RichEditable {
 
   public detachFrom(el: HTMLElement) {
     if (!this.attached) {
-      console.warn("Tried to detach when not attached");
+      // eslint-disable-next-line no-console
+      console.warn('Tried to detach when not attached');
       return;
     }
 
     this.emojiRenderer.detachFrom(el);
 
-    document.removeEventListener("selectionchange", this.selectionListener);
-    document.removeEventListener("paste", this.pasteListener);
+    document.removeEventListener('selectionchange', this.selectionListener);
+    document.removeEventListener('paste', this.pasteListener);
 
     el.removeChild(this.root);
-    this.attached = null;
+    this.attached = undefined;
   }
 
   public isAttached(el?: HTMLElement) {
     if (el) return this.attached === el;
-    return this.attached !== null;
+    return this.attached !== undefined;
   }
 
   public applyRootProperties(props: {
@@ -152,7 +168,7 @@ export class RichEditable {
       this.root.className = props.className;
     }
     if (props.placeholder) {
-      this.root.setAttribute("aria-label", props.placeholder);
+      this.root.setAttribute('aria-label', props.placeholder);
     }
     if (props.tabIndex !== undefined) {
       this.root.tabIndex = props.tabIndex;
@@ -172,15 +188,14 @@ export class RichEditable {
   }
 
   private isRangeInside(r: Range) {
-    let parentNode: HTMLElement | null =
-      r.commonAncestorContainer as HTMLElement;
+    let parentNode: HTMLElement | undefined = r.commonAncestorContainer as HTMLElement;
     let iterations = 1;
-    while (parentNode && parentNode != this.root && iterations < 10) {
-      parentNode = parentNode.parentElement;
+    while (parentNode && parentNode !== this.root && iterations < 10) {
+      parentNode = parentNode.parentElement ?? undefined;
       iterations++;
     }
 
-    if (parentNode != this.root) {
+    if (parentNode !== this.root) {
       return false;
     }
     return true;
@@ -202,47 +217,48 @@ export class RichEditable {
     s.addRange(nr);
   }
 
-  private calculateMatchable(s: Selection, r: Range): string | null {
-    if (!s.isCollapsed) return null;
+  // eslint-disable-next-line class-methods-use-this
+  private calculateMatchable(s: Selection, r: Range): string | undefined {
+    if (!s.isCollapsed) return undefined;
 
     // TODO: Check not inside code block
 
     let curNode = r.endContainer;
-    if (r.endContainer.nodeType != document.TEXT_NODE && r.endOffset > 0) {
-      let childNode = r.endContainer.childNodes[r.endOffset - 1];
+    if (r.endContainer.nodeType !== document.TEXT_NODE && r.endOffset > 0) {
+      const childNode = r.endContainer.childNodes[r.endOffset - 1];
       if (childNode) curNode = childNode;
     }
 
-    if (curNode.nodeType != document.TEXT_NODE) {
-      if (curNode.nodeType == document.ELEMENT_NODE) {
+    if (curNode.nodeType !== document.TEXT_NODE) {
+      if (curNode.nodeType === document.ELEMENT_NODE) {
         const curEl = curNode as HTMLElement;
-        if (curEl.tagName == "IMG") {
-          return `IMG_ALT__${curEl.getAttribute("alt")}`;
+        if (curEl.tagName === 'IMG') {
+          return `IMG_ALT__${curEl.getAttribute('alt')}`;
         }
       }
-      return null;
+      return undefined;
     }
 
     const str = curNode.textContent;
-    if (!str) return null;
+    if (!str) return undefined;
 
     let startPos = r.endOffset - 1;
     while (startPos > 0 && !WHITESPACE_RE.test(str[startPos])) {
       startPos -= 1;
     }
 
-    let ra = str.slice(startPos, r.endOffset);
+    const ra = str.slice(startPos, r.endOffset);
     return ra;
   }
 
   private handleSelectionUpdate() {
     const s = window.getSelection();
-    const notSelected = !s || s.rangeCount == 0;
-    const r = notSelected ? null : s?.getRangeAt(0);
+    const notSelected = !s || s.rangeCount === 0;
+    const r = notSelected ? undefined : s?.getRangeAt(0);
 
     if (notSelected || !r || !this.isRangeInside(r)) {
-      this.matchableSet(null);
-      this.selectionSet(null);
+      this.matchableSet(undefined);
+      this.selectionSet(undefined);
       return;
     }
 
@@ -257,7 +273,7 @@ export class RichEditable {
     if (!this.attached) return;
     this.htmlSet(this.root.innerHTML);
     this.emptySet(
-      this.root.innerHTML === "" || this.root.innerHTML == SAFARI_BR
+      this.root.innerHTML === '' || this.root.innerHTML === SAFARI_BR,
     );
 
     this.handleSelectionUpdate();
@@ -265,14 +281,15 @@ export class RichEditable {
   }
 
   public clearInput() {
-    this.root.innerHTML = "";
+    // TODO: Clear styling
+    this.root.innerHTML = '';
     this.handleContentUpdate();
   }
 
   public setFormattedText(text: ApiFormattedText | undefined): string {
     if (!text) {
       this.clearInput();
-      return "";
+      return '';
     }
 
     const html = getTextWithEntitiesAsHtml(text);
@@ -281,7 +298,7 @@ export class RichEditable {
 
     const s = window.getSelection();
     if (s && this.root.lastChild) {
-      let r = document.createRange();
+      const r = document.createRange();
       r.setEndAfter(this.root.lastChild);
       r.setStartAfter(this.root.lastChild);
       s.removeAllRanges();
@@ -297,7 +314,7 @@ export class RichEditable {
   public addKeyboardHandler(handler: RichInputKeyboardListener) {
     this.keyboardHandlers.push(handler);
     this.keyboardHandlers = this.keyboardHandlers.sort(
-      (a, b) => b.priority - a.priority
+      (a, b) => b.priority - a.priority,
     );
     return () => this.keyboardHandlers.filter((h) => h !== handler);
   }
@@ -309,7 +326,7 @@ export class RichEditable {
 
   public execCommand(cmd: string, value?: string) {
     this.ensureSelectionInside();
-    betterExecCommand(this.root, this.selectionS()?.range ?? null, cmd, value);
+    betterExecCommand(this.root, this.selectionS()?.range ?? undefined, cmd, value);
     this.handleContentUpdate();
   }
 
@@ -324,22 +341,22 @@ export class RichEditable {
     let startPos = r.endOffset;
 
     if (
-      curNode.nodeType != document.TEXT_NODE &&
-      curNode.childNodes[endPos - 1]?.nodeType == document.TEXT_NODE
+      curNode.nodeType !== document.TEXT_NODE
+      && curNode.childNodes[endPos - 1]?.nodeType === document.TEXT_NODE
     ) {
       curNode = curNode.childNodes[endPos - 1];
       endPos = curNode.textContent?.length || 0;
       startPos = endPos;
     }
 
-    if (r.startContainer.nodeType == document.TEXT_NODE) {
+    if (r.startContainer.nodeType === document.TEXT_NODE) {
       const str = curNode.textContent;
       if (!str) return;
 
       while (startPos > 0 && !matchLimit(str[startPos])) {
         startPos--;
       }
-    } else if (r.startContainer.nodeType == document.ELEMENT_NODE) {
+    } else if (r.startContainer.nodeType === document.ELEMENT_NODE) {
       if (startPos > 0) startPos--;
     }
 
@@ -347,16 +364,16 @@ export class RichEditable {
     r.setEnd(curNode, endPos);
     s.removeAllRanges();
     s.addRange(r);
-    this.execCommand("insertHTML", html);
+    this.execCommand('insertHTML', html);
   }
 
   public removeLastSymbol() {
-    this.execCommand("delete");
+    this.execCommand('delete');
   }
 
   public insertFormattedText(text: ApiFormattedText) {
     const html = getTextWithEntitiesAsHtml(text);
-    this.execCommand("insertHTML", html);
+    this.execCommand('insertHTML', html);
   }
 
   private handlePaste(e: ClipboardEvent) {
@@ -364,11 +381,9 @@ export class RichEditable {
       return;
     }
 
-    console.log("FFF", e.target);
-
-    let curNode: HTMLElement | null = e.target as HTMLElement;
+    let curNode: HTMLElement | undefined = e.target as HTMLElement;
     while (curNode && curNode !== this.root) {
-      curNode = curNode.parentElement;
+      curNode = curNode.parentElement ?? undefined;
     }
     if (curNode !== this.root) {
       return;
@@ -380,8 +395,8 @@ export class RichEditable {
       return;
     }
 
-    const pastedText = e.clipboardData.getData("text");
-    const html = e.clipboardData.getData("text/html");
+    const pastedText = e.clipboardData.getData('text');
+    const html = e.clipboardData.getData('text/html');
 
     const pasteCtx: PasteCtx = {
       editable: this,
@@ -389,10 +404,10 @@ export class RichEditable {
       html,
       items: e.clipboardData.items,
     };
-    if(html) {
+    if (html) {
       pasteCtx.text = parseHtmlAsFormattedText(preparePastedHtml(html), undefined, true);
       // TODO: This is needed to handle paste from vscode, but damn is this stupid
-      if(!pasteCtx.text.entities?.length) {
+      if (!pasteCtx.text.entities?.length) {
         pasteCtx.text = { text: pastedText };
       }
     }

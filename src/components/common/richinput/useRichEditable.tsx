@@ -1,13 +1,16 @@
-import useLastCallback from "../../../hooks/useLastCallback";
+import type { RefObject } from '../../../lib/teact/teact';
 import {
-  RefObject,
   useEffect,
   useRef,
-  useSignal,
-} from "../../../lib/teact/teact";
-import { Signal } from "../../../util/signals";
-import { RichInputKeyboardListener } from "./Keyboard";
-import { PasteCtx, RichEditable } from "./RichEditable";
+} from '../../../lib/teact/teact';
+
+import type { Signal } from '../../../util/signals';
+import type { RichInputKeyboardListener } from './Keyboard';
+import type { PasteCtx } from './RichEditable';
+
+import useLastCallback from '../../../hooks/useLastCallback';
+
+import { RichEditable } from './RichEditable';
 
 export type RichInputCtx = {
   editable: RichEditable;
@@ -15,7 +18,7 @@ export type RichInputCtx = {
 };
 
 export function useRichEditable(): RichInputCtx & { ctx: RichInputCtx } {
-  const richEditable: RefObject<RichEditable | null> = useRef(null);
+  const richEditable: RefObject<RichEditable | undefined> = useRef(undefined);
   if (!richEditable.current) {
     richEditable.current = new RichEditable();
   }
@@ -30,28 +33,29 @@ export function useRichEditable(): RichInputCtx & { ctx: RichInputCtx } {
 
 export function useRichEditableKeyboardListener(
   richInputCtx: RichInputCtx,
-  handler: RichInputKeyboardListener
+  handler: RichInputKeyboardListener,
 ) {
   const keydownCallback = useLastCallback(handler.onKeydown);
+  const { priority } = handler;
 
   useEffect(() => {
     return richInputCtx.editable.addKeyboardHandler({
-      ...handler,
+      priority,
       onKeydown: keydownCallback,
     });
-  }, [richInputCtx.editable, keydownCallback]);
+  }, [richInputCtx.editable, keydownCallback, priority]);
 }
 
 export function useRichEditablePasteHandler(
   richInputCtx: RichInputCtx,
   handler: (p: PasteCtx) => void,
-  enable = true
+  enable = true,
 ) {
   const keydownCallback = useLastCallback(handler);
 
   useEffect(() => {
-    if(!enable) return () => {};
+    if (!enable) return () => {};
 
     return richInputCtx.editable.addPasteHandler(keydownCallback);
-  }, [richInputCtx.editable, keydownCallback]);
+  }, [richInputCtx.editable, keydownCallback, enable]);
 }

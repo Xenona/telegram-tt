@@ -1,24 +1,18 @@
-import type { RefObject } from 'react';
 import { useEffect, useState } from '../../../../lib/teact/teact';
 import { getGlobal } from '../../../../global';
 
 import type { ApiChatMember, ApiUser } from '../../../../api/types';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 import { ApiMessageEntityTypes } from '../../../../api/types';
 
-import { requestNextMutation } from '../../../../lib/fasterdom/fasterdom';
 import { getMainUsername, getUserFirstOrLastName } from '../../../../global/helpers';
 import { filterPeersByQuery } from '../../../../global/helpers/peers';
-import focusEditableElement from '../../../../util/focusEditableElement';
 import { pickTruthy, unique } from '../../../../util/iteratees';
-import { getCaretPosition, getHtmlBeforeSelection, setCaretPosition } from '../../../../util/selection';
-import { prepareForRegExp } from '../helpers/prepareForRegExp';
 
 import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
-import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const THROTTLE = 300;
 
@@ -39,16 +33,18 @@ export default function useMentionTooltip(
 ) {
   const [filteredUsers, setFilteredUsers] = useState<ApiUser[] | undefined>();
   const [isManuallyClosed, markManuallyClosed, unmarkManuallyClosed] = useFlag(false);
-  
+
   const extractUsernameTagThrottled = useThrottledResolver(() => {
     const text = richInputCtx.editable.matchableS();
-    if (!isEnabled || !richInputCtx.editable.selectionS()?.collapsed) return undefined
+    if (!isEnabled || !richInputCtx.editable.selectionS()?.collapsed) return undefined;
     if (!text || !text.includes('@')) return undefined;
 
     const matches = text.match(RE_USERNAME_SEARCH);
-    if(!matches || matches.length == 0) return undefined;
+    if (!matches || matches.length === 0) return undefined;
     return matches[matches.length - 1].trim();
-  }, [isEnabled, richInputCtx.editable.matchableS], THROTTLE);
+
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [isEnabled, richInputCtx.editable, richInputCtx.editable.matchableS], THROTTLE);
 
   const getUsernameTag = useDerivedSignal(
     extractUsernameTagThrottled, [extractUsernameTagThrottled, richInputCtx.editable.matchableS], true,
@@ -56,7 +52,9 @@ export default function useMentionTooltip(
 
   const getWithInlineBots = useDerivedSignal(() => {
     return isEnabled && richInputCtx.editable.htmlS().startsWith('@');
-  }, [richInputCtx.editable.htmlS, isEnabled]);
+
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [richInputCtx.editable, richInputCtx.editable.htmlS, isEnabled]);
 
   useEffect(() => {
     const usernameTag = getUsernameTag();
@@ -94,7 +92,7 @@ export default function useMentionTooltip(
     setFilteredUsers(Object.values(pickTruthy(usersById, filteredIds)));
   }, [currentUserId, groupChatMembers, topInlineBotIds, getUsernameTag, getWithInlineBots]);
 
-  const insertMention = useLastCallback((user: ApiUser, forceFocus = false) => {
+  const insertMention = useLastCallback((user: ApiUser) => {
     if (!user.usernames && !getUserFirstOrLastName(user)) {
       return;
     }
@@ -111,7 +109,7 @@ export default function useMentionTooltip(
           dir="auto"
         >${userFirstOrLastName}</a> `;
 
-    richInputCtx.editable.insertMatchableHtml(htmlToInsert, c => c == '@');
+    richInputCtx.editable.insertMatchableHtml(htmlToInsert, (c) => c === '@');
 
     setFilteredUsers(undefined);
   });
@@ -125,4 +123,3 @@ export default function useMentionTooltip(
     mentionFilteredUsers: filteredUsers,
   };
 }
-

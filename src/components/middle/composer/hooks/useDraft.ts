@@ -3,14 +3,13 @@ import { getActions } from '../../../../global';
 
 import type { ApiDraft, ApiMessage } from '../../../../api/types';
 import type { ThreadId } from '../../../../types';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 import { ApiMessageEntityTypes } from '../../../../api/types';
 
 import { DRAFT_DEBOUNCE } from '../../../../config';
 import {
   requestMeasure,
 } from '../../../../lib/fasterdom/fasterdom';
-import parseHtmlAsFormattedText from '../../../../util/parseHtmlAsFormattedText';
 import { getTextWithEntitiesAsHtml } from '../../../common/helpers/renderTextWithEntities';
 
 import useLastCallback from '../../../../hooks/useLastCallback';
@@ -19,7 +18,6 @@ import useRunDebounced from '../../../../hooks/useRunDebounced';
 import { useStateRef } from '../../../../hooks/useStateRef';
 import useBackgroundMode from '../../../../hooks/window/useBackgroundMode';
 import useBeforeUnload from '../../../../hooks/window/useBeforeUnload';
-import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 let isFrozen = false;
 
@@ -42,7 +40,7 @@ const useDraft = ({
   draft?: ApiDraft;
   chatId: string;
   threadId: ThreadId;
-  richInputCtx: RichInputCtx
+  richInputCtx: RichInputCtx;
   editedMessage?: ApiMessage;
   isDisabled?: boolean;
 }) => {
@@ -58,6 +56,7 @@ const useDraft = ({
     } else {
       isTouchedRef.current = true;
     }
+  // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
   }, [draft, richInputCtx.editable.htmlS]);
   useEffect(() => {
     isTouchedRef.current = false;
@@ -68,7 +67,7 @@ const useDraft = ({
   const updateDraft = useLastCallback((prevState: { chatId?: string; threadId?: ThreadId } = {}) => {
     if (isDisabled || isEditing || !isTouchedRef.current) return;
 
-    const contents = richInputCtx.editable.getFormattedText(false)
+    const contents = richInputCtx.editable.getFormattedText(false);
     if (contents.text) {
       requestMeasure(() => {
         saveDraft({
@@ -153,8 +152,8 @@ const useDraft = ({
       }
     });
   }, [
-    chatIdRef, richInputCtx.editable, richInputCtx.editable.htmlS, 
-    isDisabled, runDebouncedForSaveDraft, threadIdRef, updateDraft
+    chatIdRef, richInputCtx.editable, richInputCtx.editable.htmlS,
+    isDisabled, runDebouncedForSaveDraft, threadIdRef, updateDraft,
   ]);
 
   useBackgroundMode(updateDraft);

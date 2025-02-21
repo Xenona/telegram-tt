@@ -2,7 +2,7 @@ import { useEffect } from '../../../../lib/teact/teact';
 import { getActions } from '../../../../global';
 
 import type { ApiSticker } from '../../../../api/types';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 import { EMOJI_IMG_REGEX } from '../../../../config';
 import twemojiRegex from '../../../../lib/twemojiRegex';
@@ -13,7 +13,6 @@ import { prepareForRegExp } from '../helpers/prepareForRegExp';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useDerivedState from '../../../../hooks/useDerivedState';
 import useFlag from '../../../../hooks/useFlag';
-import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 const MAX_LENGTH = 8;
 const MAX_UNSUPPORTED_LENGTH = 160;
@@ -31,11 +30,9 @@ export default function useStickerTooltip(
   const getSingleEmoji = useDerivedSignal(() => {
     const html = richInputCtx.editable.htmlS();
     if (!isEnabled || !html || (IS_EMOJI_SUPPORTED && html.length > MAX_LENGTH)) return undefined;
-    if(IS_EMOJI_SUPPORTED) {
-      if(html.length > MAX_LENGTH) return undefined;
-    } else {
-      if(html[0] != '<' && html[1] != '<' && html.length > MAX_UNSUPPORTED_LENGTH) return undefined;
-    }
+    if (IS_EMOJI_SUPPORTED) {
+      if (html.length > MAX_LENGTH) return undefined;
+    } else if (html[0] !== '<' && html[1] !== '<' && html.length > MAX_UNSUPPORTED_LENGTH) return undefined;
 
     const hasEmoji = html.match(IS_EMOJI_SUPPORTED ? twemojiRegex : EMOJI_IMG_REGEX);
     if (!hasEmoji) return undefined;
@@ -49,7 +46,8 @@ export default function useStickerTooltip(
     return isSingleEmoji
       ? (IS_EMOJI_SUPPORTED ? cleanHtml : cleanHtml.match(/alt="(.+)"/)?.[1]!)
       : undefined;
-  }, [richInputCtx.editable.htmlS, isEnabled]);
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [richInputCtx.editable, richInputCtx.editable.htmlS, isEnabled]);
 
   const isActive = useDerivedState(() => Boolean(getSingleEmoji()), [getSingleEmoji]);
   const hasStickers = Boolean(stickers?.length);

@@ -3,13 +3,10 @@ import { getGlobal } from '../../../../global';
 
 import type { ApiSticker } from '../../../../api/types';
 import type { EmojiData, EmojiModule, EmojiRawData } from '../../../../util/emoji/emoji';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
-import { EDITABLE_INPUT_CSS_SELECTOR, EDITABLE_INPUT_ID } from '../../../../config';
-import { requestNextMutation } from '../../../../lib/fasterdom/fasterdom';
 import { selectCustomEmojiForEmojis } from '../../../../global/selectors';
 import { uncompressEmoji } from '../../../../util/emoji/emoji';
-import focusEditableElement from '../../../../util/focusEditableElement';
 import {
   buildCollectionByKey, mapValues, pickTruthy, unique, uniqueByField,
 } from '../../../../util/iteratees';
@@ -17,13 +14,11 @@ import { MEMO_EMPTY_ARRAY } from '../../../../util/memo';
 import memoized from '../../../../util/memoized';
 import renderText from '../../../common/helpers/renderText';
 import { buildCustomEmojiHtml } from '../../../common/richinput/customEmoji';
-import { prepareForRegExp } from '../helpers/prepareForRegExp';
 
 import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
 import useFlag from '../../../../hooks/useFlag';
 import useLastCallback from '../../../../hooks/useLastCallback';
-import { RichInputCtx } from '../../../common/richinput/useRichEditable';
 
 interface Library {
   keywords: string[];
@@ -60,7 +55,6 @@ try {
 export default function useEmojiTooltip(
   isEnabled: boolean,
   richInputCtx: RichInputCtx,
-  inputId = EDITABLE_INPUT_ID,
   recentEmojiIds: string[],
   baseEmojiKeywords?: Record<string, string[]>,
   emojiKeywords?: Record<string, string[]>,
@@ -87,14 +81,15 @@ export default function useEmojiTooltip(
   }, [isEnabled]);
 
   const detectEmojiCodeThrottled = useThrottledResolver(() => {
-    if(!isEnabled) return undefined;
+    if (!isEnabled) return undefined;
     const matchable = richInputCtx.editable.matchableS();
-    if(!matchable || !matchable.includes(':')) return undefined;
+    if (!matchable || !matchable.includes(':')) return undefined;
 
     const matches = matchable.match(RE_EMOJI_SEARCH);
-    if(!matches || matches.length === 0) return undefined;
+    if (!matches || matches.length === 0) return undefined;
 
-    return matches[matches.length - 1].trim()
+    return matches[matches.length - 1].trim();
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
   }, [richInputCtx.editable.matchableS, isEnabled], THROTTLE);
 
   const getEmojiCode = useDerivedSignal(
@@ -117,7 +112,7 @@ export default function useEmojiTooltip(
     setFilteredCustomEmojis(customEmojis);
   });
 
-  const insertEmoji = useLastCallback((emoji: string | ApiSticker, isForce = false) => {
+  const insertEmoji = useLastCallback((emoji: string | ApiSticker) => {
     const emojiHtml = typeof emoji === 'string' ? renderText(emoji, ['emoji_html']) : buildCustomEmojiHtml(emoji);
     richInputCtx.editable.insertMatchableHtml(`${emojiHtml}`, (c) => c === ':');
     updateFiltered(MEMO_EMPTY_ARRAY);

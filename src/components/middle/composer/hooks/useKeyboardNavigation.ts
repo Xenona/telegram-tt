@@ -41,8 +41,10 @@ export function useKeyboardNavigation({
   });
 
   const handleArrowKey = useLastCallback((value: number, e: KeyboardEvent) => {
-    if(noArrowSelectLoop && (selectedItemIndex + value < 0 || selectedItemIndex + value > (items?.length ?? 10000) - 1)) 
+    const outOfBounds = (selectedItemIndex + value < 0 || selectedItemIndex + value > (items?.length ?? 10000) - 1);
+    if (noArrowSelectLoop && outOfBounds) {
       return;
+    }
 
     e.preventDefault();
     setSelectedItemIndex((index) => (getSelectedIndex(index + value)));

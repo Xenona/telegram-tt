@@ -1,9 +1,7 @@
 import type { ApiFormattedText, ApiMessageEntity } from '../api/types';
 import { ApiMessageEntityTypes } from '../api/types';
 
-import { RE_LINK_TEMPLATE } from '../config';
 import { parseMarkdown } from './parseMarkdown';
-import { IS_EMOJI_SUPPORTED } from './windowEnvironment';
 
 export const ENTITY_CLASS_BY_NODE_NAME: Record<string, ApiMessageEntityTypes> = {
   B: ApiMessageEntityTypes.Bold,
@@ -22,20 +20,22 @@ export const ENTITY_CLASS_BY_NODE_NAME: Record<string, ApiMessageEntityTypes> = 
 
 const MAX_TAG_DEEPNESS = 3;
 
+// TODO: Markdown links
 export default function parseHtmlAsFormattedText(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   html: string, withMarkdownLinks = false, skipMarkdown = false,
 ): ApiFormattedText {
   const fragment = document.createElement('div');
-  fragment.innerHTML = html
+  fragment.innerHTML = html;
   fragment.querySelectorAll('br').forEach((br) => {
     br.replaceWith('\n');
-  })
+  });
   fixImageContent(fragment);
-  let text = fragment.innerText.trim().replace(/\u200b+/g, '');
+  const text = fragment.innerText.trim().replace(/\u200b+/g, '');
   const trimShift = fragment.innerText.indexOf(text[0]);
   let textIndex = -trimShift;
   let recursionDeepness = 0;
-  let entities: ApiMessageEntity[] = [];
+  const entities: ApiMessageEntity[] = [];
 
   function addEntity(node: ChildNode) {
     if (node.nodeType === Node.COMMENT_NODE) return;
@@ -64,14 +64,14 @@ export default function parseHtmlAsFormattedText(
   });
 
   let fmtRes: ApiFormattedText = {
-    text, entities
-  }
+    text, entities,
+  };
   // console.log(JSON.stringify(text))
-  if(!skipMarkdown) {
-    fmtRes = parseMarkdown(text, entities)
+  if (!skipMarkdown) {
+    fmtRes = parseMarkdown(text, entities);
   }
 
-  if(fmtRes.entities?.length == 0) fmtRes.entities = undefined
+  if (fmtRes.entities?.length === 0) fmtRes.entities = undefined;
   return fmtRes;
 }
 
@@ -85,13 +85,13 @@ export function fixImageContent(fragment: HTMLDivElement) {
   });
 }
 
-
-function parseMarkdownLinks(html: string) {
-  return html.replace(new RegExp(`\\[([^\\]]+?)]\\((${RE_LINK_TEMPLATE}+?)\\)`, 'g'), (_, text, link) => {
-    const url = link.includes('://') ? link : link.includes('@') ? `mailto:${link}` : `https://${link}`;
-    return `<a href="${url}">${text}</a>`;
-  });
-}
+// TODO: Fix)
+// function parseMarkdownLinks(html: string) {
+//   return html.replace(new RegExp(`\\[([^\\]]+?)]\\((${RE_LINK_TEMPLATE}+?)\\)`, 'g'), (_, text, link) => {
+//     const url = link.includes('://') ? link : link.includes('@') ? `mailto:${link}` : `https://${link}`;
+//     return `<a href="${url}">${text}</a>`;
+//   });
+// }
 
 function getEntityDataFromNode(
   node: ChildNode,
