@@ -547,8 +547,6 @@ function MiddleColumn({
             opacity: 0.55;
             -webkit-mask: center repeat;
             mask: center repeat;
-            -webkit-mask-size: 400px;
-            mask-size: 400px;
             -webkit-mask-image: var(--custom-background);
             mask-image: var(--custom-background);
           `,
