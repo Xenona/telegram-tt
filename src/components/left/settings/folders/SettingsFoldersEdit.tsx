@@ -20,6 +20,7 @@ import { isUserId } from '../../../../global/helpers';
 import { selectCanPlayAnimatedEmojis, selectCanShareFolder } from '../../../../global/selectors';
 import { selectCurrentLimit } from '../../../../global/selectors/limits';
 import buildClassName from '../../../../util/buildClassName';
+import buildStyle from '../../../../util/buildStyle';
 import { findIntersectionWithSet } from '../../../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../../../util/memo';
 import { CUSTOM_PEER_EXCLUDED_CHAT_TYPES, CUSTOM_PEER_INCLUDED_CHAT_TYPES } from '../../../../util/objects/customPeer';
@@ -47,6 +48,7 @@ import FloatingActionButton from '../../../ui/FloatingActionButton';
 import InputText from '../../../ui/InputText';
 import ListItem from '../../../ui/ListItem';
 import Menu from '../../../ui/Menu';
+import Portal from '../../../ui/Portal';
 import ResponsiveHoverButton from '../../../ui/ResponsiveHoverButton';
 import Spinner from '../../../ui/Spinner';
 import {
@@ -122,6 +124,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   // eslint-disable-next-line no-null/no-null
   const inputRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line no-null/no-null
+  const btnRef = useRef<HTMLButtonElement>(null);
+  // eslint-disable-next-line no-null/no-null
   const sharedCanvasRef = useRef<HTMLCanvasElement>(null);
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
@@ -132,7 +136,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
   const [isIncludedChatsListExpanded, setIsIncludedChatsListExpanded] = useState(false);
   const [isExcludedChatsListExpanded, setIsExcludedChatsListExpanded] = useState(false);
 
-  const { isMobile, isTablet } = useAppLayout();
+  const { isMobile } = useAppLayout();
   const [isOpen, setOpen, setClose] = useFlag();
 
   useEffect(() => {
@@ -140,7 +144,7 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
       onReset();
     }
   }, [isRemoved, onReset]);
-  const [inputCoordinates, setInputCoordinates] = useState<{
+  const [, setInputCoordinates] = useState<{
     x: number;
     y: number;
     height: number;
@@ -346,19 +350,21 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     );
   }
 
-  const getInputCoordinates = useLastCallback(() => {
-    const rect = inputRef.current?.getBoundingClientRect();
+  useEffect(() => {
+    const rect = btnRef.current?.getBoundingClientRect();
 
-    setInputCoordinates({
-      x: rect?.x ?? -10000,
-      y: rect?.y ?? -10000,
-      height: rect?.height ?? 0,
-      width: rect?.width ?? 0,
-      right: rect?.right ?? 0,
-    });
-  });
-
-  const [, setContextMenuAnchor] = useState<IAnchorPosition | undefined>(undefined);
+    if (rect) {
+      setInputCoordinates({
+        x: rect?.x ?? -10000,
+        y: rect?.y ?? -10000,
+        height: rect?.height ?? 0,
+        width: rect?.width ?? 0,
+        right: rect?.right ?? 0,
+      });
+    }
+  }, [btnRef, isOpen, isActive]);
+  // isOpen = true;
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<IAnchorPosition | undefined>(undefined);
   const [handleMouseEnter, handleMouseLeave] = useMouseInside(isOpen, setClose, undefined, isMobile);
 
   // eslint-disable-next-line no-null/no-null
@@ -369,8 +375,6 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
     if (!triggerEl) return;
     const { x, y } = triggerEl.getBoundingClientRect();
     setContextMenuAnchor({ x, y });
-
-    getInputCoordinates();
   });
 
   const possibleIcon = getIconNameByFolder(state.folder);
@@ -487,7 +491,6 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                       noLoad={!true}
                       noPlay={!canAnimate}
                       noVideoOnMobile
-                      withSharedAnimation
                       sharedCanvasRef={sharedCanvasRef}
                       withTranslucentThumb={false}
                     />
@@ -513,42 +516,42 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                 )}
               </Button>
             )}
-            <Menu
-              isOpen={isOpen}
-              onClose={handleMenuClose}
-              withPortal={false}
-              bubbleStyle={`${
-                !isMobile && !isTablet
-                  ? `left: calc(${inputCoordinates.x}px + ${
-                    inputCoordinates.width / 2
-                  }px);`
-                  : 'right: calc(1.5rem + var(--scrollbar-width));'
-              } top: calc(${inputCoordinates.y}px + ${
-                inputCoordinates.height
-              }px + 1rem);`}
-              className={buildClassName('SymbolMenu')}
-              onMouseEnter={!IS_TOUCH_ENV ? handleMouseEnter : undefined}
-              onMouseLeave={!IS_TOUCH_ENV ? handleMouseLeave : undefined}
-              noCloseOnBackdrop={!IS_TOUCH_ENV}
-              noCompact
-              // eslint-disable-next-line react/jsx-props-no-spreading
-              {...{
-                positionX: 'right',
-                positionY: 'top',
-              }}
-            >
-              <FolderIconPicker
-                onEmojiSelect={onEmojiSelect}
-                onCustomEmojiSelect={handleCustomEmojiSelect}
-                onIconSelect={handleIconSelect}
-                className="picker-tab"
-                isHidden={!isOpen || !isActive}
-                idPrefix="emoji-folder"
-                loadAndPlay={isOpen}
-                chatId=""
-                isTranslucent={!isMobile}
-              />
-            </Menu>
+            <Portal className="icon-folder-picker">
+              <Menu
+                style={
+                  buildStyle(
+                    'position: fixed;',
+                    `top: ${contextMenuAnchor?.y}px;`,
+                    isMobile ? 'right: 20rem;' : `left: ${contextMenuAnchor?.x}px;`,
+                  )
+                }
+                isOpen={isOpen}
+                onClose={handleMenuClose}
+                withPortal={false}
+                className={buildClassName('SymbolMenu')}
+                onMouseEnter={!IS_TOUCH_ENV ? handleMouseEnter : undefined}
+                onMouseLeave={!IS_TOUCH_ENV ? handleMouseLeave : undefined}
+                noCloseOnBackdrop={!IS_TOUCH_ENV}
+                noCompact
+                // eslint-disable-next-line react/jsx-props-no-spreading
+                {...{
+                  positionX: 'left',
+                  positionY: 'top',
+                }}
+              >
+                <FolderIconPicker
+                  onEmojiSelect={onEmojiSelect}
+                  onCustomEmojiSelect={handleCustomEmojiSelect}
+                  onIconSelect={handleIconSelect}
+                  className="picker-tab"
+                  isHidden={!isOpen || !isActive}
+                  idPrefix="emoji-folder"
+                  loadAndPlay={isOpen}
+                  chatId=""
+                  isTranslucent={!isMobile}
+                />
+              </Menu>
+            </Portal>
           </div>
         </div>
 
