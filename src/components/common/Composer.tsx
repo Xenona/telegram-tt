@@ -40,6 +40,7 @@ import type {
   MessageListType,
   ThreadId,
 } from '../../types';
+import type { AnimBgRender } from '../../util/AnimBackgroundRender';
 import { MAIN_THREAD_ID } from '../../api/types';
 
 import {
@@ -104,10 +105,10 @@ import { processDeepLink } from '../../util/deeplink';
 import { tryParseDeepLink } from '../../util/deepLinkParser';
 import deleteLastCharacterOutsideSelection from '../../util/deleteLastCharacterOutsideSelection';
 import { processMessageInputForCustomEmoji } from '../../util/emoji/customEmojiManager';
+import { betterExecCommand } from '../../util/execCommand';
 import focusEditableElement from '../../util/focusEditableElement';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
 import parseHtmlAsFormattedText from '../../util/parseHtmlAsFormattedText';
-import { betterExecCommand } from '../../util/execCommand';
 import { getServerTime } from '../../util/serverTime';
 import { IS_IOS, IS_VOICE_RECORDING_SUPPORTED } from '../../util/windowEnvironment';
 import windowSize from '../../util/windowSize';
@@ -175,12 +176,11 @@ import Icon from './icons/Icon';
 import ReactionAnimatedEmoji from './reactions/ReactionAnimatedEmoji';
 
 import './Composer.scss';
-import { AnimBgRender } from '../../util/renderGradientBackground';
 
 type ComposerType = 'messageList' | 'story';
 
 type OwnProps = {
-  renderer: AnimBgRender | null;
+  renderer?: AnimBgRender | null;
   type: ComposerType;
   chatId: string;
   threadId: ThreadId;
@@ -1594,7 +1594,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   const handleStopEffect = useLastCallback(() => { hideEffectInComposer({ }); });
 
   const onSend = useMemo(() => {
-    renderer?.nextState()
+    renderer?.nextState();
     switch (mainButtonState) {
       case MainButtonState.Edit:
         return handleEditComplete;
@@ -1603,7 +1603,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       default:
         return handleSend;
     }
-  }, [mainButtonState, handleEditComplete]);
+  }, [mainButtonState, handleEditComplete, renderer]);
 
   const withBotCommands = isChatWithBot && botMenuButton?.type === 'commands' && !editingMessage
     && botCommands !== false && !activeVoiceRecording;

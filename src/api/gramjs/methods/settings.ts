@@ -182,19 +182,16 @@ export async function fetchWallpapers() {
 
   const filteredWallpapers = result.wallpapers.filter((wallpaper) => {
     if (
-      wallpaper instanceof Api.WallPaper &&
-      wallpaper?.pattern &&
-      !wallpaper.settings
-    )
-      return false;
+      wallpaper instanceof Api.WallPaper
+      && wallpaper?.pattern
+      && !wallpaper.settings
+    ) return false;
 
     return true;
   }) as GramJs.WallPaper[];
 
   filteredWallpapers.forEach((wallpaper) => {
-    if (wallpaper.document)
-      localDb.documents[String(wallpaper.document.id)] =
-        wallpaper.document as GramJs.Document;
+    if (wallpaper.document) localDb.documents[String(wallpaper.document.id)] = wallpaper.document as GramJs.Document;
   });
   return {
     wallpapers: filteredWallpapers.map(buildApiWallpaper).filter(Boolean),

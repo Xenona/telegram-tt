@@ -1,12 +1,12 @@
 import type { TeactNode } from '../../lib/teact/teact';
 
 import type { CallbackAction } from '../../global/types';
+import type { Api } from '../../lib/gramjs';
 import type { IconName } from '../../types/icons';
 import type { RegularLangFnParameters } from '../../util/localization';
 import type { ApiDocument, ApiPhoto, ApiReaction } from './messages';
 import type { ApiPremiumSection, ApiStarsSubscriptionPricing } from './payments';
 import type { ApiUser } from './users';
-import { Api } from '../../lib/gramjs';
 
 export interface ApiInitialArgs {
   userAgent: string;

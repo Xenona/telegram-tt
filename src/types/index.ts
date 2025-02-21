@@ -26,9 +26,9 @@ import type {
   ApiTypingStatus,
   ApiVideo,
 } from '../api/types';
+import type { Api } from '../lib/gramjs';
 import type { SearchResultKey } from '../util/keys/searchResultKey';
 import type { IconName } from './icons';
-import { Api } from '../lib/gramjs';
 
 export type TextPart = TeactNode;
 
@@ -81,7 +81,7 @@ export interface IThemeSettings {
   backgroundColor?: string;
   patternColor?: string;
   isBlurred?: boolean;
-  fill?: WallPaperPatternThemeSettings
+  fill?: WallPaperPatternThemeSettings;
 }
 
 export type NotifySettings = {

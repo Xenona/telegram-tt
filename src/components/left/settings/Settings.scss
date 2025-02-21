@@ -102,15 +102,15 @@
     position: relative;
     width: 100%;
 
-    &>.Spinner {
+    & > .Spinner {
       --spinner-size: 2rem;
     }
 
     .button-for-emoji {
       font-size: 1.5rem;
-      width: 2.35rem;
-      height: 2.35rem;
-      border-radius: 0.6rem;
+      width: 2.375rem;
+      height: 2.375rem;
+      border-radius: 0.625rem;
       top: 50%;
       right: 0;
       transform: translate(-15%, -50%);
@@ -137,7 +137,6 @@
         margin-bottom: 0.5rem;
       }
 
-
       .StickerPicker {
 
         &-module__header {
@@ -147,10 +146,10 @@
           &.header-hide {
 
             top: -3rem;
-
           }
 
           &.animated-slide {
+            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
             transition: top 0.3s ease;
           }
         }
@@ -163,10 +162,10 @@
           &.main-hide {
             top: -3rem;
             height: 100%;
-
           }
 
           &.animated-slide {
+            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
             transition: top 0.3s ease, height 0.3s ease;
           }
         }
@@ -181,32 +180,27 @@
           display: flex;
           align-items: center;
 
-          &>div {
+          & > div {
             border-radius: 2rem;
             max-width: 2rem;
             overflow: hidden;
 
-            &.animated-width{
-
+            &.animated-width {
+              /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
               transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
             }
-
 
             &:hover {
               max-width: 18rem;
               background-color: var(--color-background-selected);
-              padding: 0.5rem 0.2rem;
-
+              padding: 0.5rem 0.1875rem;
             }
-
-
           }
 
           .symbol-set-button {
             padding: 0;
             margin: 0 !important;
             height: auto;
-
 
             &:hover {
               background-color: transparent;
@@ -219,7 +213,6 @@
         }
       }
     }
-
   }
 }
 

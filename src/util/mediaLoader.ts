@@ -14,11 +14,11 @@ import {
 import { callApi, cancelApiProgress } from '../api/gramjs';
 import * as cacheApi from './cacheApi';
 import { fetchBlob } from './files';
+import { ungzipTGV } from './gzipUncompress';
 import { oggToWav } from './oggToWav';
 import {
   IS_OPUS_SUPPORTED, IS_PROGRESSIVE_SUPPORTED,
 } from './windowEnvironment';
-import { ungzipTGV } from './gzipUncompress';
 
 const asCacheApiType = {
   [ApiMediaFormat.BlobUrl]: cacheApi.Type.Blob,
@@ -143,10 +143,10 @@ async function fetchFromCacheOrRemote(
       if (cached.type === 'audio/ogg' && !IS_OPUS_SUPPORTED) {
         media = await oggToWav(media);
       }
-      if (cached.type === "application/x-tgwallpattern") {
+      if (cached.type === 'application/x-tgwallpattern') {
         media = new Blob(
           [ungzipTGV(new Uint8Array(await media.arrayBuffer()))],
-          { type: "image/svg+xml" },
+          { type: 'image/svg+xml' },
         );
       }
 
@@ -187,7 +187,7 @@ async function fetchFromCacheOrRemote(
   if (mimeType === 'application/x-tgwallpattern' && remote.dataBlob instanceof Blob) {
     prepared = prepareMedia(new Blob(
       [ungzipTGV(new Uint8Array(await remote.dataBlob.arrayBuffer()))],
-      { type: "image/svg+xml" },
+      { type: 'image/svg+xml' },
     ));
   }
 

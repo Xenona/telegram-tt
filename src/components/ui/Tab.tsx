@@ -1,14 +1,19 @@
 import type { FC, TeactNode } from '../../lib/teact/teact';
-import React, { useEffect, useLayoutEffect, useRef, useState } from '../../lib/teact/teact';
+import React, {
+  useEffect, useLayoutEffect, useRef, useState,
+} from '../../lib/teact/teact';
 
+import type { ApiThemeParameters } from '../../api/types';
 import type { MenuItemContextAction } from './ListItem';
 
 import { requestForcedReflow, requestMeasure, requestMutation } from '../../lib/fasterdom/fasterdom';
 import buildClassName from '../../util/buildClassName';
 import forceReflow from '../../util/forceReflow';
+import { extractCurrentThemeParams } from '../../util/themeStyle';
 import { MouseButton } from '../../util/windowEnvironment';
 import renderText from '../common/helpers/renderText';
 
+import useColorFilter from '../../hooks/stickers/useColorFilter';
 import useContextMenuHandlers from '../../hooks/useContextMenuHandlers';
 import { useFastClick } from '../../hooks/useFastClick';
 import useLastCallback from '../../hooks/useLastCallback';
@@ -19,11 +24,9 @@ import MenuItem from './MenuItem';
 import MenuSeparator from './MenuSeparator';
 
 import './Tab.scss';
-import { extractCurrentThemeParams } from '../../util/themeStyle';
-import useColorFilter from '../../hooks/stickers/useColorFilter';
 
 type OwnProps = {
-  shouldUseTextColor: boolean;
+  shouldUseTextColor?: boolean;
   className?: string;
   title: TeactNode;
   icon?: TeactNode;
@@ -137,25 +140,16 @@ const Tab: FC<OwnProps> = ({
   );
   const getLayout = useLastCallback(() => ({ withPortal: true }));
 
-  const [accentColor, setAccentColor] = useState<string|undefined>(undefined);
-  const [textColor, setTextColor] = useState<string|undefined>(undefined);
+  const [theme, setTheme] = useState<ApiThemeParameters | undefined>(undefined);
+  const accentColorTheme = useColorFilter(theme?.accent_text_color ?? '#000000', true);
+  const textColorTheme = useColorFilter(theme?.secondary_text_color ?? '#000000', true);
 
-  useEffect(()=>{
-
-    if (!accentColor || !textColor) {
-      requestMeasure(()=> {
-
-        const theme = extractCurrentThemeParams()
-
-        const accentColor_ = useColorFilter(theme.accent_text_color, true);
-        const textColor_ = useColorFilter(theme.secondary_text_color, true);
-        setAccentColor(accentColor_);
-        setTextColor(textColor_);
-      })
-    }
-
-  }, [accentColor, textColor])
-
+  useEffect(() => {
+    requestMeasure(() => {
+      const currTheme = extractCurrentThemeParams();
+      setTheme(currTheme);
+    });
+  }, []);
 
   return (
     <div
@@ -165,10 +159,16 @@ const Tab: FC<OwnProps> = ({
       onContextMenu={handleContextMenu}
       ref={tabRef}
     >
-      <span className="Tab_inner" >
-        <span style={buildClassName(shouldUseTextColor && `filter: ${ isActive ? accentColor : textColor};`,  `height: 100%;`)} >
+      <span className="Tab_inner">
+        <span style={buildClassName(
+          shouldUseTextColor && `filter: ${isActive ? accentColorTheme : textColorTheme};`,
+          'height: 100%;',
+          'display: flex;',
+          'align-items: center;',
+        )}
+        >
 
-        {icon && icon}
+          {icon && icon}
         </span>
         {typeof title === 'string' ? renderText(title) : title}
         {Boolean(badgeCount) && (

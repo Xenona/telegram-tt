@@ -1,18 +1,18 @@
 import type { FC } from '../../lib/teact/teact';
 import React, {
-  memo, useEffect, useMemo, useRef, useState
+  memo, useEffect, useMemo, useRef, useState,
 } from '../../lib/teact/teact';
-import { getActions, getGlobal, setGlobal, withGlobal } from '../../global';
+import { getGlobal, withGlobal } from '../../global';
 
 import type {
   ApiAvailableReaction, ApiReaction, ApiReactionWithPaid, ApiSticker, ApiStickerSet,
 } from '../../api/types';
 import type { EmojiKeywords, StickerSetOrReactionsSetOrRecent } from '../../types';
+import { type GlobalState } from '../../global/types';
 
 import {
   EMOJI_SIZE_PICKER,
   FAVORITE_SYMBOL_SET_ID,
-  LANG_PACK,
   POPULAR_SYMBOL_SET_ID,
   RECENT_SYMBOL_SET_ID,
   SLIDE_TRANSITION_DURATION,
@@ -29,13 +29,22 @@ import {
   selectIsCurrentUserPremium,
 } from '../../global/selectors';
 import animateHorizontalScroll from '../../util/animateHorizontalScroll';
+import animateScroll from '../../util/animateScroll';
 import buildClassName from '../../util/buildClassName';
+import
+{
+  type EmojiData, type EmojiModule, type EmojiRawData, uncompressEmoji,
+} from '../../util/emoji/emoji';
 import { pickTruthy, unique } from '../../util/iteratees';
+import { MEMO_EMPTY_ARRAY } from '../../util/memo';
 import { IS_TOUCH_ENV } from '../../util/windowEnvironment';
 import { REM } from './helpers/mediaDimensions';
 
 import useAppLayout from '../../hooks/useAppLayout';
+import useDebouncedCallback from '../../hooks/useDebouncedCallback';
+import useFlag from '../../hooks/useFlag';
 import useHorizontalScroll from '../../hooks/useHorizontalScroll';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import useLastCallback from '../../hooks/useLastCallback';
 import useOldLang from '../../hooks/useOldLang';
 import usePrevDuringAnimation from '../../hooks/usePrevDuringAnimation';
@@ -43,27 +52,20 @@ import useScrolledState from '../../hooks/useScrolledState';
 import useAsyncRendering from '../right/hooks/useAsyncRendering';
 import { FOCUS_MARGIN, useStickerPickerObservers } from './hooks/useStickerPickerObservers';
 
+import { EMOTICON_TO_FOLDER_ICON } from '../left/main/ChatFolders';
+import EmojiButton from '../middle/composer/EmojiButton';
+import EmojiCategory from '../middle/composer/EmojiCategory';
+import { ICONS_BY_CATEGORY, INTERSECTION_THROTTLE, SMOOTH_SCROLL_DISTANCE } from '../middle/composer/EmojiPicker';
 import StickerSetCover from '../middle/composer/StickerSetCover';
 import Button from '../ui/Button';
 import Loading from '../ui/Loading';
+import SearchInput from '../ui/SearchInput';
 import Icon from './icons/Icon';
 import StickerButton from './StickerButton';
 import StickerSet from './StickerSet';
 
 import pickerStyles from '../middle/composer/StickerPicker.module.scss';
 import styles from './CustomEmojiPicker.module.scss';
-import { EmojiData, EmojiModule, EmojiRawData, uncompressEmoji } from '../../util/emoji/emoji';
-import { GlobalState } from '../../global/types';
-import { MEMO_EMPTY_ARRAY } from '../../util/memo';
-import { ICONS_BY_CATEGORY, INTERSECTION_THROTTLE, SMOOTH_SCROLL_DISTANCE } from '../middle/composer/EmojiPicker';
-import animateScroll from '../../util/animateScroll';
-import EmojiCategory from '../middle/composer/EmojiCategory';
-import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
-import { EMOTICON_TO_FOLDER_ICON } from '../left/main/ChatFolders';
-import SearchInput from '../ui/SearchInput';
-import useDebouncedCallback from '../../hooks/useDebouncedCallback';
-import EmojiButton from '../middle/composer/EmojiButton';
-import useFlag from '../../hooks/useFlag';
 
 type OwnProps = {
   chatId?: string;
@@ -106,7 +108,7 @@ type StateProps = {
   isSavedMessages?: boolean;
   isCurrentUserPremium?: boolean;
   isWithPaidReaction?: boolean;
-  recentEmojis?: GlobalState['recentEmojis'],
+  recentEmojis?: GlobalState['recentEmojis'];
 };
 
 const HEADER_BUTTON_WIDTH = 2.5 * REM; // px (including margin)
@@ -127,23 +129,18 @@ let emojiRawData: EmojiRawData;
 let emojiData: EmojiData;
 const categoryIntersections: boolean[] = [];
 
-
-
 async function ensureEmojiData() {
   if (!emojiDataPromise) {
     emojiDataPromise = import('emoji-data-ios/emoji-data.json');
     emojiRawData = (await emojiDataPromise).default;
 
     emojiData = uncompressEmoji(emojiRawData);
-
-
   }
 
   return emojiDataPromise;
 }
 
 type EmojiCategoryData = { id: string; name: string; emojis: string[] };
-
 
 const FolderIconPicker: FC<OwnProps & StateProps> = ({
   emojiKeywords,
@@ -196,26 +193,28 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   const [categories, setCategories] = useState<EmojiCategoryData[]>();
   const [emojis, setEmojis] = useState<AllEmojis>();
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [emojiQuery, setEmojiQuery] = useState<string>('');
+  const [emojisFound, setEmojisFound] = useState<(Emoji | ApiSticker)[]>([]);
 
   const textToEmojiMap = useMemo(() => {
     const textToEmoji: Map<string, (Emoji | ApiSticker)[]> = new Map();
-    for(let emoji of Object.values(emojis ?? {})) {
-      let em = 'native' in emoji ? emoji : Object.values(emoji)[0];
-      let arr = textToEmoji.get(em.native) ?? []
-      arr.push(em)
-      textToEmoji.set(em.native, arr)
+    for (const emoji of Object.values(emojis ?? {})) {
+      const em = 'native' in emoji ? emoji : Object.values(emoji)[0];
+      const arr = textToEmoji.get(em.native) ?? [];
+      arr.push(em);
+      textToEmoji.set(em.native, arr);
     }
 
-    for(let custEm of Object.values(customEmojisById ?? {})) {
-      if(!custEm?.emoji) continue;
+    for (const custEm of Object.values(customEmojisById ?? {})) {
+      if (!custEm?.emoji) continue;
 
-      let arr = textToEmoji.get(custEm.emoji) ?? []
-      arr.push(custEm)
-      textToEmoji.set(custEm.emoji, arr)
+      const arr = textToEmoji.get(custEm.emoji) ?? [];
+      arr.push(custEm);
+      textToEmoji.set(custEm.emoji, arr);
     }
 
-    return textToEmoji
-  }, [emojis, customEmojisById])
+    return textToEmoji;
+  }, [emojis, customEmojisById]);
 
   const { isMobile } = useAppLayout();
   const {
@@ -244,6 +243,32 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   const lang = useOldLang();
 
   const areAddedLoaded = Boolean(addedCustomEmojiIds);
+
+  const handleEmojiSearchQueryChange = useDebouncedCallback((query: string) => {
+    setEmojiQuery(query);
+
+    const arr: Set<(Emoji | ApiSticker)> = new Set();
+
+    for (const emKw of Object.values(emojiKeywords ?? {})) {
+      if (!emKw || !emKw.keywords) continue;
+      for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
+        if (!kw.includes(query)) continue;
+
+        for (const em of emojisKws) {
+          for (const e of textToEmojiMap.get(em) ?? []) {
+            arr.add(e);
+          }
+        }
+      }
+    }
+
+    setEmojisFound([...arr.values()]);
+  }, [emojiKeywords, textToEmojiMap], 300, true);
+
+  const [isInputFocused, setFocused, setUnfocused] = useFlag();
+
+  // eslint-disable-next-line no-null/no-null
+  const sharedSearchCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const allSets = useMemo(() => {
     const defaultSets: StickerSetOrReactionsSetOrRecent[] = [];
@@ -377,7 +402,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
         ensureEmojiData()
           .then(exec);
       }
-    }, 300); //OPEN_ANIMATION_DELAY
+    }, 300); // OPEN_ANIMATION_DELAY
   }, []);
 
   // Scroll container and header when active set changes
@@ -396,6 +421,31 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
     animateHorizontalScroll(header, newLeft);
   }, [areAddedLoaded, activeSetIndex]);
 
+  const { observe: observeIntersection } = useIntersectionObserver({
+    rootRef: containerRef,
+    throttleMs: INTERSECTION_THROTTLE,
+  }, (entries) => {
+    entries.forEach((entry) => {
+      const { id } = entry.target as HTMLDivElement;
+      if (!id || !id.startsWith('emoji-category-')) {
+        return;
+      }
+
+      const index = Number(id.replace('emoji-category-', ''));
+      categoryIntersections[index] = entry.isIntersecting;
+    });
+
+    const minIntersectingIndex = categoryIntersections.reduce((lowestIndex, isIntersecting, index) => {
+      return isIntersecting && index < lowestIndex ? index : lowestIndex;
+    }, Infinity);
+
+    if (minIntersectingIndex === Infinity) {
+      return;
+    }
+
+    setActiveCategoryIndex(minIntersectingIndex);
+  });
+
   function renderCover(stickerSet: StickerSetOrReactionsSetOrRecent, index: number) {
     const firstSticker = stickerSet.stickers?.[0];
     const buttonClassName = buildClassName(
@@ -403,7 +453,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
       index === activeSetIndex && styles.activated,
     );
 
-    if (stickerSet.id === RECENT_SYMBOL_SET_ID) return;
+    if (stickerSet.id === RECENT_SYMBOL_SET_ID) return undefined;
 
     const withSharedCanvas = index < STICKER_PICKER_MAX_SHARED_COVERS;
     const isHq = selectIsAlwaysHighPriorityEmoji(getGlobal(), stickerSet as ApiStickerSet);
@@ -475,13 +525,13 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
     });
   });
 
-
   function renderCategoryButton(category: EmojiCategoryData, index: number) {
     const icon = ICONS_BY_CATEGORY[category.id];
 
     return icon && (
       <Button
-        className={`StickerPicker-module__stickerCover symbol-set-button ${index + 1 === activeCategoryIndex ? 'activated' : ''}`}
+        className={`StickerPicker-module__stickerCover symbol-set-button ${index + 1
+          === activeCategoryIndex ? 'activated' : ''}`}
         round
         faded
         color="translucent"
@@ -493,7 +543,6 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
       </Button>
     );
   }
-
 
   const allCategories = useMemo(() => {
     if (!categories) {
@@ -510,7 +559,6 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
 
     return themeCategories;
   }, [categories, lang, recentEmojis]);
-
 
   const fullClassName = buildClassName('StickerPicker', styles.root, className);
 
@@ -539,76 +587,24 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
     pickerStyles.hasHeader,
   );
 
-  const { observe: observeIntersection } = useIntersectionObserver({
-    rootRef: containerRef,
-    throttleMs: INTERSECTION_THROTTLE,
-  }, (entries) => {
-    entries.forEach((entry) => {
-      const { id } = entry.target as HTMLDivElement;
-      if (!id || !id.startsWith('emoji-category-')) {
-        return;
-      }
-
-      const index = Number(id.replace('emoji-category-', ''));
-      categoryIntersections[index] = entry.isIntersecting;
-    });
-
-    const minIntersectingIndex = categoryIntersections.reduce((lowestIndex, isIntersecting, index) => {
-      return isIntersecting && index < lowestIndex ? index : lowestIndex;
-    }, Infinity);
-
-    if (minIntersectingIndex === Infinity) {
-      return;
-    }
-
-    setActiveCategoryIndex(minIntersectingIndex);
-  });
-
-  const [emojiQuery, setEmojiQuery] = useState<string>("");
-  const [emojisFound, setEmojisFound] = useState<(Emoji | ApiSticker)[]>([])
-
-  const handleEmojiSearchQueryChange = useDebouncedCallback((query: string) => {
-
-    setEmojiQuery(query);
-
-    let arr: Set<(Emoji | ApiSticker)> = new Set();
-
-    for(let emKw of Object.values(emojiKeywords ?? {})) {
-      if(!emKw || !emKw.keywords) continue;
-      for(let [kw, emojis] of Object.entries(emKw.keywords)) {
-        if(!kw.includes(query)) continue;
-
-        for(let em of emojis) {
-          for(let e of textToEmojiMap.get(em) ?? []) {
-            arr.add(e)
-          }
-        }
-      }
-    }
-
-    setEmojisFound([...arr.values()]);
-
-  }, [], 300, true);
-
-  const [isInputFocused, setFocused, setUnfocused] = useFlag();
-
-  // eslint-disable-next-line no-null/no-null
-  const sharedSearchCanvasRef = useRef<HTMLCanvasElement>(null);
-
   return (
     <div className={fullClassName}>
       <div
         ref={headerRef}
-        className={buildClassName(headerClassName, isInputFocused||emojiQuery ? "header-hide" : "", canAnimate ? "animated-slide":"")}
+        className={buildClassName(
+          headerClassName,
+          isInputFocused || emojiQuery ? 'header-hide' : '',
+          canAnimate ? 'animated-slide' : '',
+        )}
 
       >
         <div className="categories-emojis">
           <div className={buildClassName('emoji-category-stripe')}>
-            <div className={canAnimate ? "animated-width":''}>
+            <div className={canAnimate ? 'animated-width' : ''}>
               {allCategories.slice(1).map(renderCategoryButton)}
             </div>
           </div>
-          <div className='shared-canvas-container'>
+          <div className="shared-canvas-container">
 
             <canvas ref={sharedCanvasRef} className="shared-canvas" />
             <canvas ref={sharedCanvasHqRef} className="shared-canvas" />
@@ -619,125 +615,137 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
       <div
         ref={containerRef}
         onScroll={handleContentScroll}
-        className={buildClassName(listClassName, isInputFocused||emojiQuery ? "main-hide" : "", canAnimate ? "animated-slide" : "")}
+        className={buildClassName(
+          listClassName,
+          isInputFocused || emojiQuery ? 'main-hide' : '',
+          canAnimate ? 'animated-slide' : '',
+        )}
       >
         <SearchInput
-          onBlur={()=>{setUnfocused()}}
-          onFocus={()=>{setFocused()}}
+          onBlur={setUnfocused}
+          onFocus={setFocused}
           value={emojiQuery}
           className={buildClassName(
 
           )}
           // lang pack should have a proper key
-          placeholder={lang('SearchEmoji')}
+          placeholder={lang('Search Emoji')}
           onChange={handleEmojiSearchQueryChange}
         />
-        {!(emojiQuery) ? <>
-          <div className="symbol-set symbol-set-container custom-folder-icon-container">
-            {Object.entries(EMOTICON_TO_FOLDER_ICON).map(([emoticon, v]) =>
-              <div className="EmojiButton custom-folder-icons"
-                onClick={() => { onIconSelect(emoticon) }}>
-                <Icon name={v} />
-              </div>
-            )}
-          </div>
-          {allCategories.slice(1).map((category, i) => (
-            <EmojiCategory
-              category={category}
-              index={i + 1}
-              allEmojis={emojis!}
-              observeIntersection={observeIntersection}
-              shouldRender={activeCategoryIndex >= i && activeCategoryIndex <= i + 2}
-              onEmojiSelect={onEmojiSelect}
-            />
-          ))}
-          {allSets.map((stickerSet, i) => {
-            const shouldHideHeader = stickerSet.id === TOP_SYMBOL_SET_ID
+        {!(emojiQuery) ? (
+          <>
+            <div className="symbol-set symbol-set-container custom-folder-icon-container">
+              {Object.entries(EMOTICON_TO_FOLDER_ICON).map(([emoticon, v]) => (
+                <div
+                  className="EmojiButton custom-folder-icons"
+                  onClick={() => { onIconSelect(emoticon); }}
+                >
+                  <Icon name={v} />
+                </div>
+              ))}
+            </div>
+            {allCategories.slice(1).map((category, i) => (
+              <EmojiCategory
+                category={category}
+                index={i + 1}
+                allEmojis={emojis!}
+                observeIntersection={observeIntersection}
+                shouldRender={activeCategoryIndex >= i && activeCategoryIndex <= i + 2}
+                onEmojiSelect={onEmojiSelect}
+              />
+            ))}
+            {allSets.map((stickerSet, i) => {
+              const shouldHideHeader = stickerSet.id === TOP_SYMBOL_SET_ID
               || (stickerSet.id === RECENT_SYMBOL_SET_ID && (withDefaultTopicIcons || isStatusPicker));
-            const isChatEmojiSet = stickerSet.id === chatEmojiSetId;
+              const isChatEmojiSet = stickerSet.id === chatEmojiSetId;
 
-            if (stickerSet.id === RECENT_SYMBOL_SET_ID) return <></>
+              if (stickerSet.id === RECENT_SYMBOL_SET_ID) return undefined;
 
-            return (
-              <StickerSet
-                key={stickerSet.id}
-                stickerSet={stickerSet}
-                loadAndPlay={Boolean(canAnimate && canLoadAndPlay)}
-                index={i}
-                idPrefix={prefix}
-                observeIntersection={observeIntersectionForSet}
-                observeIntersectionForPlayingItems={observeIntersectionForPlayingItems}
-                observeIntersectionForShowingItems={observeIntersectionForShowingItems}
-                isNearActive={activeSetIndex >= i - 1 && activeSetIndex <= i + 1}
-                isSavedMessages={isSavedMessages}
-                folderIconPick={true}
-                isStatusPicker={isStatusPicker}
-                isReactionPicker={isReactionPicker}
-                shouldHideHeader={shouldHideHeader}
-                withDefaultTopicIcon={withDefaultTopicIcons && stickerSet.id === RECENT_SYMBOL_SET_ID}
-                withDefaultStatusIcon={isStatusPicker && stickerSet.id === RECENT_SYMBOL_SET_ID}
-                isChatEmojiSet={isChatEmojiSet}
-                isCurrentUserPremium={isCurrentUserPremium}
-                selectedReactionIds={selectedReactionIds}
-                availableReactions={availableReactions}
-                isTranslucent={isTranslucent}
-                onReactionSelect={onReactionSelect}
-                onReactionContext={onReactionContext}
-                onStickerSelect={onCustomEmojiSelect}
-                onContextMenuOpen={onContextMenuOpen}
-                onContextMenuClose={onContextMenuClose}
-                onContextMenuClick={onContextMenuClick}
-                forcePlayback
-              />
-            );
-          })}
-        </> : (emojisFound.length ? <div className='symbol-set symbol-set-container'>
-          <canvas
-          ref={sharedSearchCanvasRef}
-          className="shared-canvas"
-          style={undefined}
-        />
-          {
-            emojisFound.map((e) =>
-            ('native' in e ?
-              <EmojiButton
-                key={e.id}
-                emoji={e}
-                onClick={onEmojiSelect}
-              />
-              :
-              <StickerButton
-                key={e.id}
-                sticker={e}
-                size={EMOJI_SIZE_PICKER}
-                observeIntersection={observeIntersectionForPlayingItems}
-                observeIntersectionForShowing={observeIntersectionForShowingItems}
-                noPlay={!loadAndPlay}
-                isSavedMessages={isSavedMessages}
-                isStatusPicker={isStatusPicker}
-                canViewSet
-                noContextMenu={true}
-                isCurrentUserPremium={isCurrentUserPremium}
-                shouldIgnorePremium={false}
-                sharedCanvasRef={sharedSearchCanvasRef}
-                withTranslucentThumb={isTranslucent}
-                onClick={onCustomEmojiSelect}
-                clickArg={e}
-                isSelected={false}
-                onUnfaveClick={undefined}
-                onFaveClick={undefined}
-                onRemoveRecentClick={undefined}
-                onContextMenuOpen={onContextMenuOpen}
-                onContextMenuClose={onContextMenuClose}
-                onContextMenuClick={onContextMenuClick}
-                forcePlayback={false}
-                isEffectEmoji={false}
-                noShowPremium={true}
-              />
+              return (
+                <StickerSet
+                  key={stickerSet.id}
+                  stickerSet={stickerSet}
+                  loadAndPlay={Boolean(canAnimate && canLoadAndPlay)}
+                  index={i}
+                  idPrefix={prefix}
+                  observeIntersection={observeIntersectionForSet}
+                  observeIntersectionForPlayingItems={observeIntersectionForPlayingItems}
+                  observeIntersectionForShowingItems={observeIntersectionForShowingItems}
+                  isNearActive={activeSetIndex >= i - 1 && activeSetIndex <= i + 1}
+                  isSavedMessages={isSavedMessages}
+                  folderIconPick
+                  isStatusPicker={isStatusPicker}
+                  isReactionPicker={isReactionPicker}
+                  shouldHideHeader={shouldHideHeader}
+                  withDefaultTopicIcon={withDefaultTopicIcons && stickerSet.id === RECENT_SYMBOL_SET_ID}
+                  withDefaultStatusIcon={isStatusPicker && stickerSet.id === RECENT_SYMBOL_SET_ID}
+                  isChatEmojiSet={isChatEmojiSet}
+                  isCurrentUserPremium={isCurrentUserPremium}
+                  selectedReactionIds={selectedReactionIds}
+                  availableReactions={availableReactions}
+                  isTranslucent={isTranslucent}
+                  onReactionSelect={onReactionSelect}
+                  onReactionContext={onReactionContext}
+                  onStickerSelect={onCustomEmojiSelect}
+                  onContextMenuOpen={onContextMenuOpen}
+                  onContextMenuClose={onContextMenuClose}
+                  onContextMenuClick={onContextMenuClick}
+                  forcePlayback
+                />
+              );
+            })}
+          </>
+        ) : (emojisFound.length ? (
+          <div className="symbol-set symbol-set-container">
+            <canvas
+              ref={sharedSearchCanvasRef}
+              className="shared-canvas"
+              style={undefined}
+            />
+            {
+              emojisFound.map((e) => ('native' in e
+                ? (
+                  <EmojiButton
+                    key={e.id}
+                    emoji={e}
+                    onClick={onEmojiSelect}
+                  />
+                )
+                : (
+                  <StickerButton
+                    key={e.id}
+                    sticker={e}
+                    size={EMOJI_SIZE_PICKER}
+                    observeIntersection={observeIntersectionForPlayingItems}
+                    observeIntersectionForShowing={observeIntersectionForShowingItems}
+                    noPlay={!loadAndPlay}
+                    isSavedMessages={isSavedMessages}
+                    isStatusPicker={isStatusPicker}
+                    canViewSet
+                    noContextMenu
+                    isCurrentUserPremium={isCurrentUserPremium}
+                    shouldIgnorePremium={false}
+                    sharedCanvasRef={sharedSearchCanvasRef}
+                    withTranslucentThumb={isTranslucent}
+                    onClick={onCustomEmojiSelect}
+                    clickArg={e}
+                    isSelected={false}
+                    onUnfaveClick={undefined}
+                    onFaveClick={undefined}
+                    onRemoveRecentClick={undefined}
+                    onContextMenuOpen={onContextMenuOpen}
+                    onContextMenuClose={onContextMenuClose}
+                    onContextMenuClick={onContextMenuClick}
+                    forcePlayback={false}
+                    isEffectEmoji={false}
+                    noShowPremium
+                  />
+                )
 
-            ))
-          }
-        </div> : <p>{lang("NoEmojiFound")}</p>)}
+              ))
+            }
+          </div>
+        ) : <p>{lang('NoEmojiFound')}</p>)}
       </div>
     </div>
   );
@@ -749,7 +757,7 @@ export default memo(withGlobal<OwnProps>(
       stickers: {
         setsById: stickerSetsById,
       },
-      emojiKeywords: emojiKeywords,
+      emojiKeywords,
       customEmojis: {
         byId: customEmojisById,
         featuredIds: customEmojiFeaturedIds,
@@ -766,7 +774,7 @@ export default memo(withGlobal<OwnProps>(
         topReactions,
         defaultTags,
       },
-      recentEmojis
+      recentEmojis,
     } = global;
 
     const isSavedMessages = Boolean(chatId && selectIsChatWithSelf(global, chatId));
@@ -791,7 +799,7 @@ export default memo(withGlobal<OwnProps>(
       isWithPaidReaction: isReactionPicker && chatFullInfo?.isPaidReactionAvailable,
       availableReactions: isReactionPicker ? availableReactions : undefined,
       defaultTagReactions: isReactionPicker ? defaultTags : undefined,
-      recentEmojis
+      recentEmojis,
     };
   },
 )(FolderIconPicker));

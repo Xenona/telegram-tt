@@ -22,14 +22,13 @@ import useThumbnail from '../../hooks/useThumbnail';
 import useUniqueId from '../../hooks/useUniqueId';
 import useDevicePixelRatio from '../../hooks/window/useDevicePixelRatio';
 
+import Loading from '../ui/Loading';
 import OptimizedVideo from '../ui/OptimizedVideo';
 import AnimatedSticker from './AnimatedSticker';
 
 import styles from './StickerView.module.scss';
-import Loading from '../ui/Loading';
 
 type OwnProps = {
-  dbg?: boolean;
   containerRef: React.RefObject<HTMLDivElement>;
   sticker: ApiSticker;
   thumbClassName?: string;
@@ -60,7 +59,6 @@ const SHARED_PREFIX = 'shared';
 const STICKER_SIZE = 24;
 
 const StickerView: FC<OwnProps> = ({
-  dbg,
   containerRef,
   sticker,
   thumbClassName,
@@ -174,31 +172,31 @@ const StickerView: FC<OwnProps> = ({
       />
       {shouldRenderFullMedia && (isLottie ? (
         <>
-        <AnimatedSticker
-          style={`${!isPlayerReady && widthLoadingCircle ? 'visibility: hidden;' : ""}`}
-          ref={fullMediaRef as React.RefObject<HTMLDivElement>}
-          key={renderId}
-          renderId={renderId}
-          size={size}
-          className={buildClassName(
-            styles.media,
-            (noCrossTransition || isThumbOpaque) && styles.noTransition,
-            fullMediaClassName,
-          )}
-          tgsUrl={fullMediaData}
-          play={shouldPlay}
-          noLoop={!shouldLoop}
-          forceOnHeavyAnimation={forceAlways || forceOnHeavyAnimation}
-          forceAlways={forceAlways}
-          isLowPriority={isSmall && !selectIsAlwaysHighPriorityEmoji(getGlobal(), stickerSetInfo)}
-          sharedCanvas={sharedCanvasRef?.current || undefined}
-          sharedCanvasCoords={coords}
-          onLoad={markPlayerReady}
-          onLoop={onAnimatedStickerLoop}
-          onEnded={onAnimatedStickerLoop}
-          color={customColor}
-        />
-        {!isPlayerReady && widthLoadingCircle && <Loading/>}
+          <AnimatedSticker
+            style={`${!isPlayerReady && widthLoadingCircle ? 'visibility: hidden;' : ''}`}
+            ref={fullMediaRef as React.RefObject<HTMLDivElement>}
+            key={renderId}
+            renderId={renderId}
+            size={size}
+            className={buildClassName(
+              styles.media,
+              (noCrossTransition || isThumbOpaque) && styles.noTransition,
+              fullMediaClassName,
+            )}
+            tgsUrl={fullMediaData}
+            play={shouldPlay}
+            noLoop={!shouldLoop}
+            forceOnHeavyAnimation={forceAlways || forceOnHeavyAnimation}
+            forceAlways={forceAlways}
+            isLowPriority={isSmall && !selectIsAlwaysHighPriorityEmoji(getGlobal(), stickerSetInfo)}
+            sharedCanvas={sharedCanvasRef?.current || undefined}
+            sharedCanvasCoords={coords}
+            onLoad={markPlayerReady}
+            onLoop={onAnimatedStickerLoop}
+            onEnded={onAnimatedStickerLoop}
+            color={customColor}
+          />
+          {!isPlayerReady && widthLoadingCircle && <Loading />}
         </>
       ) : isVideo ? (
         <OptimizedVideo

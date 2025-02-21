@@ -99,9 +99,8 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
   const handleWallPaperSelect = useCallback(
     (slug?: string, fill?: WallPaperPatternThemeSettings) => {
       setThemeSettings({ theme: themeRef.current!, background: slug, fill });
-      const currentWallpaper =
-        loadedWallpapers &&
-        loadedWallpapers.find((wallpaper) => wallpaper.slug === slug);
+      const currentWallpaper = loadedWallpapers
+        && loadedWallpapers.find((wallpaper) => wallpaper.slug === slug);
       if (currentWallpaper?.document?.thumbnail) {
         getAverageColor(currentWallpaper.document.thumbnail.dataUri).then(
           (color) => {
@@ -118,12 +117,12 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
       } else {
         const color: [number, number, number] = [
           fill?.settings.backgroundColor ?? 255,
-          fill?.settings.secondBackgroundColor ??
-            fill?.settings.backgroundColor ??
-            255,
-          fill?.settings.thirdBackgroundColor ??
-            fill?.settings.backgroundColor ??
-            255,
+          fill?.settings.secondBackgroundColor
+            ?? fill?.settings.backgroundColor
+            ?? 255,
+          fill?.settings.thirdBackgroundColor
+            ?? fill?.settings.backgroundColor
+            ?? 255,
         ];
         const patternColor = getPatternColor(color);
         const rgbColor = `#${rgb2hex(color)}`;
@@ -150,7 +149,6 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
   });
 
   const isUploading = loadedWallpapers?.[0] && loadedWallpapers[0].slug === UPLOADING_WALLPAPER_SLUG;
-
 
   return (
     <div className="SettingsGeneralBackground settings-content custom-scroll">
@@ -185,35 +183,38 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
 
       {loadedWallpapers ? (
         <div className="settings-wallpapers">
-          {loadedWallpapers.map((wallpaper, idx) => (
+          {loadedWallpapers.map((wallpaper) => (
             <WallpaperTile
               fill={
                 wallpaper.settings
                   ? {
-                      dark: wallpaper.dark,
-                      pattern: wallpaper.pattern,
-                      settings: wallpaper.settings,
-                    }
+                    dark: wallpaper.dark,
+                    pattern: wallpaper.pattern,
+                    settings: wallpaper.settings,
+                  }
                   : undefined
               }
-              key={`${wallpaper.slug}_${wallpaper.settings?.backgroundColor}_${wallpaper.settings?.secondBackgroundColor}_${wallpaper.settings?.thirdBackgroundColor}_${wallpaper.settings?.fourthBackgroundColor}_${wallpaper.dark}`}
+              key={`${wallpaper.slug}_${wallpaper.settings?.backgroundColor}_
+              ${wallpaper.settings?.secondBackgroundColor}_
+              ${wallpaper.settings?.thirdBackgroundColor}_
+              ${wallpaper.settings?.fourthBackgroundColor}_${wallpaper.dark}`}
               wallpaper={wallpaper}
               theme={theme}
               isSelected={
-                background === wallpaper.slug &&
-                wallpaper.settings?.backgroundColor ===
-                  pattern?.settings.backgroundColor &&
-                wallpaper.settings?.secondBackgroundColor ===
-                  pattern?.settings.secondBackgroundColor &&
-                wallpaper.settings?.thirdBackgroundColor ===
-                  pattern?.settings.thirdBackgroundColor &&
-                wallpaper.settings?.fourthBackgroundColor ===
-                  pattern?.settings.fourthBackgroundColor &&
-                wallpaper.settings?.CONSTRUCTOR_ID ===
-                  pattern?.settings.CONSTRUCTOR_ID &&
-                wallpaper.settings?.SUBCLASS_OF_ID ===
-                  pattern?.settings.SUBCLASS_OF_ID &&
-                wallpaper.dark === pattern?.dark
+                background === wallpaper.slug
+                && wallpaper.settings?.backgroundColor
+                  === pattern?.settings.backgroundColor
+                && wallpaper.settings?.secondBackgroundColor
+                  === pattern?.settings.secondBackgroundColor
+                && wallpaper.settings?.thirdBackgroundColor
+                  === pattern?.settings.thirdBackgroundColor
+                && wallpaper.settings?.fourthBackgroundColor
+                  === pattern?.settings.fourthBackgroundColor
+                && wallpaper.settings?.CONSTRUCTOR_ID
+                  === pattern?.settings.CONSTRUCTOR_ID
+                && wallpaper.settings?.SUBCLASS_OF_ID
+                  === pattern?.settings.SUBCLASS_OF_ID
+                && wallpaper.dark === pattern?.dark
               }
               onClick={handleWallPaperSelect}
             />
