@@ -303,7 +303,7 @@ const LeftMainHeader: FC<OwnProps & StateProps> = ({
             canShow={withStoryToggler}
           />
         </SearchInput>
-        {true && <StatusButton />}
+        {isCurrentUserPremium && <StatusButton />}
         {hasPasscode && (
           <Button
             round

@@ -175,6 +175,7 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
         </ListItem>
 
         <Checkbox
+          disabled={!!pattern}
           label={lang('BackgroundBlurred')}
           checked={Boolean(isBlurred)}
           onChange={handleWallPaperBlurChange}
