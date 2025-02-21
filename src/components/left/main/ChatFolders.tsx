@@ -491,6 +491,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
         'ChatFolders',
         shouldRenderFolders && shouldHideFolderTabs && 'ChatFolders--tabs-hidden',
         shouldRenderStoryRibbon && 'with-story-ribbon',
+        !shouldRenderFolders && 'no-folders',
       )}
     >
       {shouldRenderStoryRibbon && <StoryRibbon isClosing={isStoryRibbonClosing} />}
