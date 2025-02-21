@@ -36,7 +36,8 @@
   }
 
   @media (max-width: 600px) {
-    padding: 0.5rem;
+    padding: .375rem .8125rem .5rem .8125rem !important;
+    gap: 1rem;
   }
 
   .Button.smaller {
