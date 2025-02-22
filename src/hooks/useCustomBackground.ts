@@ -7,7 +7,7 @@ import { CUSTOM_BG_CACHE_NAME, DARK_THEME_PATTERN_COLOR, DEFAULT_PATTERN_COLOR }
 import * as cacheApi from '../util/cacheApi';
 import { preloadImage } from '../util/files';
 
-const useCustomBackground = (theme: ThemeKey, settingValue?: string) => {
+const useCustomBackground = (theme: ThemeKey, settingValue?: string, onBgReady?: ()=>void) => {
   const { setThemeSettings } = getActions();
   const [value, setValue] = useState(settingValue);
 
@@ -18,6 +18,7 @@ const useCustomBackground = (theme: ThemeKey, settingValue?: string) => {
 
     if (settingValue.startsWith('#')) {
       setValue(settingValue);
+      onBgReady?.();
     } else {
       cacheApi.fetch(CUSTOM_BG_CACHE_NAME, theme, cacheApi.Type.Blob)
         .then((blob) => {
@@ -25,6 +26,7 @@ const useCustomBackground = (theme: ThemeKey, settingValue?: string) => {
           preloadImage(url)
             .then(() => {
               setValue(`url(${url})`);
+              onBgReady?.();
             });
         })
         .catch(() => {
@@ -37,7 +39,7 @@ const useCustomBackground = (theme: ThemeKey, settingValue?: string) => {
           });
         });
     }
-  }, [settingValue, theme]);
+  }, [settingValue, theme, onBgReady]);
 
   return settingValue ? value : undefined;
 };
