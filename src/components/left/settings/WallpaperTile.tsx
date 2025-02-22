@@ -59,23 +59,21 @@ const WallpaperTile: FC<OwnProps> = ({
   const isGradientWithoutPattern = !fill?.pattern && fill?.settings;
 
   useEffect(() => {
-    if (bgRef.current && animDivRef.current) {
-      const renderer2 = new PreviewAnimgBgRender(bgRef.current, animDivRef.current);
-      setRenderer(renderer2);
-      renderer2.setColors(transformStringsToColors({
-        first: fill?.settings.backgroundColor,
-        second: fill?.settings.secondBackgroundColor,
-        third: fill?.settings.thirdBackgroundColor,
-        fourth: fill?.settings.fourthBackgroundColor,
-      }));
-    }
-
-    return () => renderer?.detach();
+    if (!bgRef.current || !animDivRef.current) return () => {};
+    const renderer2 = new PreviewAnimgBgRender(bgRef.current, animDivRef.current);
+    setRenderer(renderer2);
+    renderer2.setColors(transformStringsToColors({
+      first: fill?.settings.backgroundColor,
+      second: fill?.settings.secondBackgroundColor,
+      third: fill?.settings.thirdBackgroundColor,
+      fourth: fill?.settings.fourthBackgroundColor,
+    }));
+    return () => renderer2?.detach();
   }, [bgRef, animDivRef,
     fill?.settings.backgroundColor,
     fill?.settings.secondBackgroundColor,
     fill?.settings.thirdBackgroundColor,
-    fill?.settings.fourthBackgroundColor, renderer]);
+    fill?.settings.fourthBackgroundColor]);
 
   const { transitionClassNames } = useShowTransitionDeprecated(
     Boolean(previewBlobUrl || localBlobUrl),
