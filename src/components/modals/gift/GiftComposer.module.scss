@@ -144,6 +144,7 @@
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
   margin-left: 1rem;
 }
 
@@ -194,6 +195,9 @@
   &.customBgImage::before {
     background-image: var(--custom-background) !important;
     transform: scale(1.1);
+    mix-blend-mode: soft-light;
+    opacity: 0.5;
+    background-size: 400px !important;
   }
 
   :global(body:not(.no-page-transitions)) &.withTransition {

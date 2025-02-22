@@ -4,4 +4,48 @@
 
 .RichInputContainer {
   position: relative;
+
+  .placeholder-text {
+    position: absolute;
+    color: var(--color-placeholders);
+    pointer-events: none;
+    unicode-bidi: plaintext;
+    text-align: initial;
+    line-height: 1.3125;
+    font-size: var(--composer-text-size, 1rem);
+    top: calc((3.25rem - var(--composer-text-size, 1rem) * 1.375) / 2);
+    bottom: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    transition: opacity 200ms ease-out, transform 200ms ease-out;
+
+    &.with-icon {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .placeholder-icon {
+      margin-inline-end: 0.25rem;
+    }
+
+    @media (min-width: 600px) {
+      left: 1.2rem;
+    }
+
+    &.touched {
+      opacity: 0;
+      transform: translateX(1rem);
+    }
+  }
+
+  &[dir="rtl"] {
+    .placeholder-text {
+      right: 0;
+      &.touched {
+        transform: translateX(-1rem);
+      }
+    }
+  }
 }

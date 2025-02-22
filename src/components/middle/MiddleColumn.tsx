@@ -1,7 +1,6 @@
 /* eslint-disable no-null/no-null */
 import React, {
   memo, useEffect, useMemo,
-  useRef,
   useState,
 } from '../../lib/teact/teact';
 import { getActions, withGlobal } from '../../global';
@@ -61,8 +60,6 @@ import {
   selectTopics,
   selectUserFullInfo,
 } from '../../global/selectors';
-import { AnimBgRender } from '../../util/AnimBackgroundRender';
-import { transformStringsToColors } from '../../util/BaseAnimBackgroundRender';
 import buildClassName from '../../util/buildClassName';
 import buildStyle from '../../util/buildStyle';
 import captureEscKeyListener from '../../util/captureEscKeyListener';
@@ -77,6 +74,7 @@ import useForceUpdate from '../../hooks/useForceUpdate';
 import useHistoryBack from '../../hooks/useHistoryBack';
 import useLastCallback from '../../hooks/useLastCallback';
 import useOldLang from '../../hooks/useOldLang';
+import { usePatternBg } from '../../hooks/usePatternBg';
 import usePrevDuringAnimation from '../../hooks/usePrevDuringAnimation';
 import usePreviousDeprecated from '../../hooks/usePreviousDeprecated';
 import { useResize } from '../../hooks/useResize';
@@ -485,24 +483,7 @@ function MiddleColumn({
   );
   const withExtraShift = Boolean(isMessagingDisabled || isSelectModeActive);
 
-  const bgRef = useRef<HTMLCanvasElement>(null);
-  const animDivRef = useRef<HTMLDivElement>(null);
-
-  const [renderer, setRenderer] = useState<AnimBgRender | null>(null);
-
-  useEffect(() => {
-    if (!bgRef.current || !animDivRef.current) return () => {};
-
-    const newR = new AnimBgRender(bgRef.current, animDivRef.current);
-    setRenderer(newR);
-    newR.setColors(transformStringsToColors({
-      first: fill?.settings.backgroundColor,
-      second: fill?.settings.secondBackgroundColor,
-      third: fill?.settings.thirdBackgroundColor,
-      fourth: fill?.settings.fourthBackgroundColor,
-    }));
-    return () => newR?.detach();
-  }, [bgRef, animDivRef, fill]);
+  const { renderer, bgRef, animDivRef } = usePatternBg(fill);
 
   return (
     <div

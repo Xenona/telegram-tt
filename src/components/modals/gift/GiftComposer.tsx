@@ -1,11 +1,11 @@
-import type { ChangeEvent } from 'react';
 import React, {
-  memo, useMemo, useState,
+  memo, useEffect,
+  useMemo, useState,
 } from '../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../global';
 
-import type { ApiMessage, ApiPeer } from '../../../api/types';
-import type { ThemeKey } from '../../../types';
+import type { ApiFormattedText, ApiMessage, ApiPeer } from '../../../api/types';
+import type { ThemeKey, WallPaperPatternThemeSettings } from '../../../types';
 import type { GiftOption } from './GiftModal';
 
 import { STARS_CURRENCY_CODE } from '../../../config';
@@ -16,18 +16,21 @@ import buildClassName from '../../../util/buildClassName';
 import buildStyle from '../../../util/buildStyle';
 import { formatCurrency } from '../../../util/formatCurrency';
 import { formatStarsAsIcon } from '../../../util/localization/format';
+import { useRichInput } from '../../common/richinput/useRichInput';
 
 import useCustomBackground from '../../../hooks/useCustomBackground';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
+import { usePatternBg } from '../../../hooks/usePatternBg';
+import useThrottledCallback from '../../../hooks/useThrottledCallback';
 
 import PremiumProgress from '../../common/PremiumProgress';
+import RichInput from '../../common/richinput/RichInput';
 import ActionMessage from '../../middle/ActionMessage';
 import Button from '../../ui/Button';
 import Link from '../../ui/Link';
 import ListItem from '../../ui/ListItem';
 import Switcher from '../../ui/Switcher';
-import TextArea from '../../ui/TextArea';
 
 import styles from './GiftComposer.module.scss';
 
@@ -37,6 +40,7 @@ export type OwnProps = {
 };
 
 export type StateProps = {
+  fill?: WallPaperPatternThemeSettings;
   captionLimit?: number;
   theme: ThemeKey;
   isBackgroundBlurred?: boolean;
@@ -48,9 +52,8 @@ export type StateProps = {
   isPaymentFormLoading?: boolean;
 };
 
-const LIMIT_DISPLAY_THRESHOLD = 50;
-
 function GiftComposer({
+  fill,
   gift,
   peerId,
   peer,
@@ -64,10 +67,11 @@ function GiftComposer({
   isPaymentFormLoading,
 }: OwnProps & StateProps) {
   const { sendStarGift, openInvoice, openGiftUpgradeModal } = getActions();
+  const solutionInputCtx = useRichInput();
 
   const lang = useLang();
 
-  const [giftMessage, setGiftMessage] = useState<string>('');
+  const [giftMessage, setGiftMessage] = useState<ApiFormattedText>({ text: '' });
   const [shouldHideName, setShouldHideName] = useState<boolean>(false);
   const [shouldPayForUpgrade, setShouldPayForUpgrade] = useState<boolean>(false);
 
@@ -93,9 +97,7 @@ function GiftComposer({
             amount: gift.amount,
             currency: gift.currency,
             months: gift.months,
-            message: {
-              text: giftMessage,
-            },
+            message: giftMessage,
             translationValues: ['%action_origin%', '%gift_payment_amount%'],
           },
         },
@@ -118,9 +120,7 @@ function GiftComposer({
           amount: gift.stars,
           starGift: {
             type: 'starGift',
-            message: giftMessage?.length ? {
-              text: giftMessage,
-            } : undefined,
+            message: giftMessage?.text.length ? giftMessage : undefined,
             isNameHidden: shouldHideName,
             starsToConvert: gift.starsToConvert,
             canUpgrade: shouldPayForUpgrade || undefined,
@@ -136,9 +136,14 @@ function GiftComposer({
     } satisfies ApiMessage;
   }, [currentUserId, gift, giftMessage, isStarGift, shouldHideName, shouldPayForUpgrade, peerId]);
 
-  const handleGiftMessageChange = useLastCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setGiftMessage(e.target.value);
-  });
+  const handleGiftMessageChange = useThrottledCallback(() => {
+    setGiftMessage(solutionInputCtx.editable.getFormattedText(true));
+  // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [solutionInputCtx.editable, solutionInputCtx.editable.htmlS], 400);
+
+  useEffect(() => {
+    handleGiftMessageChange();
+  }, [handleGiftMessageChange, solutionInputCtx.editable.htmlS]);
 
   const handleShouldHideNameChange = useLastCallback(() => {
     setShouldHideName(!shouldHideName);
@@ -162,7 +167,7 @@ function GiftComposer({
         peerId,
         shouldHideName,
         gift,
-        message: giftMessage ? { text: giftMessage } : undefined,
+        message: giftMessage.text ? giftMessage : undefined,
         shouldUpgrade: shouldPayForUpgrade,
       });
       return;
@@ -174,23 +179,28 @@ function GiftComposer({
       currency: gift.currency,
       amount: gift.amount,
       option: gift,
-      message: giftMessage ? { text: giftMessage } : undefined,
+      message: giftMessage.text ? giftMessage : undefined,
     });
   });
 
   function renderOptionsSection() {
-    const symbolsLeft = captionLimit ? captionLimit - giftMessage.length : undefined;
+    // const symbolsLeft = captionLimit ? captionLimit - giftMessage.length : undefined;
 
     const title = getPeerTitle(lang, peer!)!;
     return (
       <div className={styles.optionsSection}>
-        <TextArea
+        {/* <TextArea
           className={styles.messageInput}
           onChange={handleGiftMessageChange}
           value={giftMessage}
           label={lang('GiftMessagePlaceholder')}
           maxLength={captionLimit}
           maxLengthIndicator={symbolsLeft && symbolsLeft < LIMIT_DISPLAY_THRESHOLD ? symbolsLeft.toString() : undefined}
+        /> */}
+        <RichInput
+          richInputCtx={solutionInputCtx}
+          placeholder={lang('GiftMessagePlaceholder')}
+          limitRemaining={captionLimit ? captionLimit - giftMessage.text.length : undefined}
         />
 
         {isStarGift && gift.upgradeStars && (
@@ -266,6 +276,7 @@ function GiftComposer({
           className={styles.mainButton}
           onClick={handleMainButtonClick}
           isLoading={isPaymentFormLoading}
+          disabled={captionLimit ? captionLimit - giftMessage.text.length < 0 : false}
         >
           {lang('GiftSend', {
             amount,
@@ -285,6 +296,8 @@ function GiftComposer({
     customBackground && isBackgroundBlurred && styles.blurred,
   );
 
+  const { animDivRef, bgRef } = usePatternBg(fill);
+
   return (
     <div className={buildClassName(styles.root, 'custom-scroll')}>
       <div
@@ -296,10 +309,35 @@ function GiftComposer({
           backgroundColor && `--theme-background-color: ${backgroundColor}`,
         )}
       >
-        <div
+        {/* <div
           className={bgClassName}
           style={customBackgroundValue ? `--custom-background: ${customBackgroundValue}` : undefined}
-        />
+        /> */}
+        <div
+          className={bgClassName}
+          style={buildStyle(
+            customBackgroundValue && `--custom-background: ${customBackgroundValue}`,
+            fill?.dark && 'background: #000;',
+          )}
+          ref={animDivRef}
+        >
+          <canvas
+            ref={bgRef}
+            style={buildStyle(
+              !fill && 'visibility: hidden;',
+              fill?.dark
+            && `
+              opacity: 0.55;
+              -webkit-mask: center repeat;
+              mask: center repeat;
+              -webkit-mask-image: var(--custom-background);
+              mask-image: var(--custom-background);
+              mask-size: 300px;
+              -webkit-mask-size: 300px;
+            `,
+            )}
+          />
+        </div>
         <ActionMessage key={isStarGift ? gift.id : gift.months} message={localMessage} />
       </div>
       {renderOptionsSection()}
@@ -317,12 +355,14 @@ export default memo(withGlobal<OwnProps>(
       patternColor,
       background: customBackground,
       backgroundColor,
+      fill,
     } = global.settings.themes[theme] || {};
     const peer = selectPeer(global, peerId);
 
     const tabState = selectTabState(global);
 
     return {
+      fill,
       peer,
       theme,
       isBackgroundBlurred,
