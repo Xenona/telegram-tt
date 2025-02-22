@@ -162,7 +162,7 @@ const Tab: FC<OwnProps> = ({
       <span className="Tab_inner">
         <span style={buildClassName(
           shouldUseTextColor && `filter: ${isActive ? accentColorTheme : textColorTheme};`,
-          'height: 100%;',
+          'flex: 1;',
           'display: flex;',
           'align-items: center;',
         )}

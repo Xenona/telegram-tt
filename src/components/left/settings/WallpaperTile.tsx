@@ -106,7 +106,9 @@ const WallpaperTile: FC<OwnProps> = ({
 
   useEffect(() => {
     const handleMouse = () => {
-      renderer?.nextState();
+      if (canAnimate) {
+        renderer?.nextState();
+      }
     };
 
     if (mouseRef.current && !IS_TOUCH_ENV && canAnimate) {
@@ -139,12 +141,14 @@ const WallpaperTile: FC<OwnProps> = ({
   const handleClick = useCallback(() => {
     if (fullMedia || isGradientWithoutPattern) {
       handleSelect();
-      renderer?.nextState();
+      if (canAnimate) {
+        renderer?.nextState();
+      }
     } else {
       isLoadingRef.current = true;
       setIsLoadAllowed((isAllowed) => !isAllowed);
     }
-  }, [fullMedia, handleSelect, isGradientWithoutPattern, renderer]);
+  }, [canAnimate, fullMedia, handleSelect, isGradientWithoutPattern, renderer]);
 
   const className = buildClassName(
     'WallpaperTile',

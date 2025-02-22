@@ -69,6 +69,7 @@ import {
 } from '../../global/helpers';
 import {
   selectBot,
+  selectCanAnimateInterface,
   selectCanPlayAnimatedEmojis,
   selectCanScheduleUntilOnline,
   selectChat,
@@ -748,6 +749,8 @@ const Composer: FC<OwnProps & StateProps> = ({
     };
   }, [chatId, threadId, resetComposerRef, stopRecordingVoiceRef]);
 
+  const canAnimate = selectCanAnimateInterface(getGlobal());
+
   const showCustomEmojiPremiumNotification = useLastCallback(() => {
     const notificationNumber = customEmojiNotificationNumber.current;
     if (!notificationNumber) {
@@ -985,7 +988,10 @@ const Composer: FC<OwnProps & StateProps> = ({
       return;
     }
 
-    renderer?.nextState();
+    if (canAnimate) {
+      renderer?.nextState();
+    }
+
     let currentAttachments = attachments;
 
     if (activeVoiceRecording) {
@@ -1519,7 +1525,9 @@ const Composer: FC<OwnProps & StateProps> = ({
   });
 
   const handleSendScheduled = useLastCallback(() => {
-    renderer?.nextState();
+    if (canAnimate) {
+      renderer?.nextState();
+    }
     requestCalendar((scheduledAt) => {
       handleMessageSchedule({}, scheduledAt, currentMessageList!);
     });
