@@ -5,7 +5,7 @@ import React, {
 import { getActions, withGlobal } from '../../../global';
 
 import type { GlobalState } from '../../../global/types';
-import type { ISettings } from '../../../types';
+import type { FoldersView, ISettings } from '../../../types';
 import { LeftColumnContent, SettingsScreens } from '../../../types';
 
 import {
@@ -64,6 +64,7 @@ type OwnProps = {
 
 type StateProps =
   {
+    foldersView: FoldersView;
     searchQuery?: string;
     isLoading: boolean;
     globalSearchChatId?: string;
@@ -84,6 +85,7 @@ const CLEAR_CHAT_SEARCH_PARAM = { id: undefined };
 const LeftMainHeader: FC<OwnProps & StateProps> = ({
   shouldHideSearch,
   content,
+  foldersView,
   contactsFilter,
   isClosingSearch,
   searchQuery,
@@ -262,7 +264,8 @@ const LeftMainHeader: FC<OwnProps & StateProps> = ({
             oldLang.isRtl && 'rtl',
             shouldHideSearch && oldLang.isRtl && 'right-aligned',
             shouldDisableDropdownMenuTransitionRef.current && oldLang.isRtl && 'disable-transition',
-            !hasMenu ? 'white' : '',
+            (!hasMenu || foldersView === 'top') && 'white',
+            (foldersView === 'top') && 'narrow',
           )}
           forceOpen={isBotMenuOpen}
           positionX={shouldHideSearch && oldLang.isRtl ? 'right' : 'left'}
@@ -341,9 +344,10 @@ export default memo(withGlobal<OwnProps>(
     const {
       connectionState, isSyncing, isFetchingDifference,
     } = global;
-    const { isConnectionStatusMinimized } = global.settings.byKey;
+    const { isConnectionStatusMinimized, foldersView } = global.settings.byKey;
 
     return {
+      foldersView,
       searchQuery,
       isLoading: fetchingStatus ? Boolean(fetchingStatus.chats || fetchingStatus.messages) : false,
       globalSearchChatId: chatId,

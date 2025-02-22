@@ -195,11 +195,9 @@
       flex: 1;
       overflow: hidden;
     }
-    background-color: red;
   }
 
   .ChatFolders:not(.folders-vertical) {
-    background-color: yellow;
     height: 100%;
     display: flex;
     flex-direction: column;
