@@ -522,7 +522,8 @@ const SettingsFoldersEdit: FC<OwnProps & StateProps> = ({
                   buildStyle(
                     'position: fixed;',
                     `top: ${contextMenuAnchor?.y}px;`,
-                    isMobile ? 'right: 20rem;' : `left: ${contextMenuAnchor?.x}px;`,
+                    isMobile ? 'right: 18rem;' : `left: ${contextMenuAnchor?.x}px;`,
+                    isMobile && 'top: 15rem;',
                   )
                 }
                 isOpen={isOpen}

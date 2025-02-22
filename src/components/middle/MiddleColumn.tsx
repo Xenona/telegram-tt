@@ -433,7 +433,11 @@ function MiddleColumn({
     unblockUser({ userId: chatId! });
   });
 
-  const customBackgroundValue = useCustomBackground(theme, customBackground);
+  const [fillSynced, setFillSynced] = useState<WallPaperPatternThemeSettings | undefined>(undefined);
+  const onBgLoaded = useLastCallback(() => {
+    setFillSynced(fill);
+  });
+  const customBackgroundValue = useCustomBackground(theme, customBackground, onBgLoaded);
 
   const className = buildClassName(
     MASK_IMAGE_DISABLED ? 'mask-image-disabled' : 'mask-image-enabled',
@@ -447,7 +451,7 @@ function MiddleColumn({
     customBackground && isBackgroundBlurred && styles.blurred,
     isRightColumnShown && styles.withRightColumn,
     IS_ELECTRON && !(renderingChatId && renderingThreadId) && styles.draggable,
-    fill?.pattern && styles.withPattern,
+    fillSynced?.pattern && styles.withPattern,
 
   );
 
@@ -551,14 +555,14 @@ function MiddleColumn({
         className={bgClassName}
         style={buildStyle(
           customBackgroundValue && `--custom-background: ${customBackgroundValue}`,
-          fill?.dark && 'background: #000;',
+          fillSynced?.dark && 'background: #000;',
         )}
       >
         <canvas
           ref={bgRef}
           style={buildStyle(
-            !fill && 'visibility: hidden;',
-            fill?.dark
+            !fillSynced && 'visibility: hidden;',
+            fillSynced?.dark
           && `
             opacity: 0.55;
             -webkit-mask: center repeat;

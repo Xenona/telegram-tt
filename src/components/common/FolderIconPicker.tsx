@@ -2,7 +2,7 @@ import type { FC } from '../../lib/teact/teact';
 import React, {
   memo, useEffect, useMemo, useRef, useState,
 } from '../../lib/teact/teact';
-import { getGlobal, withGlobal } from '../../global';
+import { getActions, getGlobal, withGlobal } from '../../global';
 
 import type {
   ApiAvailableReaction, ApiReaction, ApiReactionWithPaid, ApiSticker, ApiStickerSet,
@@ -11,6 +11,7 @@ import type { EmojiKeywords, StickerSetOrReactionsSetOrRecent } from '../../type
 import { type GlobalState } from '../../global/types';
 
 import {
+  BASE_EMOJI_KEYWORD_LANG,
   EMOJI_SIZE_PICKER,
   FAVORITE_SYMBOL_SET_ID,
   POPULAR_SYMBOL_SET_ID,
@@ -111,6 +112,8 @@ type StateProps = {
   recentEmojis?: GlobalState['recentEmojis'];
 };
 
+const { loadEmojiKeywords } = getActions();
+
 const HEADER_BUTTON_WIDTH = 2.5 * REM; // px (including margin)
 
 const DEFAULT_ID_PREFIX = 'custom-emoji-set';
@@ -133,7 +136,7 @@ async function ensureEmojiData() {
   if (!emojiDataPromise) {
     emojiDataPromise = import('emoji-data-ios/emoji-data.json');
     emojiRawData = (await emojiDataPromise).default;
-
+    loadEmojiKeywords({ language: BASE_EMOJI_KEYWORD_LANG });
     emojiData = uncompressEmoji(emojiRawData);
   }
 
@@ -245,7 +248,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
   const areAddedLoaded = Boolean(addedCustomEmojiIds);
 
   const handleEmojiSearchQueryChange = useDebouncedCallback((query: string) => {
-    setEmojiQuery(query);
+    setEmojiQuery(query.toLowerCase());
 
     const arr: Set<(Emoji | ApiSticker)> = new Set();
 
@@ -261,7 +264,6 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
         }
       }
     }
-
     setEmojisFound([...arr.values()]);
   }, [emojiKeywords, textToEmojiMap], 300, true);
 
