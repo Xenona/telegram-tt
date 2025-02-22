@@ -72,6 +72,7 @@ import { getChatNotifySettings } from '../../global/helpers/notifications';
 import { getPeerTitle } from '../../global/helpers/peers';
 import {
   selectBot,
+  selectCanAnimateInterface,
   selectCanPlayAnimatedEmojis,
   selectCanScheduleUntilOnline,
   selectChat,
@@ -853,6 +854,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   }, [disallowedGifts]);
 
   const shouldShowGiftButton = Boolean(!isChatWithSelf && shouldDisplayGiftsButton && !areAllGiftsDisallowed);
+  const canAnimate = selectCanAnimateInterface(getGlobal());
 
   const showCustomEmojiPremiumNotification = useLastCallback(() => {
     const notificationNumber = customEmojiNotificationNumber.current;
@@ -1180,6 +1182,11 @@ const Composer: FC<OwnProps & StateProps> = ({
     }
 
     isSilent = isSilent || isSilentPosting;
+
+
+    if (canAnimate) {
+      renderer?.nextState();
+    }
 
     let currentAttachments = attachments;
 
@@ -1738,6 +1745,9 @@ const Composer: FC<OwnProps & StateProps> = ({
   });
 
   const handleSendScheduled = useLastCallback(() => {
+    if (canAnimate) {
+      renderer?.nextState();
+    }
     requestCalendar((scheduledAt) => {
       handleMessageSchedule({}, scheduledAt, currentMessageList!);
     });

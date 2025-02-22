@@ -16,8 +16,8 @@ import {
   type ApiChatFolder, type ApiChatlistExportedInvite, type ApiSession, type ApiSticker,
 } from '../../../api/types';
 
-import { ALL_FOLDER_ID, EMOJI_SIZE_PICKER } from '../../../config';
-import { selectCanAnimateInterface, selectIsCurrentUserFrozen, selectCanShareFolder, selectTabState } from '../../../global/selectors';
+import { ALL_FOLDER_ID } from '../../../config';
+import { selectCanAnimateInterface, selectCanShareFolder, selectTabState } from '../../../global/selectors';
 import { selectCurrentLimit } from '../../../global/selectors/limits';
 import { IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
@@ -337,7 +337,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
                 <StickerView
                   containerRef={ref}
                   sticker={customEmoji as ApiSticker}
-                  size={EMOJI_SIZE_PICKER}
+                  size={30}
                   shouldLoop
                   widthLoadingCircle
                   shouldPreloadPreview
