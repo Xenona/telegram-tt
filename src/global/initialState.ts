@@ -287,6 +287,7 @@ export const INITIAL_GLOBAL_STATE: GlobalState = {
       shouldSuggestCustomEmoji: true,
       shouldPaidMessageAutoApprove: false,
       shouldUpdateStickerSetOrder: true,
+      foldersView: 'side',
       shouldArchiveAndMuteNewNonContact: false,
       shouldNewNonContactPeersRequirePremium: false,
       disallowedGifts: undefined,

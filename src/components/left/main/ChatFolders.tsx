@@ -54,6 +54,7 @@ type OwnProps = {
 };
 
 type StateProps = {
+  foldersVertical: boolean;
   canAnimate: boolean;
   customEmojisById: Record<number, ApiSticker>;
   customEmojiIcons: CustomEmojiIconsFolder;
@@ -131,6 +132,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
   onLeftColumnContentChange,
   customEmojiIcons,
   canAnimate,
+  foldersVertical,
   chatFoldersById,
   orderedFolderIds,
   activeChatFolder,
@@ -330,7 +332,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
         shouldUseTextColor: (customEmoji as ApiSticker | undefined)?.shouldUseTextColor ?? false,
         id,
         icon: (
-          <> {!isMobile && (
+          <> {!isMobile && foldersVertical && (
 
             customEmoji ? (
               <div className="emoji-wrapper">
@@ -367,7 +369,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
     });
   }, [
     displayedFolders, maxFolders, folderCountersById, lang, chatFoldersById, maxChatLists, folderInvitesById,
-    maxFolderInvites, folderUnreadChatsCountersById, onSettingsScreenSelect, customEmojiIcons, canAnimate, isMobile, ref,
+    maxFolderInvites, folderUnreadChatsCountersById, onSettingsScreenSelect, customEmojiIcons, canAnimate, isMobile, ref, foldersVertical,
   ]);
 
   const handleSwitchTab = useLastCallback((index: number) => {
@@ -492,6 +494,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
         shouldRenderFolders && shouldHideFolderTabs && 'ChatFolders--tabs-hidden',
         shouldRenderStoryRibbon && 'with-story-ribbon',
         !shouldRenderFolders && 'no-folders',
+        foldersVertical && 'folders-vertical',
       )}
     >
       {shouldRenderStoryRibbon && <StoryRibbon isClosing={isStoryRibbonClosing} />}
@@ -501,6 +504,7 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
           tabs={folderTabs}
           activeTab={activeChatFolder}
           onSwitchTab={handleSwitchTab}
+          className={buildClassName()}
         />
       ) : shouldRenderPlaceholder ? (
         <div ref={placeholderRef} className="tabs-placeholder" />
@@ -570,7 +574,10 @@ export default memo(withGlobal<OwnProps>(
 
     const canAnimate = selectCanAnimateInterface(global);
 
+    const foldersView = global.settings.byKey.foldersView;
+
     return {
+      foldersVertical: foldersView === 'side',
       canAnimate,
       customEmojisById,
       customEmojiIcons,

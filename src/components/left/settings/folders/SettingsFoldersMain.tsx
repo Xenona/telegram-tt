@@ -5,6 +5,8 @@ import React, {
 import { getActions, withGlobal } from '../../../../global';
 
 import type { ApiChatFolder } from '../../../../api/types';
+import type { FoldersView } from '../../../../types';
+import type { IRadioOption } from '../../../ui/CheckboxGroup';
 
 import { ALL_FOLDER_ID, STICKER_SIZE_FOLDER_SETTINGS } from '../../../../config';
 import { getFolderDescriptionText } from '../../../../global/helpers';
@@ -27,6 +29,7 @@ import Button from '../../../ui/Button';
 import Draggable from '../../../ui/Draggable';
 import ListItem from '../../../ui/ListItem';
 import Loading from '../../../ui/Loading';
+import RadioGroup from '../../../ui/RadioGroup';
 
 type OwnProps = {
   isActive?: boolean;
@@ -36,6 +39,7 @@ type OwnProps = {
 };
 
 type StateProps = {
+  foldersView: FoldersView;
   folderIds?: number[];
   foldersById: Record<number, ApiChatFolder>;
   recommendedChatFolders?: ApiChatFolder[];
@@ -58,6 +62,7 @@ const SettingsFoldersMain: FC<OwnProps & StateProps> = ({
   onEditFolder,
   onReset,
   folderIds,
+  foldersView,
   foldersById,
   isPremium,
   recommendedChatFolders,
@@ -69,6 +74,7 @@ const SettingsFoldersMain: FC<OwnProps & StateProps> = ({
     openLimitReachedModal,
     openDeleteChatFolderModal,
     sortChatFolders,
+    setSettingOption,
   } = getActions();
 
   const [state, setState] = useState<SortState>({
@@ -97,6 +103,10 @@ const SettingsFoldersMain: FC<OwnProps & StateProps> = ({
       loadRecommendedChatFolders();
     });
   }, [loadRecommendedChatFolders]);
+
+  const handleFoldersViewChange = useCallback((newFolderView: string) => {
+    setSettingOption({ foldersView: newFolderView as FoldersView });
+  }, [setSettingOption]);
 
   const handleCreateFolder = useCallback(() => {
     if (Object.keys(foldersById).length >= maxFolders - 1) {
@@ -194,6 +204,14 @@ const SettingsFoldersMain: FC<OwnProps & StateProps> = ({
   const canCreateNewFolder = useMemo(() => {
     return !isPremium || Object.keys(foldersById).length < maxFolders - 1;
   }, [foldersById, isPremium, maxFolders]);
+
+  const folderViewOptions: IRadioOption[] = [{
+    label: lang('Folders on the Left'),
+    value: 'side',
+  }, {
+    label: lang('Folders Above'),
+    value: 'top',
+  }];
 
   return (
     <div className="settings-content no-border custom-scroll">
@@ -366,6 +384,17 @@ const SettingsFoldersMain: FC<OwnProps & StateProps> = ({
           ))}
         </div>
       )}
+      <div className="settings-item">
+        <h4 className="settings-item-header" dir={lang.isRtl ? 'rtl' : undefined}>
+          {lang('Folders View')}
+        </h4>
+        <RadioGroup
+          name="foldersView"
+          options={folderViewOptions}
+          selected={foldersView}
+          onChange={handleFoldersViewChange}
+        />
+      </div>
     </div>
   );
 };
@@ -379,6 +408,7 @@ export default memo(withGlobal<OwnProps>(
     } = global.chatFolders;
 
     return {
+      foldersView: global.settings.byKey.foldersView,
       folderIds,
       foldersById,
       isPremium: selectIsCurrentUserPremium(global),

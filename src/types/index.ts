@@ -128,6 +128,7 @@ export type LangCode = (
 );
 
 export type TimeFormat = '24h' | '12h';
+export type FoldersView = 'side' | 'top';
 
 export interface AccountSettings {
   hasWebNotifications: boolean;
@@ -153,6 +154,7 @@ export interface AccountSettings {
   hasPassword?: boolean;
   isSensitiveEnabled?: boolean;
   canChangeSensitive?: boolean;
+  foldersView: FoldersView;
   shouldArchiveAndMuteNewNonContact?: boolean;
   shouldNewNonContactPeersRequirePremium?: boolean;
   nonContactPeersPaidStars?: number;
