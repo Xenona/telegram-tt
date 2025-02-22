@@ -1646,7 +1646,7 @@ const Composer: FC<OwnProps & StateProps> = ({
         isCurrentUserPremium={isCurrentUserPremium}
       />
       <MentionTooltip
-        isOpen={isMentionTooltipOpen}
+        isOpen={isMentionTooltipOpen && !isChatCommandTooltipOpen && !isInlineBotTooltipOpen}
         filteredUsers={mentionFilteredUsers}
         onInsertUserName={insertMention}
         onClose={closeMentionTooltip}

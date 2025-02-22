@@ -224,9 +224,15 @@ export class RichEditable {
     // TODO: Check not inside code block
 
     let curNode = r.endContainer;
-    if (r.endContainer.nodeType !== document.TEXT_NODE && r.endOffset > 0) {
-      const childNode = r.endContainer.childNodes[r.endOffset - 1];
-      if (childNode) curNode = childNode;
+    let endPos = r.endOffset;
+    let startPos = r.endOffset;
+    if (
+      curNode.nodeType !== document.TEXT_NODE
+      && curNode.childNodes[endPos - 1]?.nodeType === document.TEXT_NODE
+    ) {
+      curNode = curNode.childNodes[endPos - 1];
+      endPos = curNode.textContent?.length || 0;
+      startPos = endPos;
     }
 
     if (curNode.nodeType !== document.TEXT_NODE) {
@@ -237,17 +243,19 @@ export class RichEditable {
         }
       }
       return undefined;
+    } else {
+      startPos--;
+      endPos--;
     }
 
     const str = curNode.textContent;
     if (!str) return undefined;
 
-    let startPos = r.endOffset - 1;
     while (startPos > 0 && !WHITESPACE_RE.test(str[startPos])) {
       startPos -= 1;
     }
 
-    const ra = str.slice(startPos, r.endOffset);
+    const ra = str.slice(startPos, endPos);
     return ra;
   }
 

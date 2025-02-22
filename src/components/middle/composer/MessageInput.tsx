@@ -233,6 +233,8 @@ const MessageInput: FC<OwnProps & StateProps> = ({
       return false;
     }
 
+    if (!isActive) return false;
+
     const selection = richInputCtx.editable.selectionS();
     if (!selection) {
       closeTextFormatter();
