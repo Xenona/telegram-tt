@@ -27,6 +27,11 @@
     &.white {
       background: var(--color-background);
     }
+
+    &.narrow {
+      min-width: auto;
+      padding-left: 0.8125rem;
+    }
   }
 
   .DropdownMenu.rtl {
