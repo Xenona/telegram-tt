@@ -98,7 +98,13 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
 
   const handleWallPaperSelect = useCallback(
     (slug?: string, fill?: WallPaperPatternThemeSettings) => {
-      setThemeSettings({ theme: themeRef.current!, background: slug, fill });
+      setThemeSettings({
+        theme: themeRef.current!,
+        background: slug,
+        fill,
+        isBlurred: fill?.pattern
+          ? false : isBlurred,
+      });
       const currentWallpaper = loadedWallpapers
         && loadedWallpapers.find((wallpaper) => wallpaper.slug === slug);
       if (currentWallpaper?.document?.thumbnail) {
@@ -134,7 +140,7 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
         });
       }
     },
-    [loadedWallpapers, setThemeSettings],
+    [loadedWallpapers, setThemeSettings, isBlurred],
   );
 
   const handleWallPaperBlurChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

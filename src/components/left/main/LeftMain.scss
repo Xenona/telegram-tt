@@ -11,8 +11,7 @@
     overflow: hidden;
   }
 
-  .ChatFolders {
-
+  .ChatFolders.folders-vertical {
     .chat-list {
       @media (min-width: 600px) {
         padding: 0;
@@ -141,10 +140,10 @@
     }
 
     @media (max-width: 600px) {
-      &--tabs-hidden .TabList {
-        pointer-events: none;
-        opacity: 0.25;
-      }
+      // &--tabs-hidden .TabList {
+      //   pointer-events: none;
+      //   opacity: 0.25;
+      // }
     }
 
     .Tab {
@@ -195,6 +194,65 @@
     > .Transition {
       flex: 1;
       overflow: hidden;
+    }
+    background-color: red;
+  }
+
+  .ChatFolders:not(.folders-vertical) {
+    background-color: yellow;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .tabs-placeholder {
+      height: 2.625rem;
+      /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+      transition: height 150ms ease;
+
+      &:not(.open) {
+        height: 0;
+      }
+    }
+
+    .TabList {
+      justify-content: flex-start;
+      border-bottom: 0;
+      z-index: 1;
+
+      opacity: 1;
+      transition: opacity var(--layer-transition);
+    }
+
+    // &--tabs-hidden .TabList {
+    //   pointer-events: none;
+    //   opacity: 0.25;
+    // }
+
+    .Tab {
+      flex: 0 0 auto;
+    }
+
+    > .Transition {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .RecentContacts,
+    .LeftSearch,
+    .search-content {
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .btn-update {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      margin: 0 auto;
+      transform: translateX(-50%);
+
+      white-space: nowrap;
     }
   }
 

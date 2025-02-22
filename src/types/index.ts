@@ -103,6 +103,7 @@ export type LangCode = (
 );
 
 export type TimeFormat = '24h' | '12h';
+export type FoldersView = 'side' | 'top';
 
 export interface ISettings extends NotifySettings, Record<string, any> {
   theme: ThemeKey;
@@ -131,6 +132,7 @@ export interface ISettings extends NotifySettings, Record<string, any> {
   isSensitiveEnabled?: boolean;
   canChangeSensitive?: boolean;
   timeFormat: TimeFormat;
+  foldersView: FoldersView;
   wasTimeFormatSetManually: boolean;
   isConnectionStatusMinimized: boolean;
   shouldArchiveAndMuteNewNonContact?: boolean;
