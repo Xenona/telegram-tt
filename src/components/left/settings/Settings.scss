@@ -440,38 +440,6 @@
       }
 
       .StickerPicker {
-
-        &-module__header {
-          position: relative;
-          top: 0;
-
-          &.header-hide {
-
-            top: -3rem;
-          }
-
-          &.animated-slide {
-            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
-            transition: top 0.3s ease;
-          }
-        }
-
-        &-module__main {
-
-          position: relative;
-          top: 0;
-
-          &.main-hide {
-            top: -3rem;
-            height: 100%;
-          }
-
-          &.animated-slide {
-            /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
-            transition: top 0.3s ease, height 0.3s ease;
-          }
-        }
-
         height: 300px;
 
         .categories-emojis {

@@ -120,3 +120,35 @@
   align-items: center;
   justify-content: center;
 }
+
+:global(.icon-folder-picker) {
+  .main {
+    position: relative;
+    top: 0;
+
+    &:global(.main-hide) {
+      top: -3rem;
+      height: 100%;
+    }
+
+    &:global(.animated-slide) {
+      /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+      transition: top 0.3s ease, height 0.3s ease;
+    }
+  }
+
+  .header {
+    position: relative;
+    top: 0;
+
+    &:global(.header-hide) {
+
+      top: -3rem;
+    }
+
+    &:global(.animated-slide) {
+      /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+      transition: top 0.3s ease;
+    }
+  }
+}
