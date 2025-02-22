@@ -859,6 +859,7 @@
 
   &:not(.shown) {
     display: none;
+    visibility: hidden;
   }
 
   &.open {
