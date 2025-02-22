@@ -9,6 +9,7 @@ import { createSignal } from '../../../util/signals';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
 import { insertEnterInsideBlockquote } from './blockquoteEnter';
+import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
 import { EditableEmojiRender } from './EditableEmojiRender';
 import { RichInputKeyboardPriority } from './Keyboard';
@@ -16,6 +17,7 @@ import { RichInputKeyboardPriority } from './Keyboard';
 const SAFARI_BR = '<br>';
 const WHITESPACE_RE = /\s/;
 export const IMG_ALT_MATCHABLE_MARKER = 'IMG_ALT__';
+const fragmentEl = document.createElement('div');
 
 export type SelectionState = {
   collapsed: boolean;
@@ -255,7 +257,7 @@ export class RichEditable {
       startPos -= 1;
     }
 
-    const ra = str.slice(startPos, endPos);
+    const ra = str.slice(startPos, endPos + 1);
     return ra;
   }
 
@@ -279,12 +281,18 @@ export class RichEditable {
 
   private handleContentUpdate() {
     if (!this.attached) return;
+    const wasEmpty = this.emptyS();
+
     this.htmlSet(this.root.innerHTML);
     this.emptySet(
       this.root.innerHTML === '' || this.root.innerHTML === SAFARI_BR,
     );
 
     this.handleSelectionUpdate();
+    if (!wasEmpty && this.emptyS() && this.selectionS()?.collapsed) {
+      betterExecCommand(this.root, this.selectionS()?.range, 'removeFormat');
+    }
+
     this.emojiRenderer.synchronizeElements();
   }
 
@@ -434,5 +442,44 @@ export class RichEditable {
       s.addRange(sel);
       this.handleSelectionUpdate();
     }
+  }
+
+  public getSelectedHtml(opts: { shouldDropCustomEmoji?: boolean; shouldDropQuotes?: boolean } = {}) {
+    const sel = this.selectionS();
+    if (!sel) {
+      return undefined;
+    }
+
+    const { shouldDropCustomEmoji, shouldDropQuotes } = {
+      ...opts,
+      shouldDropCustomEmoji: false,
+      shouldDropQuotes: true,
+    };
+
+    const r = sel.range.cloneRange();
+    while (r.commonAncestorContainer !== this.root) {
+      const nr = document.createRange();
+      nr.selectNodeContents(r.commonAncestorContainer);
+      if (nr.compareBoundaryPoints(Range.START_TO_START, r) !== 0) break;
+      if (nr.compareBoundaryPoints(Range.END_TO_END, r) !== 0) break;
+      r.selectNode(r.commonAncestorContainer);
+    }
+    fragmentEl.replaceChildren(r.cloneContents());
+
+    if (shouldDropCustomEmoji) {
+      fragmentEl.querySelectorAll(INPUT_CUSTOM_EMOJI_SELECTOR).forEach((el) => {
+        el.replaceWith(el.getAttribute('alt')!);
+      });
+    }
+
+    if (shouldDropQuotes) {
+      let clearBlockQuote: HTMLElement | null = fragmentEl.querySelector('blockquote');
+      while (clearBlockQuote) {
+        clearBlockQuote.replaceWith(...clearBlockQuote.childNodes);
+        clearBlockQuote = fragmentEl.querySelector('blockquote');
+      }
+    }
+
+    return fragmentEl.innerHTML;
   }
 }

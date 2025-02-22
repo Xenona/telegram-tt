@@ -7,13 +7,13 @@ import type { IAnchorPosition } from '../../../types';
 import { ApiMessageEntityTypes } from '../../../api/types';
 
 import { EDITABLE_INPUT_ID } from '../../../config';
+import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import buildClassName from '../../../util/buildClassName';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import { ensureProtocol } from '../../../util/ensureProtocol';
 import getKeyFromEvent from '../../../util/getKeyFromEvent';
 import { selectAfterNode } from '../../../util/selection';
 import stopEvent from '../../../util/stopEvent';
-import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 import { type RichInputCtx, useRichEditableKeyboardListener } from './useRichEditable';
 
 import useFlag from '../../../hooks/useFlag';
@@ -57,7 +57,6 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   SPAN: 'spoiler',
   BLOCKQUOTE: 'quote',
 };
-const fragmentEl = document.createElement('div');
 
 const TEXT_FORMATTER_SAFE_AREA_PX = 140;
 
@@ -130,20 +129,6 @@ const TextFormatter: FC<OwnProps> = ({
     if (!sel || sel.collapsed) return;
     linkSelSaver.current = sel.range.cloneRange();
     openLinkControl();
-  });
-
-  const getSelectedHTML = useLastCallback((shouldDropCustomEmoji?: boolean) => {
-    const sel = richInputCtx.editable.selectionS();
-    if (!sel) {
-      return undefined;
-    }
-    fragmentEl.replaceChildren(sel.range.cloneContents());
-    if (shouldDropCustomEmoji) {
-      fragmentEl.querySelectorAll(INPUT_CUSTOM_EMOJI_SELECTOR).forEach((el) => {
-        el.replaceWith(el.getAttribute('alt')!);
-      });
-    }
-    return fragmentEl.innerHTML;
   });
 
   const getSelectedElement = useLastCallback(() => {
@@ -222,7 +207,8 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedHTML();
+    const text = richInputCtx.editable.getSelectedHtml();
+    if (!text) return;
     richInputCtx.editable.execCommand(
       'insertHTML', `<span class="spoiler" data-entity-type="${ApiMessageEntityTypes.Spoiler}">${text}</span>`,
     );
@@ -277,20 +263,21 @@ const TextFormatter: FC<OwnProps> = ({
     }
 
     const previousCode = [...(richInputCtx.editable.root.querySelectorAll('code') || [])];
-
-    let text = richInputCtx.editable.selectionS()?.range?.toString() || '';
-    if (text.length === 0) text = '';
+    const text = richInputCtx.editable.selectionS()?.range?.toString() || '';
+    if (!text) return;
     richInputCtx.editable.execCommand(
       'insertHTML',
       `<code class="text-entity-code" dir="auto">${text}</code>`,
     );
 
-    const currentCode = richInputCtx.editable.root?.querySelectorAll('code') || [];
-    for (const el of currentCode) {
-      if (previousCode.includes(el)) continue;
-      selectAfterNode(el);
-    }
-    onClose();
+    requestMutation(() => {
+      const currentCode = richInputCtx.editable.root?.querySelectorAll('code') || [];
+      for (const el of currentCode) {
+        if (previousCode.includes(el)) continue;
+        selectAfterNode(el);
+      }
+      onClose();
+    });
   });
 
   const handleLinkUrlConfirm = useLastCallback(() => {
@@ -313,7 +300,7 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedHTML(true);
+    const text = richInputCtx.editable.getSelectedHtml({ shouldDropCustomEmoji: true });
     richInputCtx.editable.execCommand(
       'insertHTML',
       `<a href=${formattedLinkUrl} class="text-entity-link" dir="auto">${text}</a>`,
@@ -337,20 +324,17 @@ const TextFormatter: FC<OwnProps> = ({
       element.replaceWith(element.textContent);
       setSelectedTextFormats((selectedFormats) => ({
         ...selectedFormats,
-        blockquote: false,
+        quote: false,
       }));
+      onClose();
 
       return;
     }
 
-    fragmentEl.replaceChildren(window.getSelection()!.getRangeAt(0)!.cloneContents());
-    let clearBlockQuote: HTMLElement | null = fragmentEl.querySelector('blockquote');
-    while (clearBlockQuote) {
-      clearBlockQuote.replaceWith(...clearBlockQuote.childNodes);
-      clearBlockQuote = fragmentEl.querySelector('blockquote');
-    }
+    const html = richInputCtx.editable.getSelectedHtml({ shouldDropQuotes: true });
+    if (!html) return;
     richInputCtx.editable.execCommand('insertHTML',
-      `<blockquote class="blockquote">${fragmentEl.innerHTML}</blockquote>`);
+      `<blockquote class="blockquote">${html}</blockquote>`);
     onClose();
   });
 
