@@ -532,7 +532,7 @@ const FolderIconPicker: FC<OwnProps & StateProps> = ({
 
     return icon && (
       <Button
-        className={`StickerPicker-module__stickerCover symbol-set-button ${index + 1
+        className={`${pickerStyles.stickerCover} symbol-set-button ${index + 1
           === activeCategoryIndex ? 'activated' : ''}`}
         round
         faded

@@ -12,6 +12,17 @@
   transition-delay: 0s;
 }
 
+:global(#LeftColumn-main .ChatFolders.folders-vertical .TabList) {
+  .thumb {
+    display: none !important;
+  }
+
+  .media {
+    left: 50%;
+    translate: -50% 16%;
+  }
+}
+
 .no-transition {
   transition: none !important;
 }
