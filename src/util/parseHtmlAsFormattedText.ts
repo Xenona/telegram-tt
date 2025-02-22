@@ -1,6 +1,7 @@
 import type { ApiFormattedText, ApiMessageEntity } from '../api/types';
 import { ApiMessageEntityTypes } from '../api/types';
 
+import { RE_LINK_TEMPLATE } from '../config';
 import { parseMarkdown } from './parseMarkdown';
 
 export const ENTITY_CLASS_BY_NODE_NAME: Record<string, ApiMessageEntityTypes> = {
@@ -22,11 +23,10 @@ const MAX_TAG_DEEPNESS = 3;
 
 // TODO: Markdown links
 export default function parseHtmlAsFormattedText(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   html: string, withMarkdownLinks = false, skipMarkdown = false,
 ): ApiFormattedText {
   const fragment = document.createElement('div');
-  fragment.innerHTML = html;
+  fragment.innerHTML = withMarkdownLinks ? parseMarkdownLinks(html) : html;
   fragment.querySelectorAll('br').forEach((br) => {
     br.replaceWith('\n');
   });
@@ -85,13 +85,13 @@ export function fixImageContent(fragment: HTMLDivElement) {
   });
 }
 
-// TODO: Fix)
-// function parseMarkdownLinks(html: string) {
-//   return html.replace(new RegExp(`\\[([^\\]]+?)]\\((${RE_LINK_TEMPLATE}+?)\\)`, 'g'), (_, text, link) => {
-//     const url = link.includes('://') ? link : link.includes('@') ? `mailto:${link}` : `https://${link}`;
-//     return `<a href="${url}">${text}</a>`;
-//   });
-// }
+// TODO: Improvem, though used realy rarely
+function parseMarkdownLinks(html: string) {
+  return html.replace(new RegExp(`\\[([^\\]]+?)]\\((${RE_LINK_TEMPLATE}+?)\\)`, 'g'), (_, text, link) => {
+    const url = link.includes('://') ? link : link.includes('@') ? `mailto:${link}` : `https://${link}`;
+    return `<a href="${url}">${text}</a>`;
+  });
+}
 
 function getEntityDataFromNode(
   node: ChildNode,

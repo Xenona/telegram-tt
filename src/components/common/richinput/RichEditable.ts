@@ -413,7 +413,7 @@ export class RichEditable {
       items: e.clipboardData.items,
     };
     if (html) {
-      pasteCtx.text = parseHtmlAsFormattedText(preparePastedHtml(html), undefined, true);
+      pasteCtx.text = parseHtmlAsFormattedText(preparePastedHtml(html), false, true);
       // TODO: This is needed to handle paste from vscode, but damn is this stupid
       if (!pasteCtx.text.entities?.length) {
         pasteCtx.text = { text: pastedText };
@@ -425,5 +425,14 @@ export class RichEditable {
     }
 
     this.insertFormattedText(pasteCtx.text);
+  }
+
+  public setSelRange(sel: Range) {
+    const s = window.getSelection();
+    if (s) {
+      s.removeAllRanges();
+      s.addRange(sel);
+      this.handleSelectionUpdate();
+    }
   }
 }

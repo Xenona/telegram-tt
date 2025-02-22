@@ -570,6 +570,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
       <TextFormatter
         richInputCtx={richInputCtx}
         isOpen={isTextFormatterOpen}
+        isActive={isActive}
         onClose={handleCloseTextFormatter}
       />
       {forcedPlaceholder && <span className="forced-placeholder">{renderText(forcedPlaceholder!)}</span>}

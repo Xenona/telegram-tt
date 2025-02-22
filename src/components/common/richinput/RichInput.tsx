@@ -61,6 +61,7 @@ const RichInput: FC<OwnProps> = ({
       <TextFormatter
         richInputCtx={richInputCtx}
         isOpen={isTextFormatterOpen}
+        isActive
         onClose={closeTextFormatter}
       />
       {limitRemaining !== undefined && limitRemaining < 10 && (

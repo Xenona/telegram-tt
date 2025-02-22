@@ -34,16 +34,19 @@ export function useRichEditable(): RichInputCtx & { ctx: RichInputCtx } {
 export function useRichEditableKeyboardListener(
   richInputCtx: RichInputCtx,
   handler: RichInputKeyboardListener,
+  enable = true,
 ) {
   const keydownCallback = useLastCallback(handler.onKeydown);
   const { priority } = handler;
 
   useEffect(() => {
+    if (!enable) return () => {};
+
     return richInputCtx.editable.addKeyboardHandler({
       priority,
       onKeydown: keydownCallback,
     });
-  }, [richInputCtx.editable, keydownCallback, priority]);
+  }, [richInputCtx.editable, keydownCallback, priority, enable]);
 }
 
 export function useRichEditablePasteHandler(

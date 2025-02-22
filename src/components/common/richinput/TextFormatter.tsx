@@ -4,7 +4,6 @@ import React, {
 } from '../../../lib/teact/teact';
 
 import type { IAnchorPosition } from '../../../types';
-import type { RichInputCtx } from './useRichEditable';
 import { ApiMessageEntityTypes } from '../../../api/types';
 
 import { EDITABLE_INPUT_ID } from '../../../config';
@@ -15,6 +14,7 @@ import getKeyFromEvent from '../../../util/getKeyFromEvent';
 import { selectAfterNode } from '../../../util/selection';
 import stopEvent from '../../../util/stopEvent';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
+import { type RichInputCtx, useRichEditableKeyboardListener } from './useRichEditable';
 
 import useFlag from '../../../hooks/useFlag';
 import useLastCallback from '../../../hooks/useLastCallback';
@@ -24,12 +24,14 @@ import useVirtualBackdrop from '../../../hooks/useVirtualBackdrop';
 
 import Button from '../../ui/Button';
 import Icon from '../icons/Icon';
+import { RichInputKeyboardPriority } from './Keyboard';
 
 import './TextFormatter.scss';
 
 export type OwnProps = {
   richInputCtx: RichInputCtx;
   isOpen: boolean;
+  isActive: boolean;
   onClose: () => void;
 };
 
@@ -62,6 +64,7 @@ const TEXT_FORMATTER_SAFE_AREA_PX = 140;
 const TextFormatter: FC<OwnProps> = ({
   richInputCtx,
   isOpen: shouldOpen,
+  isActive,
   onClose,
 }) => {
   // eslint-disable-next-line no-null/no-null
@@ -69,9 +72,9 @@ const TextFormatter: FC<OwnProps> = ({
   // eslint-disable-next-line no-null/no-null
   const linkUrlInputRef = useRef<HTMLInputElement>(null);
   const [isEditingLink, setIsEditingLink] = useState(false);
-  const isOpen = shouldOpen || isEditingLink;
-  const { shouldRender, transitionClassNames } = useShowTransitionDeprecated(isOpen);
+  const isOpen = isActive && (shouldOpen || isEditingLink);
   const [isLinkControlOpen, openLinkControl, closeLinkControl] = useFlag();
+  const { shouldRender, transitionClassNames } = useShowTransitionDeprecated(isOpen || isLinkControlOpen);
   const [linkUrl, setLinkUrl] = useState('');
   const [inputClassName, setInputClassName] = useState<string | undefined>();
   const [selectedTextFormats, setSelectedTextFormats] = useState<ISelectedTextFormats>({});
@@ -119,6 +122,15 @@ const TextFormatter: FC<OwnProps> = ({
 
     setSelectedTextFormats(selectedFormats);
   }, [isOpen, richInputCtx.editable, richInputCtx.editable.selectionS, openLinkControl]);
+
+  const linkSelSaver = useRef<Range | undefined>();
+  const startLinkControl = useLastCallback(() => {
+    const sel = richInputCtx.editable.selectionS();
+
+    if (!sel || sel.collapsed) return;
+    linkSelSaver.current = sel.range.cloneRange();
+    openLinkControl();
+  });
 
   const getSelectedHTML = useLastCallback((shouldDropCustomEmoji?: boolean) => {
     const sel = richInputCtx.editable.selectionS();
@@ -284,6 +296,10 @@ const TextFormatter: FC<OwnProps> = ({
   const handleLinkUrlConfirm = useLastCallback(() => {
     const formattedLinkUrl = (ensureProtocol(linkUrl) || '').split('%').map(encodeURI).join('%');
 
+    if (linkSelSaver.current) {
+      richInputCtx.editable.setSelRange(linkSelSaver.current);
+    }
+
     if (isEditingLink) {
       const element = getSelectedElement();
       if (!element || element.tagName !== 'A') {
@@ -302,6 +318,7 @@ const TextFormatter: FC<OwnProps> = ({
       'insertHTML',
       `<a href=${formattedLinkUrl} class="text-entity-link" dir="auto">${text}</a>`,
     );
+    closeLinkControl();
     onClose();
   });
 
@@ -337,38 +354,37 @@ const TextFormatter: FC<OwnProps> = ({
     onClose();
   });
 
-  const handleKeyDown = useLastCallback((e: KeyboardEvent) => {
-    const HANDLERS_BY_KEY: Record<string, AnyToVoidFunction> = {
-      k: openLinkControl,
-      b: handleBoldText,
-      u: handleUnderlineText,
-      i: handleItalicText,
-      m: handleMonospaceText,
-      s: handleStrikethroughText,
-      p: handleSpoilerText,
-      q: handleQuote,
-    };
+  useRichEditableKeyboardListener(richInputCtx, {
+    priority: RichInputKeyboardPriority.Tool,
+    onKeydown: (e: KeyboardEvent) => {
+      if (!isActive) return false;
+      const HANDLERS_BY_KEY: Record<string, AnyToVoidFunction> = {
+        k: startLinkControl,
+        b: handleBoldText,
+        u: handleUnderlineText,
+        i: handleItalicText,
+        m: handleMonospaceText,
+        s: handleStrikethroughText,
+        p: handleSpoilerText,
+        q: handleQuote,
+      };
 
-    const handler = HANDLERS_BY_KEY[getKeyFromEvent(e)];
+      const handler = HANDLERS_BY_KEY[getKeyFromEvent(e)];
 
-    if (
-      e.altKey
-      || !(e.ctrlKey || e.metaKey)
-      || !handler
-    ) {
-      return;
-    }
+      if (
+        e.altKey
+        || !(e.ctrlKey || e.metaKey)
+        || !handler
+      ) {
+        return false;
+      }
 
-    e.preventDefault();
-    e.stopPropagation();
-    handler();
-  });
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleKeyDown]);
+      e.preventDefault();
+      e.stopPropagation();
+      handler();
+      return true;
+    },
+  }, isActive);
 
   const lang = useOldLang();
 
@@ -489,7 +505,7 @@ const TextFormatter: FC<OwnProps> = ({
           <Icon name="monospace" />
         </Button>
         <div className="TextFormatter-divider" />
-        <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={openLinkControl}>
+        <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={startLinkControl}>
           <Icon name="link" />
         </Button>
       </div>
