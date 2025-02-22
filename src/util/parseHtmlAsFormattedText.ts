@@ -19,7 +19,7 @@ export const ENTITY_CLASS_BY_NODE_NAME: Record<string, ApiMessageEntityTypes> = 
   BLOCKQUOTE: ApiMessageEntityTypes.Blockquote,
 };
 
-const MAX_TAG_DEEPNESS = 3;
+const MAX_TAG_DEEPNESS = 5;
 
 // TODO: Markdown links
 export default function parseHtmlAsFormattedText(
@@ -30,6 +30,11 @@ export default function parseHtmlAsFormattedText(
   fragment.querySelectorAll('br').forEach((br) => {
     br.replaceWith('\n');
   });
+  let dtr = fragment.querySelector('div');
+  while (dtr) {
+    dtr.replaceWith('\n', ...dtr.childNodes);
+    dtr = fragment.querySelector('div');
+  }
   fixImageContent(fragment);
   const text = fragment.innerText.trim().replace(/\u200b+/g, '');
   const trimShift = fragment.innerText.indexOf(text[0]);

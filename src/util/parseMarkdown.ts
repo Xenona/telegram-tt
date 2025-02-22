@@ -171,7 +171,7 @@ function doCodePass(tokens: Token[]): Token[] {
             tokenCount.dec(token.entity);
             res.push(token);
           } else {
-            discard = true;
+            res.push({ type: 'text', str: token.str });
           }
         } else {
           res.push(token);

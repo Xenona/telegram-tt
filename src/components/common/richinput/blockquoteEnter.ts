@@ -1,4 +1,4 @@
-export function insertEnterInsideBlockquote(e: KeyboardEvent) {
+export function insertEnterInsideBlockquote(e: KeyboardEvent): boolean {
   const s = window.getSelection();
   if (s && s.isCollapsed) {
     const r = s.getRangeAt(0);
@@ -24,6 +24,7 @@ export function insertEnterInsideBlockquote(e: KeyboardEvent) {
         s.addRange(nr);
         e.preventDefault();
         // document.execCommand("insertText", false, "\n")
+        return true;
       }
     } else if (r.endOffset === r.endContainer.textContent?.length) {
       let isEnd = true;
@@ -45,7 +46,9 @@ export function insertEnterInsideBlockquote(e: KeyboardEvent) {
         s.addRange(nr);
         e.preventDefault();
         // document.execCommand("insertText", false, "\n")
+        return true;
       }
     }
   }
+  return false;
 }

@@ -6,6 +6,7 @@ import { betterExecCommand } from '../../../util/execCommand';
 import focusEditableElement from '../../../util/focusEditableElement';
 import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
 import { createSignal } from '../../../util/signals';
+import { IS_MOBILE, IS_SAFARI, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
 import { insertEnterInsideBlockquote } from './blockquoteEnter';
@@ -66,6 +67,10 @@ export class RichEditable {
 
   constructor() {
     this.root = document.createElement('div');
+    this.root.style.maxHeight = '256px';
+    if (IS_TOUCH_ENV || IS_MOBILE) {
+      this.root.style.overflowY = 'scroll';
+    }
     this.attached = undefined;
 
     this.disableEdit = false;
@@ -105,7 +110,20 @@ export class RichEditable {
       priority: RichInputKeyboardPriority.Default,
       onKeydown: (e) => {
         if (e.key === 'Enter') {
-          insertEnterInsideBlockquote(e);
+          let p = this.selectionS()?.range.commonAncestorContainer;
+          while (p && p !== this.root && !(p?.nodeType
+            === document.ELEMENT_NODE || (p as HTMLElement)?.tagName
+            === 'BLOCKQUOTE')) {
+            p = p?.parentNode ?? undefined;
+          }
+          if (p && (p as HTMLElement)?.tagName === 'BLOCKQUOTE') {
+            const wasEnd = insertEnterInsideBlockquote(e);
+            if (!wasEnd && (IS_MOBILE || IS_SAFARI)) {
+              e.preventDefault();
+              this.execCommand('insertHTML', '<br/>');
+            }
+          }
+
           return true;
         }
         return false;
