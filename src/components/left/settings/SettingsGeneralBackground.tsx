@@ -92,6 +92,7 @@ const SettingsGeneralBackground: FC<OwnProps & StateProps> = ({
       background: undefined,
       backgroundColor: undefined,
       isBlurred: true,
+      fill: undefined,
       patternColor: theme === 'dark' ? DARK_THEME_PATTERN_COLOR : DEFAULT_PATTERN_COLOR,
     });
   }, [setThemeSettings, theme]);

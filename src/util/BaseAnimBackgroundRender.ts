@@ -1,5 +1,6 @@
 /* eslint-disable no-bitwise */
-import { requestMutation } from '../lib/fasterdom/fasterdom';
+import { requestMutation } from "../lib/fasterdom/fasterdom";
+import { fastRaf } from "./schedulers";
 
 export type AnimBgColor = [number, number, number, number];
 export type AnimBgColorPoints = [
@@ -112,18 +113,23 @@ export function transformStringsToColors(colors: {
     0xff,
   ];
 
-  return [fi, se, th, fo] as [AnimBgColor, AnimBgColor, AnimBgColor, AnimBgColor];
+  return [fi, se, th, fo] as [
+    AnimBgColor,
+    AnimBgColor,
+    AnimBgColor,
+    AnimBgColor,
+  ];
 }
 
 export const keyPoints: [number, number][] = [
-  [0.265, 0.582], // 0
-  [0.176, 0.918], // 1
-  [1 - 0.585, 1 - 0.164], // 0
-  [0.644, 0.755], // 1
-  [1 - 0.265, 1 - 0.582], // 0
-  [1 - 0.176, 1 - 0.918], // 1
-  [0.585, 0.164], // 0
-  [1 - 0.644, 1 - 0.755], // 1
+  [0.8, 0.1],
+  [0.6, 0.2],
+  [0.35, 0.25],
+  [0.25, 0.6],
+  [0.2, 0.9],
+  [0.4, 0.8],
+  [0.65, 0.75],
+  [0.75, 0.4],
 ];
 
 const TRANSITION_TIME = 200;
@@ -166,6 +172,7 @@ export abstract class BaseAnimBgRender {
     if (this.container) {
       this.resObserver = new ResizeObserver((e) => {
         requestMutation(() => {
+          if (e[0]?.contentRect.width == 0) return;
           this.canvas.width = e[0]?.contentRect?.width ?? 50;
           this.canvas.height = e[0]?.contentRect?.height ?? 50;
           this.syncState();
@@ -202,7 +209,8 @@ export abstract class BaseAnimBgRender {
   protected abstract render(progress?: number): void;
 
   protected getTransitionProgress(): number {
-    let transitionProgress = (performance.now() - this.transitionStart) / TRANSITION_TIME;
+    let transitionProgress =
+      (performance.now() - this.transitionStart) / TRANSITION_TIME;
     if (transitionProgress > 1) {
       transitionProgress = 1;
     }

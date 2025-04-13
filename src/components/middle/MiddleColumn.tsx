@@ -435,6 +435,7 @@ function MiddleColumn({
 
   const [fillSynced, setFillSynced] = useState<WallPaperPatternThemeSettings | undefined>(undefined);
   const onBgLoaded = useLastCallback(() => {
+    console.log('XE message')
     setFillSynced(fill);
   });
   const customBackgroundValue = useCustomBackground(theme, customBackground, onBgLoaded);
@@ -524,6 +525,7 @@ function MiddleColumn({
     return () => renderer?.detach();
   }, [bgRef, animDivRef, fill, renderer]);
 
+  console.log("XE", {fillSynced, customBackgroundValue});
   return (
     <div
       ref={animDivRef}
