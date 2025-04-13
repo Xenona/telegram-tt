@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="msg_emoji_home">
+<g id="Group">
+<g id="Object">
+<mask id="mask0_4266_10571" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="4" width="20" height="20">
+<path id="Path 281" fill-rule="evenodd" clip-rule="evenodd" d="M2 14.2993L12 4.65527L22 14.8454V23.6667H2V14.2993Z" fill="white"/>
+</mask>
+<g mask="url(#mask0_4266_10571)">
+<path id="Path 279" d="M5.21429 10.5111V18.4667C5.21429 19.5712 6.10973 20.4667 7.21429 20.4667H16.7857C17.8903 20.4667 18.7857 19.5712 18.7857 18.4667V10.8803" stroke="black" stroke-width="1.33333" stroke-linecap="round"/>
+</g>
+</g>
+<rect id="Rectangle" x="9.85715" y="11.9333" width="4.28571" height="4.26667" rx="0.888889" stroke="black" stroke-width="1.2" stroke-linecap="round"/>
+<path id="Path 280" d="M18.5702 8.13933L18.5713 5.34589" stroke="black" stroke-width="1.46667" stroke-linecap="round"/>
+<path id="Path 278" d="M2 11.3713L11.2287 3.28332C11.6313 2.93048 12.233 2.93072 12.6354 3.28388L22 11.5042" stroke="black" stroke-width="1.33333" stroke-linecap="round"/>
+</g>
+</g>
+</svg>
