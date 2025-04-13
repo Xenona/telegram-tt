@@ -372,8 +372,30 @@ function GiftComposer({
       >
         <div
           className={bgClassName}
-          style={customBackgroundValue ? `--custom-background: ${customBackgroundValue}` : undefined}
-        />
+          style={buildStyle(
+            customBackgroundValue && `--custom-background: ${customBackgroundValue}`,
+            fill?.dark && 'background: #000;',
+          )}
+          ref={animDivRef}
+        >
+          <canvas
+            ref={bgRef}
+            style={buildStyle(
+              !fill && 'visibility: hidden;',
+              fill?.dark
+            && `
+              opacity: 0.25;
+              -webkit-mask: center repeat;
+              mask: center repeat;
+              -webkit-mask-image: var(--custom-background);
+              mask-image: var(--custom-background);
+              mask-size: 300px;
+              -webkit-mask-size: 300px;
+            `,
+            )}
+          />
+        </div>
+
         <ActionMessage
           key={isStarGift ? gift.id : gift.months}
           message={localMessage}

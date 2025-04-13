@@ -566,7 +566,7 @@ function MiddleColumn({
             !fillSynced && 'visibility: hidden;',
             fillSynced?.dark
           && `
-            opacity: 0.55;
+            opacity: 0.25;
             -webkit-mask: center repeat;
             mask: center repeat;
             -webkit-mask-image: var(--custom-background);
