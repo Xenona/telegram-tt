@@ -196,13 +196,13 @@ const SymbolMenu: FC<OwnProps & StateProps> = ({
 
   function renderContent(isActive: boolean, isFrom: boolean) {
     switch (activeTab) {
-      case SymbolMenuTabs.Emoji:
-        return (
-          <EmojiPicker
-            className="picker-tab"
-            onEmojiSelect={handleEmojiSelect}
-          />
-        );
+      // case SymbolMenuTabs.Emoji:
+      //   return (
+      //     <EmojiPicker
+      //       className="picker-tab"
+      //       onEmojiSelect={handleEmojiSelect}
+      //     />
+      //   );
       case SymbolMenuTabs.CustomEmoji:
         return (
           <CustomEmojiPicker
@@ -215,32 +215,31 @@ const SymbolMenu: FC<OwnProps & StateProps> = ({
             onCustomEmojiSelect={handleCustomEmojiSelect}
           />
         );
-      case SymbolMenuTabs.Stickers:
-        return (
-          <StickerPicker
-            className="picker-tab"
-            isHidden={!isOpen || !isActive}
-            loadAndPlay={canSendStickers ? isOpen && (isActive || isFrom) : false}
-            idPrefix={idPrefix}
-            canSendStickers={canSendStickers}
-            noContextMenus={!isMessageComposer}
-            chatId={chatId}
-            threadId={threadId}
-            isTranslucent={!isMobile && isBackgroundTranslucent}
-            onStickerSelect={handleStickerSelect}
-          />
-        );
-      case SymbolMenuTabs.GIFs:
-        return (
-          <GifPicker
-            className="picker-tab"
-            loadAndPlay={canSendGifs ? isOpen && (isActive || isFrom) : false}
-            canSendGifs={canSendGifs}
-            onGifSelect={onGifSelect}
-          />
-        );
+    //   case SymbolMenuTabs.Stickers:
+    //     return (
+    //       <StickerPicker
+    //         className="picker-tab"
+    //         isHidden={!isOpen || !isActive}
+    //         loadAndPlay={canSendStickers ? isOpen && (isActive || isFrom) : false}
+    //         idPrefix={idPrefix}
+    //         canSendStickers={canSendStickers}
+    //         noContextMenus={!isMessageComposer}
+    //         chatId={chatId}
+    //         threadId={threadId}
+    //         isTranslucent={!isMobile && isBackgroundTranslucent}
+    //         onStickerSelect={handleStickerSelect}
+    //       />
+    //     );
+    //   case SymbolMenuTabs.GIFs:
+    //     return (
+    //       <GifPicker
+    //         className="picker-tab"
+    //         loadAndPlay={canSendGifs ? isOpen && (isActive || isFrom) : false}
+    //         canSendGifs={canSendGifs}
+    //         onGifSelect={onGifSelect}
+    //       />
+    //     );
     }
-
     return undefined;
   }
 
