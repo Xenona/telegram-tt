@@ -43,23 +43,7 @@ class SvgColorFilter {
   }
 }
 
-export default function useColorFilter(color?: string, asValue?: boolean) {
-  useEffect(() => {
-    if (!color) return undefined;
-
-    return () => {
-      const colorFilter = SVG_MAP.get(color);
-      if (colorFilter) {
-        colorFilter.removeReference();
-        if (!colorFilter.isUsed()) {
-          SVG_MAP.delete(colorFilter.color);
-        }
-      }
-    };
-  }, [color]);
-
-  if (!color) return undefined;
-
+export function addColorFilter(color: string, asValue?: boolean) {
   if (SVG_MAP.has(color)) {
     const svg = SVG_MAP.get(color)!;
     return prepareStyle(svg.getFilterId(), asValue);
@@ -69,6 +53,29 @@ export default function useColorFilter(color?: string, asValue?: boolean) {
   SVG_MAP.set(color, svg);
 
   return prepareStyle(svg.getFilterId(), asValue);
+}
+
+export function removeColorFilter(color: string) {
+  const colorFilter = SVG_MAP.get(color);
+  if (colorFilter) {
+    colorFilter.removeReference();
+    if (!colorFilter.isUsed()) {
+      SVG_MAP.delete(colorFilter.color);
+    }
+  }
+}
+
+export default function useColorFilter(color?: string, asValue?: boolean) {
+  useEffect(() => {
+    if (!color) return undefined;
+
+    return () => {
+      removeColorFilter(color);
+    };
+  }, [color]);
+
+  if (!color) return undefined;
+  return addColorFilter(color, asValue);
 }
 
 function prepareStyle(filterId: string, asValue?: boolean) {

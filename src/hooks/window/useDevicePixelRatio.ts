@@ -26,3 +26,8 @@ createListener();
 
 // Set up new listener for the next `devicePixelRatio` change
 callbacks.addCallback(createListener);
+
+export function addDevicePixelRatioListener(cb: ()=>void) {
+  callbacks.addCallback(cb);
+  return () => callbacks.removeCallback(cb);
+}

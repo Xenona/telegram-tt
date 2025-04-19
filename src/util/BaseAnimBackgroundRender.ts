@@ -10,67 +10,6 @@ export type AnimBgColorPoints = [
   AnimBgColor,
 ];
 
-export const VERTEX_SHADER = `
-attribute vec2 a_position;
-
-void main() {
- gl_Position = vec4(a_position, 1, 1);
-}`;
-
-export const FRAGMENT_SHADER = `
-precision highp float;
-
-struct ColorPoint {
-  vec4 color;
-  vec2 pos;
-  vec2 prevPos;
-};
-
-uniform ColorPoint colorPoints[4];
-uniform vec2 resolution;
-uniform float transitionFactor;
-
-void main() {
-  vec2 position = gl_FragCoord.xy / resolution.xy;
-
-  position.y = 1.0 - position.y;
-
-  float dp[4];
-  float minD = 10000000.0;
-  for(int i = 0; i < 4; i++) {
-    vec2 pointPos = colorPoints[i].pos * (1.0 - transitionFactor) + colorPoints[i].prevPos * transitionFactor;
-    dp[i] = distance(position, pointPos);
-    minD = min(minD, dp[i]);
-  }
-
-  float p = 3.0;
-  float dpt = 0.0;
-  vec4 gradColor = vec4(0.0, 0.0, 0.0, 0.0);
-  for(int i = 0; i < 4; i++) {
-    float dpp = pow(1.0 - (dp[i] - minD), p);
-    dpt += dpp;
-    gradColor += colorPoints[i].color * dpp;
-  }
-
-  gradColor.w = dpt;
-  gl_FragColor = gradColor / dpt;
-}
-`;
-
-export function compileShader(
-  gl: WebGLRenderingContext,
-  type: number,
-  source: string,
-) {
-  const shader = gl.createShader(type)!;
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw new Error(`Failed to compile shader: ${gl.getShaderInfoLog(shader)}`);
-  }
-  return shader;
-}
-
 export function transformStringsToColors(colors: {
   first?: number;
   second?: number;
@@ -226,6 +165,6 @@ export abstract class BaseAnimBgRender {
     this.render(progress);
 
     if (progress === 1) return;
-    requestAnimationFrame(() => this.renderLoop());
+    fastRaf(() => this.renderLoop());
   }
 }

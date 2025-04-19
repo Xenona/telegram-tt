@@ -1,7 +1,6 @@
 /* eslint-disable no-null/no-null */
 import React, {
   memo, useEffect, useMemo,
-  useRef,
   useState,
 } from '../../lib/teact/teact';
 import { getActions, withGlobal } from '../../global';
@@ -67,8 +66,6 @@ import {
 import {
   IS_ANDROID, IS_ELECTRON, IS_IOS, IS_SAFARI, IS_TRANSLATION_SUPPORTED, MASK_IMAGE_DISABLED,
 } from '../../util/browser/windowEnvironment';
-import { AnimBgRender } from '../../util/AnimBackgroundRender';
-import { transformStringsToColors } from '../../util/BaseAnimBackgroundRender';
 import buildClassName from '../../util/buildClassName';
 import buildStyle from '../../util/buildStyle';
 import captureEscKeyListener from '../../util/captureEscKeyListener';
@@ -80,6 +77,7 @@ import useForceUpdate from '../../hooks/useForceUpdate';
 import useHistoryBack from '../../hooks/useHistoryBack';
 import useLastCallback from '../../hooks/useLastCallback';
 import useOldLang from '../../hooks/useOldLang';
+import { usePatternBg } from '../../hooks/usePatternBg';
 import usePrevDuringAnimation from '../../hooks/usePrevDuringAnimation';
 import usePreviousDeprecated from '../../hooks/usePreviousDeprecated';
 import { useResize } from '../../hooks/useResize';

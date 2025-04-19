@@ -1,10 +1,10 @@
-import type { ChangeEvent } from 'react';
 import React, {
   memo, useEffect, useMemo, useState,
 } from '../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../global';
 
-import type { ThemeKey } from '../../../types';
+import type { ApiFormattedText, ApiMessage, ApiPeer } from '../../../api/types';
+import type { ThemeKey, WallPaperPatternThemeSettings } from '../../../types';
 import type { GiftOption } from './GiftModal';
 import {
 
@@ -23,6 +23,8 @@ import { formatStarsAsIcon } from '../../../util/localization/format';
 import useCustomBackground from '../../../hooks/useCustomBackground';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
+import { usePatternBg } from '../../../hooks/usePatternBg';
+import useThrottledCallback from '../../../hooks/useThrottledCallback';
 
 import PremiumProgress from '../../common/PremiumProgress';
 import RichInput from '../../common/richinput/RichInput';
@@ -31,7 +33,6 @@ import Button from '../../ui/Button';
 import Link from '../../ui/Link';
 import ListItem from '../../ui/ListItem';
 import Switcher from '../../ui/Switcher';
-import TextArea from '../../ui/TextArea';
 
 import styles from './GiftComposer.module.scss';
 
@@ -42,6 +43,7 @@ export type OwnProps = {
 };
 
 export type StateProps = {
+  fill?: WallPaperPatternThemeSettings;
   captionLimit?: number;
   theme: ThemeKey;
   isBackgroundBlurred?: boolean;
@@ -57,9 +59,8 @@ export type StateProps = {
   shouldDisallowLimitedStarGifts?: boolean;
 };
 
-const LIMIT_DISPLAY_THRESHOLD = 50;
-
 function GiftComposer({
+  fill,
   gift,
   giftByStars,
   peerId,
@@ -77,6 +78,7 @@ function GiftComposer({
   areUniqueStarGiftsDisallowed,
   shouldDisallowLimitedStarGifts,
 }: OwnProps & StateProps) {
+
   const {
     sendStarGift, sendPremiumGiftByStars, openInvoice, openGiftUpgradeModal, openStarsBalanceModal,
   } = getActions();
@@ -118,6 +120,7 @@ function GiftComposer({
             currency: currentGift.currency,
             months: gift.months,
             message: giftMessage ? { text: giftMessage } : undefined,
+            translationValues: ['%action_origin%', '%gift_payment_amount%'],
           },
         },
       } satisfies ApiMessage;
@@ -361,6 +364,8 @@ function GiftComposer({
     customBackground && isBackgroundBlurred && styles.blurred,
   );
 
+  const { animDivRef, bgRef } = usePatternBg(fill);
+
   return (
     <div className={buildClassName(styles.root, 'custom-scroll')}>
       <div
@@ -372,6 +377,10 @@ function GiftComposer({
           backgroundColor && `--theme-background-color: ${backgroundColor}`,
         )}
       >
+        {/* <div
+          className={bgClassName}
+          style={customBackgroundValue ? `--custom-background: ${customBackgroundValue}` : undefined}
+        /> */}
         <div
           className={bgClassName}
           style={buildStyle(
@@ -417,6 +426,7 @@ export default memo(withGlobal<OwnProps>(
       patternColor,
       background: customBackground,
       backgroundColor,
+      fill,
     } = selectThemeValues(global, theme) || {};
     const peer = selectPeer(global, peerId);
     const paidMessagesStars = selectPeerPaidMessagesStars(global, peerId);
@@ -432,6 +442,7 @@ export default memo(withGlobal<OwnProps>(
 
     return {
       starBalance: stars?.balance,
+      fill,
       peer,
       theme,
       isBackgroundBlurred,

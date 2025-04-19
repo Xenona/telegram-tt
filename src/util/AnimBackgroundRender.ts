@@ -2,9 +2,75 @@ import type { AnimBgColorPoints } from './BaseAnimBackgroundRender';
 
 import { requestMutation } from '../lib/fasterdom/fasterdom';
 
-import {
-  BaseAnimBgRender, compileShader, FRAGMENT_SHADER, keyPoints, VERTEX_SHADER,
-} from './BaseAnimBackgroundRender';
+import { BaseAnimBgRender, keyPoints } from './BaseAnimBackgroundRender';
+
+export const VERTEX_SHADER = `
+attribute vec2 a_position;
+
+void main() {
+ gl_Position = vec4(a_position, 1, 1);
+}`;
+
+export const FRAGMENT_SHADER = `
+precision highp float;
+
+struct ColorPoint {
+  vec4 color;
+  vec2 pos;
+  vec2 prevPos;
+};
+
+uniform ColorPoint colorPoints[4];
+uniform vec2 resolution;
+uniform float transitionFactor;
+
+void main() {
+  vec2 position = gl_FragCoord.xy / resolution.xy;
+
+  position.y = 1.0 - position.y;
+
+  float centerDistanceX = position.x - 0.5;
+  float centerDistanceY = position.y - 0.5;
+  float centerDistance = sqrt(centerDistanceX * centerDistanceX + centerDistanceY * centerDistanceY);
+  float swirlFactor = 0.35 * centerDistance;
+  float theta = swirlFactor * swirlFactor * 0.8 * 8.0;
+  float sinTheta = sin(theta);
+  float cosTheta = cos(theta);
+
+  float pixelX = max(0.0, min(1.0, 0.5 + centerDistanceX * cosTheta - centerDistanceY * sinTheta));
+  float pixelY = max(0.0, min(1.0, 0.5 + centerDistanceX * sinTheta + centerDistanceY * cosTheta));
+
+  vec2 pixelPos = vec2(pixelX, 1.-pixelY);
+
+  float p = 4.0;
+  float dpt = 0.0;
+  vec4 gradColor = vec4(0.0, 0.0, 0.0, 0.0);
+  for(int i = 0; i < 4; i++) {
+    vec2 pointPos = colorPoints[i].pos * (1.0 - transitionFactor) + colorPoints[i].prevPos * transitionFactor;
+    float distance = max(0.0, 0.9 - distance(pixelPos, pointPos));
+    float dpp = pow(distance, p);
+    dpt += dpp;
+    gradColor += colorPoints[i].color * dpp;
+  }
+
+  gradColor.w = dpt;
+  gl_FragColor = gradColor / dpt;
+}
+`;
+
+export function compileShader(
+  gl: WebGLRenderingContext,
+  type: number,
+  source: string,
+) {
+  const shader = gl.createShader(type)!;
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(`Failed to compile shader: ${gl.getShaderInfoLog(shader)}`);
+  }
+  return shader;
+}
 
 type GLColorPoint = {
   colorLoc: WebGLUniformLocation;
@@ -144,6 +210,7 @@ export class AnimBgRender extends BaseAnimBgRender {
 
     const gl = this.gl;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.useProgram(this.glState.prog);
     gl.uniform2fv(this.glState.resolutionLoc, [
       gl.canvas.width,
       gl.canvas.height,
@@ -169,6 +236,7 @@ export class AnimBgRender extends BaseAnimBgRender {
 
     const gl = this.gl;
     const { posBuf, transitionFactorLoc } = this.glState;
+    gl.useProgram(this.glState.prog);
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
     gl.uniform1f(
       transitionFactorLoc,
