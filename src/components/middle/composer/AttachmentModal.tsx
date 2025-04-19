@@ -10,6 +10,7 @@ import type {
 import type { GlobalState } from '../../../global/types';
 import type { MessageListType, ThreadId } from '../../../types';
 import type { Signal } from '../../../util/signals';
+import type { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 import {
   BASE_EMOJI_KEYWORD_LANG,
@@ -37,7 +38,6 @@ import useContextMenuHandlers from '../../../hooks/useContextMenuHandlers';
 import useDerivedState from '../../../hooks/useDerivedState';
 import useEffectOnce from '../../../hooks/useEffectOnce';
 import useFlag from '../../../hooks/useFlag';
-import useGetSelectionRange from '../../../hooks/useGetSelectionRange';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
 import useOldLang from '../../../hooks/useOldLang';
@@ -64,6 +64,7 @@ import SymbolMenuButton from './SymbolMenuButton';
 import styles from './AttachmentModal.module.scss';
 
 export type OwnProps = {
+  richInputCtx: RichInputCtx;
   chatId: string;
   threadId: ThreadId;
   attachments: ApiAttachment[];
@@ -79,7 +80,6 @@ export type OwnProps = {
   shouldForceAsFile?: boolean;
   isForCurrentMessageList?: boolean;
   forceDarkTheme?: boolean;
-  onCaptionUpdate: (html: string) => void;
   onSend: (sendCompressed: boolean, sendGrouped: boolean, isInvertedMedia?: true) => void;
   onFileAppend: (files: File[], isSpoiler?: boolean) => void;
   onAttachmentsUpdate: (attachments: ApiAttachment[]) => void;
@@ -114,6 +114,7 @@ const DROP_LEAVE_TIMEOUT_MS = 150;
 const MAX_LEFT_CHARS_TO_SHOW = 100;
 
 const AttachmentModal: FC<OwnProps & StateProps> = ({
+  richInputCtx,
   chatId,
   threadId,
   attachments,
@@ -139,7 +140,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
   isForCurrentMessageList,
   forceDarkTheme,
   onAttachmentsUpdate,
-  onCaptionUpdate,
   onSend,
   onFileAppend,
   onClear,
@@ -164,8 +164,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
 
   // eslint-disable-next-line no-null/no-null
   const mainButtonRef = useRef<HTMLButtonElement | null>(null);
-  // eslint-disable-next-line no-null/no-null
-  const inputRef = useRef<HTMLDivElement>(null);
 
   const hideTimeoutRef = useRef<number>();
   const prevAttachments = usePreviousDeprecated(attachments);
@@ -221,8 +219,6 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     return [hasOneSpoiler, false];
   }, [renderingAttachments]);
 
-  const getSelectionRange = useGetSelectionRange(`#${EDITABLE_INPUT_MODAL_ID}`);
-
   const {
     isEmojiTooltipOpen,
     filteredEmojis,
@@ -231,9 +227,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     closeEmojiTooltip,
   } = useEmojiTooltip(
     Boolean(isReady && (isForCurrentMessageList || !isForMessage) && renderingIsOpen),
-    getHtml,
-    onCaptionUpdate,
-    EDITABLE_INPUT_MODAL_ID,
+    richInputCtx,
     recentEmojis,
     baseEmojiKeywords,
     emojiKeywords,
@@ -245,10 +239,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     closeCustomEmojiTooltip,
   } = useCustomEmojiTooltip(
     Boolean(isReady && (isForCurrentMessageList || !isForMessage) && renderingIsOpen && shouldSuggestCustomEmoji),
-    getHtml,
-    onCaptionUpdate,
-    getSelectionRange,
-    inputRef,
+    richInputCtx,
     customEmojiForEmoji,
   );
 
@@ -259,10 +250,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
     mentionFilteredUsers,
   } = useMentionTooltip(
     Boolean(isReady && isForCurrentMessageList && renderingIsOpen),
-    getHtml,
-    onCaptionUpdate,
-    getSelectionRange,
-    inputRef,
+    richInputCtx,
     groupChatMembers,
     undefined,
     currentUserId,
@@ -690,7 +678,7 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
               forceDarkTheme={forceDarkTheme}
             />
             <MessageInput
-              ref={inputRef}
+              richInputCtx={richInputCtx}
               id={ATTACHMENT_MODAL_INPUT_ID}
               chatId={chatId}
               threadId={threadId}
@@ -698,10 +686,8 @@ const AttachmentModal: FC<OwnProps & StateProps> = ({
               customEmojiPrefix="attachment"
               isReady={isReady}
               isActive={isOpen}
-              getHtml={getHtml}
               editableInputId={EDITABLE_INPUT_MODAL_ID}
               placeholder={oldLang('AddCaption')}
-              onUpdate={onCaptionUpdate}
               onSend={handleSendClick}
               onScroll={handleCaptionScroll}
               canAutoFocus={Boolean(isReady && isForCurrentMessageList && attachments.length)}

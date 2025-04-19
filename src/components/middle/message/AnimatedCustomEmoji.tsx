@@ -13,7 +13,7 @@ import {
 } from '../../../global/selectors';
 import buildClassName from '../../../util/buildClassName';
 import { LIKE_STICKER_ID } from '../../common/helpers/mediaDimensions';
-import { getCustomEmojiSize } from '../composer/helpers/customEmoji';
+import { getCustomEmojiSize } from '../../common/richinput/customEmoji';
 
 import useAnimatedEmoji from '../../common/hooks/useAnimatedEmoji';
 

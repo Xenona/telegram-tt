@@ -1,12 +1,12 @@
-import { getGlobal } from '../../../../global';
+import { getGlobal } from '../../../global';
 
-import type { ApiMessageEntityCustomEmoji, ApiSticker } from '../../../../api/types';
-import { ApiMessageEntityTypes } from '../../../../api/types';
+import type { ApiMessageEntityCustomEmoji, ApiSticker } from '../../../api/types';
+import { ApiMessageEntityTypes } from '../../../api/types';
 
-import { EMOJI_SIZES } from '../../../../config';
-import buildClassName from '../../../../util/buildClassName';
-import { getInputCustomEmojiParams } from '../../../../util/emoji/customEmojiManager';
-import { REM } from '../../../common/helpers/mediaDimensions';
+import { EMOJI_SIZES } from '../../../config';
+import buildClassName from '../../../util/buildClassName';
+import { getInputCustomEmojiParams } from '../../../util/emoji/customEmojiManager';
+import { REM } from '../helpers/mediaDimensions';
 
 export const INPUT_CUSTOM_EMOJI_SELECTOR = 'img[data-document-id]';
 

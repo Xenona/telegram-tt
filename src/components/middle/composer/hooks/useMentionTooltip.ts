@@ -1,18 +1,13 @@
-import type { RefObject } from 'react';
 import { useEffect, useState } from '../../../../lib/teact/teact';
 import { getGlobal } from '../../../../global';
 
 import type { ApiChatMember, ApiUser } from '../../../../api/types';
-import type { Signal } from '../../../../util/signals';
+import type { RichInputCtx } from '../../../common/richinput/useRichEditable';
 import { ApiMessageEntityTypes } from '../../../../api/types';
 
-import { requestNextMutation } from '../../../../lib/fasterdom/fasterdom';
 import { getMainUsername, getUserFirstOrLastName } from '../../../../global/helpers';
 import { filterPeersByQuery } from '../../../../global/helpers/peers';
-import focusEditableElement from '../../../../util/focusEditableElement';
 import { pickTruthy, unique } from '../../../../util/iteratees';
-import { getCaretPosition, getHtmlBeforeSelection, setCaretPosition } from '../../../../util/selection';
-import { prepareForRegExp } from '../helpers/prepareForRegExp';
 
 import { useThrottledResolver } from '../../../../hooks/useAsyncResolvers';
 import useDerivedSignal from '../../../../hooks/useDerivedSignal';
@@ -31,10 +26,7 @@ try {
 
 export default function useMentionTooltip(
   isEnabled: boolean,
-  getHtml: Signal<string>,
-  setHtml: (html: string) => void,
-  getSelectionRange: Signal<Range | undefined>,
-  inputRef: RefObject<HTMLDivElement>,
+  richInputCtx: RichInputCtx,
   groupChatMembers?: ApiChatMember[],
   topInlineBotIds?: string[],
   currentUserId?: string,
@@ -43,21 +35,26 @@ export default function useMentionTooltip(
   const [isManuallyClosed, markManuallyClosed, unmarkManuallyClosed] = useFlag(false);
 
   const extractUsernameTagThrottled = useThrottledResolver(() => {
-    const html = getHtml();
-    if (!isEnabled || !getSelectionRange()?.collapsed || !html.includes('@')) return undefined;
+    const text = richInputCtx.editable.matchableS();
+    if (!isEnabled || !richInputCtx.editable.selectionS()?.collapsed) return undefined;
+    if (!text || !text.includes('@')) return undefined;
 
-    const htmlBeforeSelection = getHtmlBeforeSelection(inputRef.current!);
+    const matches = text.match(RE_USERNAME_SEARCH);
+    if (!matches || matches.length === 0) return undefined;
+    return matches[matches.length - 1].trim();
 
-    return prepareForRegExp(htmlBeforeSelection).match(RE_USERNAME_SEARCH)?.[0].trim();
-  }, [isEnabled, getHtml, getSelectionRange, inputRef], THROTTLE);
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [isEnabled, richInputCtx.editable, richInputCtx.editable.matchableS], THROTTLE);
 
   const getUsernameTag = useDerivedSignal(
-    extractUsernameTagThrottled, [extractUsernameTagThrottled, getHtml, getSelectionRange], true,
+    extractUsernameTagThrottled, [extractUsernameTagThrottled, richInputCtx.editable.matchableS], true,
   );
 
   const getWithInlineBots = useDerivedSignal(() => {
-    return isEnabled && getHtml().startsWith('@');
-  }, [getHtml, isEnabled]);
+    return isEnabled && richInputCtx.editable.htmlS().startsWith('@');
+
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [richInputCtx.editable, richInputCtx.editable.htmlS, isEnabled]);
 
   useEffect(() => {
     const usernameTag = getUsernameTag();
@@ -95,7 +92,7 @@ export default function useMentionTooltip(
     setFilteredUsers(Object.values(pickTruthy(usersById, filteredIds)));
   }, [currentUserId, groupChatMembers, topInlineBotIds, getUsernameTag, getWithInlineBots]);
 
-  const insertMention = useLastCallback((user: ApiUser, forceFocus = false) => {
+  const insertMention = useLastCallback((user: ApiUser) => {
     if (!user.usernames && !getUserFirstOrLastName(user)) {
       return;
     }
@@ -103,41 +100,21 @@ export default function useMentionTooltip(
     const mainUsername = getMainUsername(user);
     const userFirstOrLastName = getUserFirstOrLastName(user) || '';
     const htmlToInsert = mainUsername
-      ? `@${mainUsername}`
+      ? `@${mainUsername} `
       : `<a
           class="text-entity-link"
           data-entity-type="${ApiMessageEntityTypes.MentionName}"
           data-user-id="${user.id}"
           contenteditable="false"
           dir="auto"
-        >${userFirstOrLastName}</a>`;
+        >${userFirstOrLastName}</a> `;
 
-    const inputEl = inputRef.current!;
-    const htmlBeforeSelection = getHtmlBeforeSelection(inputEl);
-    const fixedHtmlBeforeSelection = cleanWebkitNewLines(htmlBeforeSelection);
-    const atIndex = fixedHtmlBeforeSelection.lastIndexOf('@');
-    const shiftCaretPosition = (mainUsername ? mainUsername.length + 1 : userFirstOrLastName.length)
-      - (fixedHtmlBeforeSelection.length - atIndex);
-
-    if (atIndex !== -1) {
-      const newHtml = `${fixedHtmlBeforeSelection.substr(0, atIndex)}${htmlToInsert}&nbsp;`;
-      const htmlAfterSelection = cleanWebkitNewLines(inputEl.innerHTML).substring(fixedHtmlBeforeSelection.length);
-      const caretPosition = getCaretPosition(inputEl);
-      setHtml(`${newHtml}${htmlAfterSelection}`);
-
-      requestNextMutation(() => {
-        const newCaretPosition = caretPosition + shiftCaretPosition + 1;
-        focusEditableElement(inputEl, forceFocus);
-        if (newCaretPosition >= 0) {
-          setCaretPosition(inputEl, newCaretPosition);
-        }
-      });
-    }
+    richInputCtx.editable.insertMatchableHtml(htmlToInsert, (c) => c === '@');
 
     setFilteredUsers(undefined);
   });
 
-  useEffect(unmarkManuallyClosed, [unmarkManuallyClosed, getHtml]);
+  useEffect(unmarkManuallyClosed, [unmarkManuallyClosed, richInputCtx.editable.htmlS]);
 
   return {
     isMentionTooltipOpen: Boolean(filteredUsers?.length && !isManuallyClosed),
@@ -145,10 +122,4 @@ export default function useMentionTooltip(
     insertMention,
     mentionFilteredUsers: filteredUsers,
   };
-}
-
-// Webkit replaces the line break with the `<div><br /></div>` or `<div></div>` code.
-// It is necessary to clean the html to a single form before processing.
-function cleanWebkitNewLines(html: string) {
-  return html.replace(/<div>(<br>|<br\s?\/>)?<\/div>/gi, '<br>');
 }

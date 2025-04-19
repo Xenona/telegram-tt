@@ -8,11 +8,13 @@ import { ApiMessageEntityTypes } from '../../../api/types';
 
 import { EDITABLE_INPUT_ID } from '../../../config';
 import { ensureProtocol } from '../../../util/browser/url';
+import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import buildClassName from '../../../util/buildClassName';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import getKeyFromEvent from '../../../util/getKeyFromEvent';
+import { selectAfterNode } from '../../../util/selection';
 import stopEvent from '../../../util/stopEvent';
-import { INPUT_CUSTOM_EMOJI_SELECTOR } from './helpers/customEmoji';
+import { type RichInputCtx, useRichEditableKeyboardListener } from './useRichEditable';
 
 import useFlag from '../../../hooks/useFlag';
 import useLastCallback from '../../../hooks/useLastCallback';
@@ -20,16 +22,16 @@ import useOldLang from '../../../hooks/useOldLang';
 import useShowTransitionDeprecated from '../../../hooks/useShowTransitionDeprecated';
 import useVirtualBackdrop from '../../../hooks/useVirtualBackdrop';
 
-import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
+import Icon from '../icons/Icon';
+import { RichInputKeyboardPriority } from './Keyboard';
 
 import './TextFormatter.scss';
 
 export type OwnProps = {
+  richInputCtx: RichInputCtx;
   isOpen: boolean;
-  anchorPosition?: IAnchorPosition;
-  selectedRange?: Range;
-  setSelectedRange: (range: Range) => void;
+  isActive: boolean;
   onClose: () => void;
 };
 
@@ -40,6 +42,7 @@ interface ISelectedTextFormats {
   strikethrough?: boolean;
   monospace?: boolean;
   spoiler?: boolean;
+  quote?: boolean;
 }
 
 const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
@@ -49,29 +52,31 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   EM: 'italic',
   U: 'underline',
   DEL: 'strikethrough',
+  STRIKE: 'strikethrough',
   CODE: 'monospace',
   SPAN: 'spoiler',
+  BLOCKQUOTE: 'quote',
 };
-const fragmentEl = document.createElement('div');
+
+const TEXT_FORMATTER_SAFE_AREA_PX = 140;
 
 const TextFormatter: FC<OwnProps> = ({
-  isOpen,
-  anchorPosition,
-  selectedRange,
-  setSelectedRange,
+  richInputCtx,
+  isOpen: shouldOpen,
+  isActive,
   onClose,
 }) => {
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
   const linkUrlInputRef = useRef<HTMLInputElement>(null);
-  const { shouldRender, transitionClassNames } = useShowTransitionDeprecated(isOpen);
-  const [isLinkControlOpen, openLinkControl, closeLinkControl] = useFlag();
-  const [linkUrl, setLinkUrl] = useState('');
   const [isEditingLink, setIsEditingLink] = useState(false);
+  const isOpen = isActive && (shouldOpen || isEditingLink);
+  const [isLinkControlOpen, openLinkControl, closeLinkControl] = useFlag();
+  const { shouldRender, transitionClassNames } = useShowTransitionDeprecated(isOpen || isLinkControlOpen);
+  const [linkUrl, setLinkUrl] = useState('');
   const [inputClassName, setInputClassName] = useState<string | undefined>();
   const [selectedTextFormats, setSelectedTextFormats] = useState<ISelectedTextFormats>({});
-
   useEffect(() => (isOpen ? captureEscKeyListener(onClose) : undefined), [isOpen, onClose]);
   useVirtualBackdrop(
     isOpen,
@@ -87,7 +92,7 @@ const TextFormatter: FC<OwnProps> = ({
       setLinkUrl('');
       setIsEditingLink(false);
     }
-  }, [isLinkControlOpen]);
+  }, [isLinkControlOpen, linkUrlInputRef]);
 
   useEffect(() => {
     if (!shouldRender) {
@@ -98,12 +103,13 @@ const TextFormatter: FC<OwnProps> = ({
   }, [closeLinkControl, shouldRender]);
 
   useEffect(() => {
-    if (!isOpen || !selectedRange) {
+    const sel = richInputCtx.editable.selectionS();
+    if (!isOpen || !sel) {
       return;
     }
 
     const selectedFormats: ISelectedTextFormats = {};
-    let { parentElement } = selectedRange.commonAncestorContainer;
+    let { parentElement } = sel.range.commonAncestorContainer;
     while (parentElement && parentElement.id !== EDITABLE_INPUT_ID) {
       const textFormat = TEXT_FORMAT_BY_TAG_NAME[parentElement.tagName];
       if (textFormat) {
@@ -114,46 +120,24 @@ const TextFormatter: FC<OwnProps> = ({
     }
 
     setSelectedTextFormats(selectedFormats);
-  }, [isOpen, selectedRange, openLinkControl]);
+  }, [isOpen, richInputCtx.editable, richInputCtx.editable.selectionS, openLinkControl]);
 
-  const restoreSelection = useLastCallback(() => {
-    if (!selectedRange) {
-      return;
-    }
+  const linkSelSaver = useRef<Range | undefined>();
+  const startLinkControl = useLastCallback(() => {
+    const sel = richInputCtx.editable.selectionS();
 
-    const selection = window.getSelection();
-    if (selection) {
-      selection.removeAllRanges();
-      selection.addRange(selectedRange);
-    }
-  });
-
-  const updateSelectedRange = useLastCallback(() => {
-    const selection = window.getSelection();
-    if (selection) {
-      setSelectedRange(selection.getRangeAt(0));
-    }
-  });
-
-  const getSelectedText = useLastCallback((shouldDropCustomEmoji?: boolean) => {
-    if (!selectedRange) {
-      return undefined;
-    }
-    fragmentEl.replaceChildren(selectedRange.cloneContents());
-    if (shouldDropCustomEmoji) {
-      fragmentEl.querySelectorAll(INPUT_CUSTOM_EMOJI_SELECTOR).forEach((el) => {
-        el.replaceWith(el.getAttribute('alt')!);
-      });
-    }
-    return fragmentEl.innerHTML;
+    if (!sel || sel.collapsed) return;
+    linkSelSaver.current = sel.range.cloneRange();
+    openLinkControl();
   });
 
   const getSelectedElement = useLastCallback(() => {
-    if (!selectedRange) {
+    const sel = richInputCtx.editable.selectionS();
+    if (!sel) {
       return undefined;
     }
 
-    return selectedRange.commonAncestorContainer.parentElement;
+    return sel.range.commonAncestorContainer.parentElement;
   });
 
   function updateInputStyles() {
@@ -189,13 +173,13 @@ const TextFormatter: FC<OwnProps> = ({
       return 'active';
     }
 
-    if (key === 'monospace' || key === 'strikethrough') {
+    if (key === 'monospace') {
       if (Object.keys(selectedTextFormats).some(
         (fKey) => fKey !== key && Boolean(selectedTextFormats[fKey as keyof ISelectedTextFormats]),
       )) {
         return 'disabled';
       }
-    } else if (selectedTextFormats.monospace || selectedTextFormats.strikethrough) {
+    } else if (selectedTextFormats.monospace) {
       return 'disabled';
     }
 
@@ -206,7 +190,7 @@ const TextFormatter: FC<OwnProps> = ({
     if (selectedTextFormats.spoiler) {
       const element = getSelectedElement();
       if (
-        !selectedRange
+        !richInputCtx.editable.selectionS()
         || !element
         || element.dataset.entityType !== ApiMessageEntityTypes.Spoiler
         || !element.textContent
@@ -223,9 +207,10 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedText();
-    document.execCommand(
-      'insertHTML', false, `<span class="spoiler" data-entity-type="${ApiMessageEntityTypes.Spoiler}">${text}</span>`,
+    const text = richInputCtx.editable.getSelectedHtml();
+    if (!text) return;
+    richInputCtx.editable.execCommand(
+      'insertHTML', `<span class="spoiler" data-entity-type="${ApiMessageEntityTypes.Spoiler}">${text}</span>`,
     );
     onClose();
   });
@@ -233,14 +218,7 @@ const TextFormatter: FC<OwnProps> = ({
   const handleBoldText = useLastCallback(() => {
     setSelectedTextFormats((selectedFormats) => {
       // Somehow re-applying 'bold' command to already bold text doesn't work
-      document.execCommand(selectedFormats.bold ? 'removeFormat' : 'bold');
-      Object.keys(selectedFormats).forEach((key) => {
-        if ((key === 'italic' || key === 'underline') && Boolean(selectedFormats[key])) {
-          document.execCommand(key);
-        }
-      });
-
-      updateSelectedRange();
+      richInputCtx.editable.execCommand('bold');
       return {
         ...selectedFormats,
         bold: !selectedFormats.bold,
@@ -249,8 +227,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleItalicText = useLastCallback(() => {
-    document.execCommand('italic');
-    updateSelectedRange();
+    richInputCtx.editable.execCommand('italic');
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
       italic: !selectedFormats.italic,
@@ -258,8 +235,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleUnderlineText = useLastCallback(() => {
-    document.execCommand('underline');
-    updateSelectedRange();
+    richInputCtx.editable.execCommand('underline');
     setSelectedTextFormats((selectedFormats) => ({
       ...selectedFormats,
       underline: !selectedFormats.underline,
@@ -267,59 +243,49 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleStrikethroughText = useLastCallback(() => {
-    if (selectedTextFormats.strikethrough) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.tagName !== 'DEL'
-        || !element.textContent
-      ) {
-        return;
-      }
-
-      element.replaceWith(element.textContent);
-      setSelectedTextFormats((selectedFormats) => ({
-        ...selectedFormats,
-        strikethrough: false,
-      }));
-
-      return;
-    }
-
-    const text = getSelectedText();
-    document.execCommand('insertHTML', false, `<del>${text}</del>`);
-    onClose();
+    richInputCtx.editable.execCommand('strikethrough');
+    setSelectedTextFormats((selectedFormats) => ({
+      ...selectedFormats,
+      strikethrough: !selectedFormats.strikethrough,
+    }));
   });
 
   const handleMonospaceText = useLastCallback(() => {
-    if (selectedTextFormats.monospace) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.tagName !== 'CODE'
-        || !element.textContent
-      ) {
-        return;
-      }
+    if (window.getSelection()?.isCollapsed) return;
 
-      element.replaceWith(element.textContent);
+    if (selectedTextFormats.monospace) {
+      richInputCtx.editable.execCommand('removeFormat');
       setSelectedTextFormats((selectedFormats) => ({
         ...selectedFormats,
         monospace: false,
       }));
-
       return;
     }
 
-    const text = getSelectedText(true);
-    document.execCommand('insertHTML', false, `<code class="text-entity-code" dir="auto">${text}</code>`);
-    onClose();
+    const previousCode = [...(richInputCtx.editable.root.querySelectorAll('code') || [])];
+    const text = richInputCtx.editable.selectionS()?.range?.toString() || '';
+    if (!text) return;
+    richInputCtx.editable.execCommand(
+      'insertHTML',
+      `<code class="text-entity-code" dir="auto">${text}</code>`,
+    );
+
+    requestMutation(() => {
+      const currentCode = richInputCtx.editable.root?.querySelectorAll('code') || [];
+      for (const el of currentCode) {
+        if (previousCode.includes(el)) continue;
+        selectAfterNode(el);
+      }
+      onClose();
+    });
   });
 
   const handleLinkUrlConfirm = useLastCallback(() => {
     const formattedLinkUrl = (ensureProtocol(linkUrl) || '').split('%').map(encodeURI).join('%');
+
+    if (linkSelSaver.current) {
+      richInputCtx.editable.setSelRange(linkSelSaver.current);
+    }
 
     if (isEditingLink) {
       const element = getSelectedElement();
@@ -334,49 +300,75 @@ const TextFormatter: FC<OwnProps> = ({
       return;
     }
 
-    const text = getSelectedText(true);
-    restoreSelection();
-    document.execCommand(
+    const text = richInputCtx.editable.getSelectedHtml({ shouldDropCustomEmoji: true });
+    richInputCtx.editable.execCommand(
       'insertHTML',
-      false,
       `<a href=${formattedLinkUrl} class="text-entity-link" dir="auto">${text}</a>`,
     );
+    closeLinkControl();
     onClose();
   });
 
-  const handleKeyDown = useLastCallback((e: KeyboardEvent) => {
-    const HANDLERS_BY_KEY: Record<string, AnyToVoidFunction> = {
-      k: openLinkControl,
-      b: handleBoldText,
-      u: handleUnderlineText,
-      i: handleItalicText,
-      m: handleMonospaceText,
-      s: handleStrikethroughText,
-      p: handleSpoilerText,
-    };
+  const handleQuote = useLastCallback(() => {
+    if (selectedTextFormats.quote) {
+      const element = getSelectedElement();
+      if (
+        !richInputCtx.editable.selectionS()
+        || !element
+        || element.tagName !== 'BLOCKQUOTE'
+        || !element.textContent
+      ) {
+        return;
+      }
 
-    const handler = HANDLERS_BY_KEY[getKeyFromEvent(e)];
+      element.replaceWith(element.textContent);
+      setSelectedTextFormats((selectedFormats) => ({
+        ...selectedFormats,
+        quote: false,
+      }));
+      onClose();
 
-    if (
-      e.altKey
-      || !(e.ctrlKey || e.metaKey)
-      || !handler
-    ) {
       return;
     }
 
-    e.preventDefault();
-    e.stopPropagation();
-    handler();
+    const html = richInputCtx.editable.getSelectedHtml({ shouldDropQuotes: true });
+    if (!html) return;
+    richInputCtx.editable.execCommand('insertHTML',
+      `<blockquote class="blockquote">${html}</blockquote>`);
+    onClose();
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
+  useRichEditableKeyboardListener(richInputCtx, {
+    priority: RichInputKeyboardPriority.Tool,
+    onKeydown: (e: KeyboardEvent) => {
+      if (!isActive) return false;
+      const HANDLERS_BY_KEY: Record<string, AnyToVoidFunction> = {
+        k: startLinkControl,
+        b: handleBoldText,
+        u: handleUnderlineText,
+        i: handleItalicText,
+        m: handleMonospaceText,
+        s: handleStrikethroughText,
+        p: handleSpoilerText,
+        q: handleQuote,
+      };
 
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleKeyDown]);
+      const handler = HANDLERS_BY_KEY[getKeyFromEvent(e)];
+
+      if (
+        e.altKey
+        || !(e.ctrlKey || e.metaKey)
+        || !handler
+      ) {
+        return false;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+      handler();
+      return true;
+    },
+  }, isActive);
 
   const lang = useOldLang();
 
@@ -385,10 +377,6 @@ const TextFormatter: FC<OwnProps> = ({
       handleLinkUrlConfirm();
       e.preventDefault();
     }
-  }
-
-  if (!shouldRender) {
-    return undefined;
   }
 
   const className = buildClassName(
@@ -402,9 +390,36 @@ const TextFormatter: FC<OwnProps> = ({
     Boolean(linkUrl.length) && 'shown',
   );
 
+  const [anchorPosition, setAnchorPosition] = useState<IAnchorPosition>();
+
+  useEffect(() => {
+    const selectionRange = richInputCtx.editable.selectionS()?.range;
+    if (!selectionRange || !isOpen) return;
+
+    const selectionRect = selectionRange.getBoundingClientRect();
+    const rootRect = richInputCtx.editable.root.getBoundingClientRect();
+
+    let x = (selectionRect.left + selectionRect.width / 2) - rootRect.left;
+
+    if (x < TEXT_FORMATTER_SAFE_AREA_PX) {
+      x = TEXT_FORMATTER_SAFE_AREA_PX;
+    } else if (x > rootRect.width - TEXT_FORMATTER_SAFE_AREA_PX) {
+      x = rootRect.width - TEXT_FORMATTER_SAFE_AREA_PX;
+    }
+
+    setAnchorPosition({
+      x,
+      y: selectionRect.top - rootRect.top,
+    });
+  }, [richInputCtx.editable, richInputCtx.editable.root, richInputCtx.editable.selectionS, isOpen]);
+
   const style = anchorPosition
     ? `left: ${anchorPosition.x}px; top: ${anchorPosition.y}px;--text-formatter-left: ${anchorPosition.x}px;`
     : '';
+
+  if (!shouldRender) {
+    return undefined;
+  }
 
   return (
     <div
@@ -423,6 +438,14 @@ const TextFormatter: FC<OwnProps> = ({
           onClick={handleSpoilerText}
         >
           <Icon name="eye-crossed" />
+        </Button>
+        <Button
+          color="translucent"
+          ariaLabel={selectedTextFormats.quote ? 'Break quote' : 'Make quote'}
+          className={getFormatButtonClassName('quote')}
+          onClick={handleQuote}
+        >
+          <Icon name={selectedTextFormats.quote === true ? 'remove-quote' : 'quote-text'} />
         </Button>
         <div className="TextFormatter-divider" />
         <Button
@@ -466,7 +489,7 @@ const TextFormatter: FC<OwnProps> = ({
           <Icon name="monospace" />
         </Button>
         <div className="TextFormatter-divider" />
-        <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={openLinkControl}>
+        <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={startLinkControl}>
           <Icon name="link" />
         </Button>
       </div>

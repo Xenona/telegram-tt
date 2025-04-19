@@ -19,6 +19,7 @@ import buildClassName from '../../../util/buildClassName';
 import buildStyle from '../../../util/buildStyle';
 import { formatCurrency } from '../../../util/formatCurrency';
 import { formatStarsAsIcon } from '../../../util/localization/format';
+import { useRichInput } from '../../common/richinput/useRichInput';
 
 import useCustomBackground from '../../../hooks/useCustomBackground';
 import useLang from '../../../hooks/useLang';
@@ -82,10 +83,11 @@ function GiftComposer({
   const {
     sendStarGift, sendPremiumGiftByStars, openInvoice, openGiftUpgradeModal, openStarsBalanceModal,
   } = getActions();
+  const solutionInputCtx = useRichInput();
 
   const lang = useLang();
 
-  const [giftMessage, setGiftMessage] = useState<string>('');
+  const [giftMessage, setGiftMessage] = useState<ApiFormattedText>({ text: '' });
   const [shouldHideName, setShouldHideName] = useState<boolean>(false);
   const [shouldPayForUpgrade, setShouldPayForUpgrade] = useState<boolean>(false);
   const [shouldPayByStars, setShouldPayByStars] = useState<boolean>(false);
@@ -119,8 +121,7 @@ function GiftComposer({
             amount: currentGift.amount,
             currency: currentGift.currency,
             months: gift.months,
-            message: giftMessage ? { text: giftMessage } : undefined,
-            translationValues: ['%action_origin%', '%gift_payment_amount%'],
+            message: giftMessage?.text.length ? giftMessage : undefined,
           },
         },
       } satisfies ApiMessage;
@@ -136,9 +137,7 @@ function GiftComposer({
         action: {
           mediaType: 'action',
           type: 'starGift',
-          message: giftMessage?.length ? {
-            text: giftMessage,
-          } : undefined,
+          message: giftMessage?.text.length ? giftMessage : undefined,
           isNameHidden: shouldHideName || undefined,
           starsToConvert: gift.starsToConvert,
           canUpgrade: shouldPayForUpgrade || undefined,
@@ -153,9 +152,14 @@ function GiftComposer({
     shouldHideName, shouldPayForUpgrade, peerId,
     shouldPayByStars, hasPremiumByStars, giftByStars]);
 
-  const handleGiftMessageChange = useLastCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setGiftMessage(e.target.value);
-  });
+  const handleGiftMessageChange = useThrottledCallback(() => {
+    setGiftMessage(solutionInputCtx.editable.getFormattedText(true));
+  // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [solutionInputCtx.editable, solutionInputCtx.editable.htmlS], 400);
+
+  useEffect(() => {
+    handleGiftMessageChange();
+  }, [handleGiftMessageChange, solutionInputCtx.editable.htmlS]);
 
   const handleShouldHideNameChange = useLastCallback(() => {
     setShouldHideName(!shouldHideName);
@@ -187,7 +191,7 @@ function GiftComposer({
         peerId,
         shouldHideName,
         gift,
-        message: giftMessage ? { text: giftMessage } : undefined,
+        message: giftMessage.text ? giftMessage : undefined,
         shouldUpgrade: shouldPayForUpgrade,
       });
       return;
@@ -198,7 +202,7 @@ function GiftComposer({
         userId: peerId,
         months: giftByStars.months,
         amount: giftByStars.amount,
-        message: giftMessage ? { text: giftMessage } : undefined,
+        message: giftMessage?.text.length ? giftMessage : undefined,
       });
       return;
     }
@@ -209,31 +213,23 @@ function GiftComposer({
       currency: gift.currency,
       amount: gift.amount,
       option: gift,
-      message: giftMessage ? { text: giftMessage } : undefined,
+      message: giftMessage.text ? giftMessage : undefined,
     });
   });
 
   const canUseStarsPayment = hasPremiumByStars && starBalance && (starBalance.amount > giftByStars.amount);
   function renderOptionsSection() {
-    const symbolsLeft = captionLimit ? captionLimit - giftMessage.length : undefined;
+    // const symbolsLeft = captionLimit ? captionLimit - giftMessage.length : undefined;
 
     const title = getPeerTitle(lang, peer!)!;
     return (
       <div className={styles.optionsSection}>
 
-        {!paidMessagesStars && (
-          <TextArea
-            className={styles.messageInput}
-            onChange={handleGiftMessageChange}
-            value={giftMessage}
-            label={lang('GiftMessagePlaceholder')}
-            maxLength={captionLimit}
-            maxLengthIndicator={
-              symbolsLeft && symbolsLeft < LIMIT_DISPLAY_THRESHOLD ? symbolsLeft.toString() : undefined
-            }
-          />
-        )}
-
+        <RichInput
+          richInputCtx={solutionInputCtx}
+          placeholder={lang('GiftMessagePlaceholder')}
+          limitRemaining={captionLimit ? captionLimit - giftMessage.text.length : undefined}
+        />
         {canUseStarsPayment && (
           <ListItem className={styles.switcher} narrow ripple onClick={toggleShouldPayByStars}>
             <span>
@@ -345,6 +341,7 @@ function GiftComposer({
           size="smaller"
           onClick={handleMainButtonClick}
           isLoading={isPaymentFormLoading}
+          disabled={captionLimit ? captionLimit - giftMessage.text.length < 0 : false}
         >
           {lang('GiftSend', {
             amount,
@@ -406,7 +403,12 @@ function GiftComposer({
             )}
           />
         </div>
-        <ActionMessage key={isStarGift ? gift.id : gift.months} message={localMessage} />
+        <ActionMessage
+          key={isStarGift ? gift.id : gift.months}
+          message={localMessage}
+          threadId={MAIN_THREAD_ID}
+          appearanceOrder={0}
+        />
       </div>
       {renderOptionsSection()}
       <div className={styles.spacer} />

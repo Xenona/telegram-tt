@@ -10,6 +10,8 @@ export function useKeyboardNavigation({
   isHorizontal,
   shouldSaveSelectionOnUpdateItems,
   shouldRemoveSelectionOnReset,
+  shouldStartOnFirstItem,
+  noArrowSelectLoop,
   noArrowNavigation,
   items,
   shouldSelectOnTab,
@@ -20,13 +22,15 @@ export function useKeyboardNavigation({
   isHorizontal?: boolean;
   shouldSaveSelectionOnUpdateItems?: boolean;
   shouldRemoveSelectionOnReset?: boolean;
+  shouldStartOnFirstItem?: boolean;
+  noArrowSelectLoop?: boolean;
   noArrowNavigation?: boolean;
   items?: any[];
   shouldSelectOnTab?: boolean;
   onSelect: (item: any) => void | boolean;
   onClose: NoneToVoidFunction;
 }) {
-  const [selectedItemIndex, setSelectedItemIndex] = useState(-1);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(shouldStartOnFirstItem ? 0 : -1);
 
   const getSelectedIndex = useLastCallback((newIndex: number) => {
     if (!items) {
@@ -37,6 +41,11 @@ export function useKeyboardNavigation({
   });
 
   const handleArrowKey = useLastCallback((value: number, e: KeyboardEvent) => {
+    const outOfBounds = (selectedItemIndex + value < 0 || selectedItemIndex + value > (items?.length ?? 10000) - 1);
+    if (noArrowSelectLoop && outOfBounds) {
+      return;
+    }
+
     e.preventDefault();
     setSelectedItemIndex((index) => (getSelectedIndex(index + value)));
   });

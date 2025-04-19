@@ -1,6 +1,6 @@
 import type { FC, TeactNode } from '../../lib/teact/teact';
 import React, {
-  memo, useEffect, useMemo, useRef, useSignal, useState,
+  memo, useEffect, useMemo, useRef, useState,
 } from '../../lib/teact/teact';
 import { getActions, getGlobal, withGlobal } from '../../global';
 
@@ -113,23 +113,20 @@ import buildClassName from '../../util/buildClassName';
 import { formatMediaDuration, formatVoiceRecordDuration } from '../../util/dates/dateFormat';
 import { processDeepLink } from '../../util/deeplink';
 import { tryParseDeepLink } from '../../util/deepLinkParser';
-import deleteLastCharacterOutsideSelection from '../../util/deleteLastCharacterOutsideSelection';
 import { processMessageInputForCustomEmoji } from '../../util/emoji/customEmojiManager';
-import { betterExecCommand } from '../../util/execCommand';
 import focusEditableElement from '../../util/focusEditableElement';
 import { formatStarsAsIcon } from '../../util/localization/format';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
 import parseHtmlAsFormattedText from '../../util/parseHtmlAsFormattedText';
-import { insertHtmlInSelection } from '../../util/selection';
 import { getServerTime } from '../../util/serverTime';
 import windowSize from '../../util/windowSize';
 import applyIosAutoCapitalizationFix from '../middle/composer/helpers/applyIosAutoCapitalizationFix';
 import buildAttachment, { prepareAttachmentsToSend } from '../middle/composer/helpers/buildAttachment';
-import { buildCustomEmojiHtml } from '../middle/composer/helpers/customEmoji';
-import { isSelectionInsideInput } from '../middle/composer/helpers/selection';
 import { getPeerColorClass } from './helpers/peerColor';
 import renderText from './helpers/renderText';
 import { getTextWithEntitiesAsHtml } from './helpers/renderTextWithEntities';
+import { buildCustomEmojiHtml } from './richinput/customEmoji';
+import { useRichEditable } from './richinput/useRichEditable';
 
 import useInterval from '../../hooks/schedulers/useInterval';
 import useTimeout from '../../hooks/schedulers/useTimeout';
@@ -137,7 +134,6 @@ import useContextMenuHandlers from '../../hooks/useContextMenuHandlers';
 import useDerivedState from '../../hooks/useDerivedState';
 import useEffectWithPrevDeps from '../../hooks/useEffectWithPrevDeps';
 import useFlag from '../../hooks/useFlag';
-import useGetSelectionRange from '../../hooks/useGetSelectionRange';
 import useLang from '../../hooks/useLang';
 import useLastCallback from '../../hooks/useLastCallback';
 import useOldLang from '../../hooks/useOldLang';
@@ -458,7 +454,8 @@ const Composer: FC<OwnProps & StateProps> = ({
   const oldLang = useOldLang();
   const lang = useLang();
 
-  // eslint-disable-next-line no-null/no-null
+  const { getHtml, ctx: richInputCtx } = useRichEditable();
+
   const inputRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
   const counterRef = useRef<HTMLSpanElement>(null);
@@ -466,9 +463,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   // eslint-disable-next-line no-null/no-null
   const storyReactionRef = useRef<HTMLButtonElement>(null);
 
-  const [getHtml, setHtml] = useSignal('');
   const [isMounted, setIsMounted] = useState(false);
-  const getSelectionRange = useGetSelectionRange(editableInputCssSelector);
   const lastMessageSendTimeSeconds = useRef<number>();
   const prevDropAreaState = usePreviousDeprecated(dropAreaState);
   const { width: windowWidth } = windowSize.get();
@@ -481,7 +476,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   // Prevent Symbol Menu from closing when calendar is open
   const [isSymbolMenuForced, forceShowSymbolMenu, cancelForceShowSymbolMenu] = useFlag();
   const sendMessageAction = useSendMessageAction(chatId, threadId);
-  const [isInputHasFocus, markInputHasFocus, unmarkInputHasFocus] = useFlag();
+  const isInputHasFocus = false; // TODO: FIX
   const [isAttachMenuOpen, onAttachMenuOpen, onAttachMenuClose] = useFlag();
 
   const canMediaBeReplaced = editingMessage && canEditMedia(editingMessage);
@@ -491,7 +486,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const isSentStoryReactionHeart = sentStoryReaction && isSameReaction(sentStoryReaction, HEART_REACTION);
 
-  useEffect(processMessageInputForCustomEmoji, [getHtml]);
+  useEffect(processMessageInputForCustomEmoji, [richInputCtx.editable.htmlS]);
 
   const customEmojiNotificationNumber = useRef(0);
 
@@ -580,29 +575,8 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const insertHtmlAndUpdateCursor = useLastCallback((newHtml: string, inInputId: string = editableInputId) => {
     if (inInputId === editableInputId && isComposerBlocked) return;
-    const selection = window.getSelection()!;
-    let messageInput: HTMLDivElement;
-    if (inInputId === editableInputId) {
-      messageInput = document.querySelector<HTMLDivElement>(editableInputCssSelector)!;
-    } else {
-      messageInput = document.getElementById(inInputId) as HTMLDivElement;
-    }
 
-    if (selection.rangeCount) {
-      const selectionRange = selection.getRangeAt(0);
-      if (isSelectionInsideInput(selectionRange, inInputId)) {
-        insertHtmlInSelection(newHtml);
-        messageInput.dispatchEvent(new Event('input', { bubbles: true }));
-        return;
-      }
-    }
-
-    setHtml(`${getHtml()}${newHtml}`);
-
-    // If selection is outside of input, set cursor at the end of input
-    requestNextMutation(() => {
-      focusEditableElement(messageInput);
-    });
+    richInputCtx.editable.execCommand('insertHtml', newHtml);
   });
 
   const insertTextAndUpdateCursor = useLastCallback((
@@ -637,12 +611,10 @@ const Composer: FC<OwnProps & StateProps> = ({
     shouldForceAsFile,
     handleAppendFiles,
     handleFileSelect,
-    onCaptionUpdate,
     handleClearAttachments,
     handleSetAttachments,
   } = useAttachmentModal({
     attachments,
-    setHtml,
     setAttachments,
     fileSizeLimit,
     chatId,
@@ -688,10 +660,13 @@ const Composer: FC<OwnProps & StateProps> = ({
   const isEditingRef = useStateRef(Boolean(editingMessage));
   useEffect(() => {
     if (!isForCurrentMessageList || isInStoryViewer) return;
-    if (getHtml() && !isEditingRef.current) {
+    if (richInputCtx.editable.htmlS() && !isEditingRef.current) {
       sendMessageAction({ type: 'typing' });
     }
-  }, [getHtml, isEditingRef, isForCurrentMessageList, isInStoryViewer, sendMessageAction]);
+  }, [
+    richInputCtx.editable, richInputCtx.editable.htmlS, isEditingRef,
+    isForCurrentMessageList, isInStoryViewer, sendMessageAction,
+  ]);
 
   const isAdmin = chat && isChatAdmin(chat);
 
@@ -704,9 +679,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   } = useEmojiTooltip(
     Boolean(isReady && isOnActiveTab && (isInStoryViewer || isForCurrentMessageList)
       && shouldSuggestStickers && !hasAttachments),
-    getHtml,
-    setHtml,
-    undefined,
+    richInputCtx,
     recentEmojis,
     baseEmojiKeywords,
     emojiKeywords,
@@ -719,10 +692,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   } = useCustomEmojiTooltip(
     Boolean(isReady && isOnActiveTab && (isInStoryViewer || isForCurrentMessageList)
       && shouldSuggestCustomEmoji && !hasAttachments),
-    getHtml,
-    setHtml,
-    getSelectionRange,
-    inputRef,
+    richInputCtx,
     customEmojiForEmoji,
   );
 
@@ -736,7 +706,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       && shouldSuggestStickers
       && canSendStickers
       && !hasAttachments),
-    getHtml,
+    richInputCtx,
     stickersForEmoji,
   );
 
@@ -747,10 +717,7 @@ const Composer: FC<OwnProps & StateProps> = ({
     mentionFilteredUsers,
   } = useMentionTooltip(
     Boolean(isInMessageList && isReady && isForCurrentMessageList && !hasAttachments),
-    getHtml,
-    setHtml,
-    getSelectionRange,
-    inputRef,
+    richInputCtx,
     groupChatMembers,
     topInlineBotIds,
     currentUserId,
@@ -795,15 +762,14 @@ const Composer: FC<OwnProps & StateProps> = ({
     draft,
     chatId,
     threadId,
-    getHtml,
-    setHtml,
+    richInputCtx,
     editedMessage: editingMessage,
     isDisabled: isInStoryViewer || Boolean(requestedDraft),
   });
 
   const resetComposer = useLastCallback((shouldPreserveInput = false) => {
     if (!shouldPreserveInput) {
-      setHtml('');
+      richInputCtx.editable.clearInput();
     }
 
     setAttachments(MEMO_EMPTY_ARRAY);
@@ -823,8 +789,7 @@ const Composer: FC<OwnProps & StateProps> = ({
   });
 
   const [handleEditComplete, handleEditCancel, shouldForceShowEditing] = useEditing(
-    getHtml,
-    setHtml,
+    richInputCtx,
     editingMessage,
     resetComposer,
     chatId,
@@ -933,7 +898,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   useClipboardPaste(
     isForCurrentMessageList || isInStoryViewer,
-    insertFormattedTextAndUpdateCursor,
+    richInputCtx,
     handleSetAttachments,
     setNextText,
     editingMessage,
@@ -1004,7 +969,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       return false;
     }
 
-    const { text } = parseHtmlAsFormattedText(getHtml());
+    const { text } = richInputCtx.editable.getFormattedText(true);
     if (!text && !attachmentsToSend.length) {
       return false;
     }
@@ -1034,7 +999,7 @@ const Composer: FC<OwnProps & StateProps> = ({
     }
     isSilent = isSilent || isSilentPosting;
 
-    const { text, entities } = parseHtmlAsFormattedText(getHtml());
+    const { text, entities } = richInputCtx.editable.getFormattedText(true);
 
     isInvertedMedia = text && sendCompressed && sendGrouped ? isInvertedMedia : undefined;
 
@@ -1115,7 +1080,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const handleSendCore = useLastCallback(
     (currentAttachments: ApiAttachment[], isSilent = false, scheduledAt?: number) => {
-      const { text, entities } = parseHtmlAsFormattedText(getHtml());
+    const { text, entities } = richInputCtx.editable.getFormattedText(true);
 
       if (currentAttachments.length) {
         if (canSendAttachments(currentAttachments)) {
@@ -1169,6 +1134,10 @@ const Composer: FC<OwnProps & StateProps> = ({
         applyIosAutoCapitalizationFix(messageInput);
       }
 
+      if (canAnimate) {
+        renderer?.nextState();
+      }
+
       // Wait until message animation starts
       requestMeasure(() => {
         resetComposer();
@@ -1184,9 +1153,6 @@ const Composer: FC<OwnProps & StateProps> = ({
     isSilent = isSilent || isSilentPosting;
 
 
-    if (canAnimate) {
-      renderer?.nextState();
-    }
 
     let currentAttachments = attachments;
 
@@ -1282,7 +1248,7 @@ const Composer: FC<OwnProps & StateProps> = ({
         focusEditableElement(messageInput, true);
       });
     }
-  }, [editableInputId, requestedDraft, resetOpenChatWithDraft, setHtml]);
+  }, [editableInputId, requestedDraft, resetOpenChatWithDraft, richInputCtx.editable]);
 
   useEffect(() => {
     if (requestedDraftFiles?.length) {
@@ -1483,29 +1449,19 @@ const Composer: FC<OwnProps & StateProps> = ({
   useEffect(() => {
     if (!isComposerBlocked) return;
 
-    setHtml('');
-  }, [isComposerBlocked, setHtml, attachments]);
+    richInputCtx.editable.clearInput();
+  }, [isComposerBlocked, richInputCtx.editable, attachments]);
 
   const insertTextAndUpdateCursorAttachmentModal = useLastCallback((text: string) => {
     insertTextAndUpdateCursor(text, EDITABLE_INPUT_MODAL_ID);
   });
 
-  const removeSymbol = useLastCallback((inInputId = editableInputId) => {
-    const selection = window.getSelection()!;
-
-    if (selection.rangeCount) {
-      const selectionRange = selection.getRangeAt(0);
-      if (isSelectionInsideInput(selectionRange, inInputId)) {
-        document.execCommand('delete', false);
-        return;
-      }
-    }
-
-    setHtml(deleteLastCharacterOutsideSelection(getHtml()));
+  const removeSymbol = useLastCallback(() => {
+    richInputCtx.editable.removeLastSymbol();
   });
 
   const removeSymbolAttachmentModal = useLastCallback(() => {
-    removeSymbol(EDITABLE_INPUT_MODAL_ID);
+    removeSymbol();
   });
 
   const handleAllScheduledClick = useLastCallback(() => {
@@ -1547,7 +1503,7 @@ const Composer: FC<OwnProps & StateProps> = ({
     }
   }, [isSelectModeActive, enableHover, disableHover, isReady]);
 
-  const hasText = useDerivedState(() => Boolean(getHtml()), [getHtml]);
+  const hasText = useDerivedState(() => !richInputCtx.editable.emptyS(), [richInputCtx.editable.emptyS]);
 
   const withBotMenuButton = isChatWithBot && botMenuButton?.type === 'webApp' && !editingMessage
     && messageListType === 'thread';
@@ -1785,7 +1741,6 @@ const Composer: FC<OwnProps & StateProps> = ({
   const handleStopEffect = useLastCallback(() => { hideEffectInComposer({ }); });
 
   const onSend = useMemo(() => {
-    renderer?.nextState();
     switch (mainButtonState) {
       case MainButtonState.Edit:
         return handleEditComplete;
@@ -1831,6 +1786,7 @@ const Composer: FC<OwnProps & StateProps> = ({
         />
       )}
       <AttachmentModal
+        richInputCtx={richInputCtx}
         chatId={chatId}
         threadId={threadId}
         canShowCustomSendMenu={canShowCustomSendMenu}
@@ -1845,7 +1801,6 @@ const Composer: FC<OwnProps & StateProps> = ({
         shouldSchedule={!paidMessagesStars && isInScheduledList}
         canSchedule={!paidMessagesStars}
         forceDarkTheme={isInStoryViewer}
-        onCaptionUpdate={onCaptionUpdate}
         onSendSilent={handleSendSilentAttachments}
         onSend={handleSendAttachmentsFromModal}
         onSendScheduled={handleSendScheduledAttachments}
@@ -1876,7 +1831,7 @@ const Composer: FC<OwnProps & StateProps> = ({
         isCurrentUserPremium={isCurrentUserPremium}
       />
       <MentionTooltip
-        isOpen={isMentionTooltipOpen}
+        isOpen={isMentionTooltipOpen && !isChatCommandTooltipOpen && !isInlineBotTooltipOpen}
         filteredUsers={mentionFilteredUsers}
         onInsertUserName={insertMention}
         onClose={closeMentionTooltip}
@@ -2026,7 +1981,7 @@ const Composer: FC<OwnProps & StateProps> = ({
             />
           )}
           <MessageInput
-            ref={inputRef}
+            richInputCtx={richInputCtx}
             id={inputId}
             editableInputId={editableInputId}
             customEmojiPrefix={type}
@@ -2036,7 +1991,6 @@ const Composer: FC<OwnProps & StateProps> = ({
             threadId={threadId}
             isReady={isReady}
             isActive={!hasAttachments}
-            getHtml={getHtml}
             placeholder={placeholder}
             timedPlaceholderDate={timedPlaceholderDate}
             timedPlaceholderLangKey={timedPlaceholderLangKey}
@@ -2045,11 +1999,8 @@ const Composer: FC<OwnProps & StateProps> = ({
             noFocusInterception={hasAttachments}
             shouldSuppressFocus={isMobile && isSymbolMenuOpen}
             shouldSuppressTextFormatter={isEmojiTooltipOpen || isMentionTooltipOpen || isInlineBotTooltipOpen}
-            onUpdate={setHtml}
             onSend={onSend}
             onSuppressedFocus={closeSymbolMenu}
-            onFocus={markInputHasFocus}
-            onBlur={unmarkInputHasFocus}
             isNeedPremium={isNeedPremium}
             messageListType={messageListType}
           />

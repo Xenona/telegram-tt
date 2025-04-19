@@ -28,7 +28,7 @@ import {
 import buildClassName from '../../../../util/buildClassName';
 import parseHtmlAsFormattedText from '../../../../util/parseHtmlAsFormattedText';
 import { REM } from '../../../common/helpers/mediaDimensions';
-import { buildCustomEmojiHtml } from '../../composer/helpers/customEmoji';
+import { buildCustomEmojiHtml } from '../../../common/richinput/customEmoji';
 
 import { getIsMobile } from '../../../../hooks/useAppLayout';
 import useCurrentOrPrev from '../../../../hooks/useCurrentOrPrev';

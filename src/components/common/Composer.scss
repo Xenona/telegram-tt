@@ -677,13 +677,6 @@
     box-shadow: none !important;
     caret-color: var(--color-text);
 
-    &.touched {
-      & ~ .placeholder-text {
-        opacity: 0;
-        transform: translateX(1rem);
-      }
-    }
-
     &.focus-disabled {
       pointer-events: none;
     }
@@ -725,6 +718,11 @@
     @media (min-width: 600px) {
       left: 0.5rem;
     }
+
+    &.touched {
+      opacity: 0;
+      transform: translateX(1rem);
+    }
   }
 
   .forced-placeholder {
@@ -739,10 +737,9 @@
   &[dir="rtl"] {
     .placeholder-text {
       right: 0;
-    }
-
-    .touched ~ .placeholder-text {
-      transform: translateX(-1rem);
+      &.touched {
+        transform: translateX(-1rem);
+      }
     }
   }
 
@@ -922,6 +919,7 @@
 
   &:not(.shown) {
     display: none;
+    visibility: hidden;
   }
 
   &.open {

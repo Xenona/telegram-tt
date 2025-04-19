@@ -8,18 +8,18 @@ import type { ApiNewPoll } from '../../../api/types';
 
 import { requestMeasure, requestNextMutation } from '../../../lib/fasterdom/fasterdom';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
-import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
+import { useRichInput } from '../../common/richinput/useRichInput';
 
 import useLastCallback from '../../../hooks/useLastCallback';
 import useOldLang from '../../../hooks/useOldLang';
 
 import Icon from '../../common/icons/Icon';
+import RichInput from '../../common/richinput/RichInput';
 import Button from '../../ui/Button';
 import Checkbox from '../../ui/Checkbox';
 import InputText from '../../ui/InputText';
 import Modal from '../../ui/Modal';
 import RadioGroup from '../../ui/RadioGroup';
-import TextArea from '../../ui/TextArea';
 
 import './PollModal.scss';
 
@@ -50,15 +50,11 @@ const PollModal: FC<OwnProps> = ({
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [isMultipleAnswers, setIsMultipleAnswers] = useState(false);
   const [isQuizMode, setIsQuizMode] = useState(isQuiz || false);
-  const [solution, setSolution] = useState<string>('');
+  const solutionInputCtx = useRichInput();
   const [correctOption, setCorrectOption] = useState<number | undefined>();
   const [hasErrors, setHasErrors] = useState<boolean>(false);
 
   const lang = useOldLang();
-
-  const handleSolutionChange = useLastCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setSolution(e.target.value);
-  });
 
   const focusInput = useLastCallback((ref: RefObject<HTMLInputElement>) => {
     if (isOpen && ref.current) {
@@ -74,11 +70,11 @@ const PollModal: FC<OwnProps> = ({
       setIsAnonymous(true);
       setIsMultipleAnswers(false);
       setIsQuizMode(isQuiz || false);
-      setSolution('');
+      solutionInputCtx.editable.clearInput();
       setCorrectOption(undefined);
       setHasErrors(false);
     }
-  }, [isQuiz, isOpen]);
+  }, [isQuiz, isOpen, solutionInputCtx.editable]);
 
   useEffect(() => focusInput(questionInputRef), [focusInput, isOpen]);
 
@@ -155,12 +151,11 @@ const PollModal: FC<OwnProps> = ({
     };
 
     if (isQuizMode) {
-      const { text, entities } = (solution && parseHtmlAsFormattedText(solution.substring(0, MAX_SOLUTION_LENGTH)))
-        || {};
+      const { text, entities } = solutionInputCtx.editable.getFormattedText(true);
 
       payload.quiz = {
         correctAnswers: [String(correctOption)],
-        ...(text && { solution: text }),
+        ...(text && { solution: text.substring(0, MAX_SOLUTION_LENGTH) }),
         ...(entities && { solutionEntities: entities }),
       };
     }
@@ -361,10 +356,9 @@ const PollModal: FC<OwnProps> = ({
         {isQuizMode && (
           <>
             <h3 className="options-header">{lang('lng_polls_solution_title')}</h3>
-            <TextArea
-              value={solution}
-              onChange={handleSolutionChange}
-              noReplaceNewlines
+            <RichInput
+              richInputCtx={solutionInputCtx}
+              placeholder={lang('lng_polls_solution_placeholder')}
             />
             <div className="note">{lang('CreatePoll.ExplanationInfo')}</div>
           </>
