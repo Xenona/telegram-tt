@@ -7,7 +7,8 @@ import { getActions, withGlobal } from '../../../global';
 import type { ThemeKey } from '../../../types';
 import type { GiftOption } from './GiftModal';
 import {
-  type ApiMessage, type ApiPeer, type ApiStarsAmount, MAIN_THREAD_ID,
+
+  type ApiStarsAmount, MAIN_THREAD_ID,
 } from '../../../api/types';
 
 import { getPeerTitle, isApiPeerUser } from '../../../global/helpers/peers';
@@ -24,7 +25,8 @@ import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
 
 import PremiumProgress from '../../common/PremiumProgress';
-import ActionMessage from '../../middle/message/ActionMessage';
+import RichInput from '../../common/richinput/RichInput';
+import ActionMessage from '../../middle/message/ActionMessage';;
 import Button from '../../ui/Button';
 import Link from '../../ui/Link';
 import ListItem from '../../ui/ListItem';
@@ -395,13 +397,7 @@ function GiftComposer({
             )}
           />
         </div>
-
-        <ActionMessage
-          key={isStarGift ? gift.id : gift.months}
-          message={localMessage}
-          threadId={MAIN_THREAD_ID}
-          appearanceOrder={0}
-        />
+        <ActionMessage key={isStarGift ? gift.id : gift.months} message={localMessage} />
       </div>
       {renderOptionsSection()}
       <div className={styles.spacer} />

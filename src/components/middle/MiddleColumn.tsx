@@ -505,25 +505,7 @@ function MiddleColumn({
   );
   const withExtraShift = Boolean(isMessagingDisabled || isSelectModeActive);
 
-  const bgRef = useRef<HTMLCanvasElement>(null);
-  const animDivRef = useRef<HTMLDivElement>(null);
-
-  const [renderer, setRenderer] = useState<AnimBgRender | null>(null);
-
-  useEffect(() => {
-    if (bgRef.current && animDivRef.current) {
-      const renderer2 = new AnimBgRender(bgRef.current, animDivRef.current);
-      setRenderer(renderer2);
-      renderer2.setColors(transformStringsToColors({
-        first: fill?.settings.backgroundColor,
-        second: fill?.settings.secondBackgroundColor,
-        third: fill?.settings.thirdBackgroundColor,
-        fourth: fill?.settings.fourthBackgroundColor,
-      }));
-    }
-
-    return () => renderer?.detach();
-  }, [bgRef, animDivRef, fill, renderer]);
+  const { renderer, bgRef, animDivRef } = usePatternBg(fillSynced);
 
   console.log("XE", {fillSynced, customBackgroundValue});
   return (
