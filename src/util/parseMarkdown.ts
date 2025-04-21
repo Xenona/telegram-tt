@@ -409,8 +409,10 @@ function fixupEntities(text: ApiFormattedText): ApiFormattedText {
       }
     }
 
-    for (const stat of curState.entries()) {
-      curEnts.push({ type: stat[0], offset: pos, length: 0 });
+    for (const [type, val] of curState.entries()) {
+      if (val > 0) {
+        curEnts.push({ type, offset: pos, length: 0 });
+      }
     }
   }
 
