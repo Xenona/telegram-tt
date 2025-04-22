@@ -9,7 +9,7 @@ import { createSignal } from '../../../util/signals';
 import { IS_MOBILE, IS_SAFARI, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
-import { insertEnterInsideBlockquote } from './blockquoteEnter';
+import { BlockQuoteEnterHandler, insertEnterInsideBlockquote } from './BlockquoteEnter';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
 import { EditableEmojiRender } from './EditableEmojiRender';
@@ -64,6 +64,7 @@ export class RichEditable {
   private pasteListener: (e: ClipboardEvent) => void;
 
   public emojiRenderer: EditableEmojiRender;
+  private blockquoteEnter: BlockQuoteEnterHandler;
 
   constructor() {
     this.root = document.createElement('div');
@@ -105,30 +106,8 @@ export class RichEditable {
     });
 
     this.emojiRenderer = new EditableEmojiRender(this);
-
-    this.addKeyboardHandler({
-      priority: RichInputKeyboardPriority.Default,
-      onKeydown: (e) => {
-        if (e.key === 'Enter') {
-          let p = this.selectionS()?.range.commonAncestorContainer;
-          while (p && p !== this.root && !(p?.nodeType
-            === document.ELEMENT_NODE || (p as HTMLElement)?.tagName
-            === 'BLOCKQUOTE')) {
-            p = p?.parentNode ?? undefined;
-          }
-          if (p && (p as HTMLElement)?.tagName === 'BLOCKQUOTE') {
-            const wasEnd = insertEnterInsideBlockquote(e);
-            if (!wasEnd && (IS_MOBILE || IS_SAFARI)) {
-              e.preventDefault();
-              this.execCommand('insertHTML', '<br/>');
-            }
-          }
-
-          return true;
-        }
-        return false;
-      },
-    });
+    this.blockquoteEnter = new BlockQuoteEnterHandler();
+    this.blockquoteEnter.attachHandler(this.root);
   }
 
   private updateRootProps() {
