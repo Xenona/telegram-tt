@@ -9,7 +9,7 @@ import { createSignal } from '../../../util/signals';
 import { IS_MOBILE, IS_SAFARI, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
-import { BlockQuoteEnterHandler, insertEnterInsideBlockquote } from './BlockquoteEnter';
+import { BlockQuoteEnterHandler } from './BlockquoteEnter';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
 import { EditableEmojiRender } from './EditableEmojiRender';

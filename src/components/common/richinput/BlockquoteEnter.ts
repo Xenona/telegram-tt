@@ -1,4 +1,4 @@
-const isBlockquote = (noteAnc: Node) =>
+export const isBlockquote = (noteAnc: Node) =>
   "tagName" in noteAnc && noteAnc.tagName == "BLOCKQUOTE";
 
 export class BlockQuoteEnterHandler {

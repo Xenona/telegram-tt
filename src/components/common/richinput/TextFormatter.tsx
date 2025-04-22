@@ -27,6 +27,7 @@ import Icon from '../icons/Icon';
 import { RichInputKeyboardPriority } from './Keyboard';
 
 import './TextFormatter.scss';
+import { isBlockquote } from './BlockquoteEnter';
 
 export type OwnProps = {
   richInputCtx: RichInputCtx;
@@ -109,14 +110,14 @@ const TextFormatter: FC<OwnProps> = ({
     }
 
     const selectedFormats: ISelectedTextFormats = {};
-    let { parentElement } = sel.range.commonAncestorContainer;
-    while (parentElement && parentElement.id !== EDITABLE_INPUT_ID) {
-      const textFormat = TEXT_FORMAT_BY_TAG_NAME[parentElement.tagName];
+    let formNode: Node | null = sel.range.commonAncestorContainer;
+    while (formNode && formNode !== richInputCtx.editable.root) {
+      const textFormat = (formNode && ("tagName" in formNode)) ? TEXT_FORMAT_BY_TAG_NAME[formNode.tagName as string] : null;
       if (textFormat) {
         selectedFormats[textFormat] = true;
       }
 
-      parentElement = parentElement.parentElement;
+      formNode = formNode.parentElement;
     }
 
     setSelectedTextFormats(selectedFormats);
@@ -311,17 +312,25 @@ const TextFormatter: FC<OwnProps> = ({
 
   const handleQuote = useLastCallback(() => {
     if (selectedTextFormats.quote) {
-      const element = getSelectedElement();
+      const selection = window.getSelection();
+      if (!selection) return;
+      const r = selection.getRangeAt(0)
+      let element: Node | null = r.commonAncestorContainer;
+      
+      while(element && !isBlockquote(element)) {
+        element = element.parentElement;
+      }
+
       if (
         !richInputCtx.editable.selectionS()
         || !element
-        || element.tagName !== 'BLOCKQUOTE'
+        || !isBlockquote(element)
         || !element.textContent
       ) {
         return;
       }
 
-      element.replaceWith(element.textContent);
+      (element as HTMLElement).replaceWith(...element.childNodes);
       setSelectedTextFormats((selectedFormats) => ({
         ...selectedFormats,
         quote: false,
