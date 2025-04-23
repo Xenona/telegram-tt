@@ -231,7 +231,10 @@ const MessageInput: FC<OwnProps & StateProps> = ({
 
   const handleCloseTextFormatter = useLastCallback(() => {
     closeTextFormatter();
-    window.getSelection()?.collapseToEnd();
+    const sel = window.getSelection();
+    if(sel && sel.rangeCount > 0) {
+      sel.collapseToEnd()
+    }
   });
 
   const checkSelection = useLastCallback(() => {

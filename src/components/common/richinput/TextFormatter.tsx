@@ -59,7 +59,7 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   BLOCKQUOTE: 'quote',
 };
 
-const TEXT_FORMATTER_SAFE_AREA_PX = 140;
+const TEXT_FORMATTER_SAFE_AREA_PX = 180;
 
 const TextFormatter: FC<OwnProps> = ({
   richInputCtx,
@@ -347,6 +347,13 @@ const TextFormatter: FC<OwnProps> = ({
     onClose();
   });
 
+  const handlePreview = useLastCallback(() => {
+    window.getSelection()?.removeAllRanges();
+    richInputCtx.editable.root.blur();
+    richInputCtx.editable.preview.startPreview();
+    onClose();
+  });
+
   useRichEditableKeyboardListener(richInputCtx, {
     priority: RichInputKeyboardPriority.Tool,
     onKeydown: (e: KeyboardEvent) => {
@@ -500,6 +507,15 @@ const TextFormatter: FC<OwnProps> = ({
         <div className="TextFormatter-divider" />
         <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={startLinkControl}>
           <Icon name="link" />
+        </Button>
+        <div className="TextFormatter-divider" />
+        <Button color="translucent" ariaLabel={"Preview"} style={`
+              width: 5rem;
+              font-size: 1.3rem;
+              text-transform: none;
+        `} onClick={handlePreview}>
+          {/* TODO: Support translations */}
+          Preview
         </Button>
       </div>
 

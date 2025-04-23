@@ -13,7 +13,7 @@ import { BlockQuoteEnterHandler } from './BlockquoteEnter';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
 import { EditableEmojiRender } from './EditableEmojiRender';
-import { RichInputKeyboardPriority } from './Keyboard';
+import { Previewer } from './Previewer';
 
 const SAFARI_BR = '<br>';
 const WHITESPACE_RE = /\s/;
@@ -65,6 +65,7 @@ export class RichEditable {
 
   public emojiRenderer: EditableEmojiRender;
   private blockquoteEnter: BlockQuoteEnterHandler;
+  public preview: Previewer;
 
   constructor() {
     this.root = document.createElement('div');
@@ -108,6 +109,7 @@ export class RichEditable {
     this.emojiRenderer = new EditableEmojiRender(this);
     this.blockquoteEnter = new BlockQuoteEnterHandler();
     this.blockquoteEnter.attachHandler(this.root);
+    this.preview = new Previewer(this);
   }
 
   private updateRootProps() {
@@ -133,6 +135,7 @@ export class RichEditable {
 
     this.emojiRenderer.attachTo(el);
 
+    el.appendChild(this.preview.root);
     this.handleContentUpdate();
   }
 
