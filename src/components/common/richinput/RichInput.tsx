@@ -19,10 +19,11 @@ type OwnProps = {
   placeholder?: string;
   richInputCtx: RichInputCtx;
   limitRemaining?: number;
+  disablePreview?: boolean;
 };
 
 const RichInput: FC<OwnProps> = ({
-  richInputCtx, className, placeholder, limitRemaining,
+  richInputCtx, className, placeholder, limitRemaining, disablePreview
 }) => {
   const fullClass = buildClassName(className,
     'form-control',
@@ -63,6 +64,7 @@ const RichInput: FC<OwnProps> = ({
         isOpen={isTextFormatterOpen}
         isActive
         onClose={closeTextFormatter}
+        disablePreview={disablePreview}
       />
       {limitRemaining !== undefined && limitRemaining < 10 && (
         <div

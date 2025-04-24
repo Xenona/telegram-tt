@@ -229,6 +229,7 @@ function GiftComposer({
           richInputCtx={solutionInputCtx}
           placeholder={lang('GiftMessagePlaceholder')}
           limitRemaining={captionLimit ? captionLimit - giftMessage.text.length : undefined}
+          disablePreview
         />
         {canUseStarsPayment && (
           <ListItem className={styles.switcher} narrow ripple onClick={toggleShouldPayByStars}>

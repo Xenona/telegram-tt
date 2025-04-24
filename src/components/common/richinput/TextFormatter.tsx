@@ -34,6 +34,7 @@ export type OwnProps = {
   isOpen: boolean;
   isActive: boolean;
   onClose: () => void;
+  disablePreview?: boolean;
 };
 
 interface ISelectedTextFormats {
@@ -66,6 +67,7 @@ const TextFormatter: FC<OwnProps> = ({
   isOpen: shouldOpen,
   isActive,
   onClose,
+  disablePreview
 }) => {
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
@@ -508,15 +510,15 @@ const TextFormatter: FC<OwnProps> = ({
         <Button color="translucent" ariaLabel={lang('TextFormat.AddLinkTitle')} onClick={startLinkControl}>
           <Icon name="link" />
         </Button>
-        <div className="TextFormatter-divider" />
-        <Button color="translucent" ariaLabel={"Preview"} style={`
+        {!disablePreview && <div className="TextFormatter-divider" />}
+        {!disablePreview && <Button color="translucent" ariaLabel={"Preview"} style={`
               width: 5rem;
               font-size: 1.3rem;
               text-transform: none;
         `} onClick={handlePreview}>
           {/* TODO: Support translations */}
           Preview
-        </Button>
+        </Button>}
       </div>
 
       <div className="TextFormatter-link-control">
