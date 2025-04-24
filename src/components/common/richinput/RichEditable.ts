@@ -14,6 +14,7 @@ import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
 import { EditableEmojiRender } from './EditableEmojiRender';
 import { Previewer } from './Previewer';
+import { requestMeasure } from '../../../lib/fasterdom/fasterdom';
 
 const SAFARI_BR = '<br>';
 const WHITESPACE_RE = /\s/;
@@ -293,7 +294,9 @@ export class RichEditable {
       betterExecCommand(this.root, this.selectionS()?.range, 'removeFormat');
     }
 
-    this.emojiRenderer.synchronizeElements();
+    requestMeasure(() => {
+      this.emojiRenderer.synchronizeElements();
+    });
   }
 
   public clearInput() {

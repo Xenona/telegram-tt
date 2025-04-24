@@ -70,7 +70,7 @@ export class BlockQuoteEnterHandler {
           const nr = document.createRange();
           nr.setStartAfter(noteAnc);
           nr.setEndAfter(noteAnc);
-          const textNode = document.createTextNode("\u200B");
+          const textNode = document.createTextNode(" ");
           nr.insertNode(textNode);
           nr.collapse(false);
           s.addRange(nr);
@@ -93,7 +93,7 @@ export class BlockQuoteEnterHandler {
           const nr = document.createRange();
           nr.setStartBefore(noteAnc);
           nr.setEndBefore(noteAnc);
-          const textNode = document.createTextNode("\u200B");
+          const textNode = document.createTextNode(" ");
           nr.insertNode(textNode);
           nr.collapse(true);
           s.addRange(nr);
