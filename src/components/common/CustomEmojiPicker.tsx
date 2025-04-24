@@ -1,5 +1,5 @@
-import type { FC } from "../../lib/teact/teact";
 import React, {
+  FC,
   memo,
   useEffect,
   useMemo,
@@ -98,6 +98,7 @@ import {
 } from "../../util/emoji/emoji";
 import useMediaTransitionDeprecated from "../../hooks/useMediaTransitionDeprecated";
 import windowSize from "../../util/windowSize";
+import ScrollableSearchInputWithEmojis from "./ScrollableSearchInputWithEmojis";
 
 type OwnProps = {
   chatId?: string;
@@ -143,7 +144,7 @@ type StateProps = {
   recentEmojis?: GlobalState["recentEmojis"];
 };
 
-const HEADER_BUTTON_WIDTH = 2.5 * REM; // px (including margin)
+export const HEADER_BUTTON_WIDTH = 2.5 * REM; // px (including margin)
 
 const DEFAULT_ID_PREFIX = "custom-emoji-set";
 const TOP_REACTIONS_COUNT = 16;
@@ -491,7 +492,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
 
   useHorizontalScroll(headerRef, isMobile || !shouldRenderContent);
 
-
   // Initialize data on first render.
   useEffect(() => {
     setTimeout(() => {
@@ -540,7 +540,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     (entries) => {
       entries.forEach((entry) => {
         const { id } = entry.target as HTMLDivElement;
-        console.log('XE id', id)
+        console.log("XE id", id);
         if (!id || !id.startsWith("emoji-category-")) {
           return;
         }
@@ -559,7 +559,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       if (minIntersectingIndex === Infinity) {
         return;
       }
-      console.log("XE setting index", minIntersectingIndex)
       setActiveCategoryIndex(minIntersectingIndex);
     },
   );
@@ -666,8 +665,12 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     return themeCategories;
   }, [categories, lang, recentEmojis]);
 
-
-  const fullClassName = buildClassName("StickerPicker", styles.root, className, "esg-searcheable");
+  const fullClassName = buildClassName(
+    "StickerPicker",
+    styles.root,
+    className,
+    "esg-searcheable",
+  );
 
   if (!shouldRenderContent) {
     return (
@@ -696,6 +699,10 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     pickerStyles.hasHeader,
   );
 
+  const onReset = () => {
+    setEmojiQuery("");
+  }
+
   const selectCategory = useLastCallback((index: number) => {
     setActiveCategoryIndex(index);
     let categoryEl;
@@ -704,9 +711,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       categoryEl = containerRef.current!.querySelector(
         `#emoji-search`,
       )! as HTMLElement;
-
     } else {
-
       categoryEl = containerRef.current!.querySelector(
         `#emoji-category-${index}`,
       )! as HTMLElement;
@@ -726,7 +731,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       selectCategory(0);
     }
   }, [containerRef.current]);
-
 
   function renderCategoryButton(category: EmojiCategoryData, index: number) {
     const icon = ICONS_BY_CATEGORY[category.id];
@@ -783,7 +787,14 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       >
         <div className={styles.categoriesEmojis}>
           {renderCategoryButton(allCategories[0], 0)}
-          <div className={buildClassName(styles.emojiCategoryStripe, activeCategoryIndex>0&&activeCategoryIndex<allCategories.length&&styles.activated)}>
+          <div
+            className={buildClassName(
+              styles.emojiCategoryStripe,
+              // activeCategoryIndex > 0 &&
+              //   activeCategoryIndex < allCategories.length &&
+              //   styles.activated,
+            )}
+          >
             <div className={canAnimate ? styles.animatedWidth : ""}>
               {allCategories
                 .slice(1)
@@ -806,23 +817,16 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
           canAnimate ? styles.animatedSlide : "",
         )}
       >
-        <SearchInput
+        <ScrollableSearchInputWithEmojis
           onBlur={setUnfocused}
           onFocus={setFocused}
-          value={emojiQuery}
-          className={buildClassName(styles.SearchInput)}
+          onReset={onReset}
+          emojiQuery={emojiQuery}
+          isInputFocused={isInputFocused}
           // lang pack should have a proper key
           // @ts-ignore
-          placeholder={lang("Search Emoji")}
           onChange={handleEmojiSearchQueryChange}
           inputId="emoji-search"
-          children={
-            (
-              <div>
-                sfsekjfsekjfse
-              </div>
-            )
-          }
         />
         {!emojiQuery ? (
           <>
@@ -853,7 +857,11 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
                     )
                   : EMOJIS_PER_ROW_ON_DESKTOP;
                 const height =
-                  Math.ceil((category.emojis.length + (recentCustomEmojis?.length ?? 0)) / emojisPerRow) *
+                  Math.ceil(
+                    (category.emojis.length +
+                      (recentCustomEmojis?.length ?? 0)) /
+                      emojisPerRow,
+                  ) *
                   (EMOJI_SIZE_PICKER +
                     (isMobile
                       ? EMOJI_VERTICAL_MARGIN_MOBILE

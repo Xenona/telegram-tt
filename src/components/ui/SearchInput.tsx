@@ -39,6 +39,7 @@ type OwnProps = {
   hasDownButton?: boolean;
   teactExperimentControlled?: boolean;
   withBackIcon?: boolean;
+  hasTransition?: boolean;
   onChange: (value: string) => void;
   onStartBackspace?: NoneToVoidFunction;
   onReset?: NoneToVoidFunction;
@@ -59,6 +60,7 @@ const SearchInput: FC<OwnProps> = ({
   className,
   focused,
   isLoading = false,
+  hasTransition = true,
   spinnerColor,
   spinnerBackgroundColor,
   placeholder,
@@ -159,13 +161,12 @@ const SearchInput: FC<OwnProps> = ({
           <Icon name="search" className="search-icon" />
         )}
       </Transition>
-      <div>{children}</div>
       <input
         ref={inputRef}
         id={inputId}
         type="text"
         dir="auto"
-        placeholder={placeholder || oldLang('Search')}
+        // placeholder={placeholder || oldLang('Search')}
         className="form-control"
         value={value}
         disabled={disabled}
@@ -176,6 +177,7 @@ const SearchInput: FC<OwnProps> = ({
         onKeyDown={handleKeyDown}
         teactExperimentControlled={teactExperimentControlled}
       />
+      {children}
       {hasUpButton && (
         <Button
           round
@@ -200,7 +202,7 @@ const SearchInput: FC<OwnProps> = ({
           <Icon name="down" />
         </Button>
       )}
-      <Transition
+      {hasTransition &&<Transition
         name="fade"
         shouldCleanup
         activeKey={Number(isLoading)}
@@ -221,7 +223,7 @@ const SearchInput: FC<OwnProps> = ({
             </Button>
           )
         )}
-      </Transition>
+      </Transition>}
     </div>
   );
 };
