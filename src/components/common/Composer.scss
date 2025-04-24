@@ -785,7 +785,7 @@
 }
 
 #message-input-text {
-  .form-control, .inputPreview {
+  .form-control {
     margin-bottom: 0;
     line-height: 1.3125;
     padding: calc((var(--base-height, 3.5rem) - var(--composer-text-size, 1rem) * 1.3125) / 2) 0;
@@ -795,18 +795,6 @@
     @media (max-width: 600px) {
       padding: calc((2.875rem - var(--composer-text-size, 1rem) * 1.3125) / 2) 0;
     }
-  }
-
-  .previewHidden {
-    opacity: 0;
-  }
-
-  .inputPreview {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: -1;
   }
 
   .forced-placeholder,
@@ -819,7 +807,7 @@
   }
 
   &:not(:only-child) {
-    .form-control, .inputPreview {
+    .form-control {
       padding-left: 0;
       padding-right: 0;
 

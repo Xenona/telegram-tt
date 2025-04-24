@@ -5,6 +5,7 @@ import TeactDOM from "../../../lib/teact/teact-dom";
 import { createSignal, Signal } from "../../../util/signals";
 import { renderTextWithEntities } from "../helpers/renderTextWithEntities";
 import type { RichEditable } from "./RichEditable";
+import styles from "./Previewer.module.scss"
 
 export class Previewer {
   public root: HTMLElement;
@@ -17,8 +18,10 @@ export class Previewer {
   constructor(edtiable: RichEditable) {
     this.editable = edtiable;
     this.root = document.createElement("div");
-    this.root.classList.add("inputPreview");
-    this.root.classList.add("previewHidden");
+    this.root.classList.add(styles.inputPreview);
+    this.root.classList.add(styles.previewHidden);
+    // While not really a form control, it needs same styles
+    this.root.classList.add("form-control"); 
 
     this.hiddenOnPreview = [
       this.editable.root,
@@ -53,9 +56,9 @@ export class Previewer {
 
     requestMutation(() => {
       for (const el of this.hiddenOnPreview) {
-        el.classList.add("previewHidden");
+        el.classList.add(styles.previewHidden);
       }
-      this.root.classList.remove("previewHidden");
+      this.root.classList.remove(styles.previewHidden);
     });
   }
 
@@ -65,9 +68,9 @@ export class Previewer {
     this.setIsPreviewing(false);
     requestMutation(() => {
       for (const el of this.hiddenOnPreview) {
-        el.classList.remove("previewHidden");
+        el.classList.remove(styles.previewHidden);
       }
-      this.root.classList.remove("previewHidden");
+      this.root.classList.remove(styles.previewHidden);
       TeactDOM.render(undefined, this.root);
     });
   }
