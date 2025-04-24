@@ -15,11 +15,11 @@ import useOldLang from '../../../hooks/useOldLang';
 
 import EmojiButton from './EmojiButton';
 
-const EMOJIS_PER_ROW_ON_DESKTOP = 8;
-const EMOJI_MARGIN = 0.625 * REM;
-const EMOJI_VERTICAL_MARGIN = 0.25 * REM;
-const EMOJI_VERTICAL_MARGIN_MOBILE = 0.5 * REM;
-const MOBILE_CONTAINER_PADDING = 0.5 * REM;
+export const EMOJIS_PER_ROW_ON_DESKTOP = 8;
+export const EMOJI_MARGIN = 0.625 * REM;
+export const EMOJI_VERTICAL_MARGIN = 0.25 * REM;
+export const EMOJI_VERTICAL_MARGIN_MOBILE = 0.5 * REM;
+export const MOBILE_CONTAINER_PADDING = 0.5 * REM;
 
 type OwnProps = {
   category: EmojiCategory;

@@ -196,13 +196,6 @@ const SymbolMenu: FC<OwnProps & StateProps> = ({
 
   function renderContent(isActive: boolean, isFrom: boolean) {
     switch (activeTab) {
-      // case SymbolMenuTabs.Emoji:
-      //   return (
-      //     <EmojiPicker
-      //       className="picker-tab"
-      //       onEmojiSelect={handleEmojiSelect}
-      //     />
-      //   );
       case SymbolMenuTabs.CustomEmoji:
         return (
           <CustomEmojiPicker
@@ -213,6 +206,7 @@ const SymbolMenu: FC<OwnProps & StateProps> = ({
             chatId={chatId}
             isTranslucent={!isMobile && isBackgroundTranslucent}
             onCustomEmojiSelect={handleCustomEmojiSelect}
+            onEmojiSelect={handleEmojiSelect}
           />
         );
     //   case SymbolMenuTabs.Stickers:

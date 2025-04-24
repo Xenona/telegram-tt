@@ -12,3 +12,50 @@
 .activated {
   background-color: var(--color-interactive-element-hover);
 }
+
+
+.animatedSlide {
+  /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+  transition: top 0.3s ease, height 0.3s ease;
+}
+
+.SearchInput {
+  border-radius: var(--border-radius-messages-small);
+  margin-bottom: 0.5rem;
+}
+
+.categoriesEmojis {
+  display: flex;
+}
+
+.emojiCategoryStripe {
+  display: flex;
+  align-items: center;
+
+  & > div {
+    border-radius: 2rem;
+    max-width: 2rem;
+    overflow: hidden;
+
+    &.animatedWidth {
+      /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
+      transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
+    }
+
+    &:hover {
+      max-width: 18rem;
+      background-color: var(--color-background-selected);
+      padding: 0.5rem 0.1875rem;
+    }
+  }
+
+  .symbolSetButton {
+    padding: 0;
+    margin: 0 !important;
+    height: auto;
+
+    &:hover {
+      background-color: transparent !important;
+    }
+  }
+}
