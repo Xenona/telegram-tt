@@ -655,7 +655,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       return MEMO_EMPTY_ARRAY;
     }
     const themeCategories = [...categories];
-    console.log("XE hfhfhfh", { themeCategories });
     if (recentEmojis?.length) {
       themeCategories.unshift({
         id: RECENT_SYMBOL_SET_ID,
@@ -667,7 +666,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     return themeCategories;
   }, [categories, lang, recentEmojis]);
 
-  console.log("XE categore", { categories });
 
   const fullClassName = buildClassName("StickerPicker", styles.root, className, "esg-searcheable");
 
@@ -818,6 +816,13 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
           placeholder={lang("Search Emoji")}
           onChange={handleEmojiSearchQueryChange}
           inputId="emoji-search"
+          children={
+            (
+              <div>
+                sfsekjfsekjfse
+              </div>
+            )
+          }
         />
         {!emojiQuery ? (
           <>
@@ -848,7 +853,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
                     )
                   : EMOJIS_PER_ROW_ON_DESKTOP;
                 const height =
-                  Math.ceil(category.emojis.length / emojisPerRow) *
+                  Math.ceil((category.emojis.length + (recentCustomEmojis?.length ?? 0)) / emojisPerRow) *
                   (EMOJI_SIZE_PICKER +
                     (isMobile
                       ? EMOJI_VERTICAL_MARGIN_MOBILE
