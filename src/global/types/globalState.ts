@@ -11,6 +11,7 @@ import type {
   ApiConfig,
   ApiCountry,
   ApiCountryCode,
+  ApiEmojiGroup,
   ApiEmojiStatusType,
   ApiGroupCall,
   ApiMessage,
@@ -452,6 +453,8 @@ export type GlobalState = {
     history: StarsTransactionHistory;
     subscriptions?: StarsSubscriptions;
   };
+
+  emojiGroups: ApiEmojiGroup[];
 };
 
 export type RequiredGlobalState = GlobalState & { _: never };

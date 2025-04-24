@@ -827,6 +827,20 @@ addActionHandler('loadRecentEmojiStatuses', async (global): Promise<void> => {
   setGlobal(global);
 });
 
+addActionHandler('loadEmojiGroups', async (global): Promise<void> => {
+  const result = await callApi('fetchEmojiGroups');
+  if (!result) {
+    return;
+  }
+
+  global = getGlobal(); 
+  global = {
+    ...global,
+    emojiGroups: result,
+  }
+  setGlobal(global);
+});
+
 async function searchGifs<T extends GlobalState>(global: T, query: string, botUsername?: string, offset?: string,
   ...[tabId = getCurrentTabId()]: TabArgs<T>) {
   const result = await callApi('searchGifs', { query, offset, username: botUsername });

@@ -116,6 +116,7 @@
     "messages.getStickerSet",
     "messages.installStickerSet",
     "messages.uninstallStickerSet",
+    "messages.getEmojiGroups",
     "messages.startBot",
     "messages.migrateChat",
     "messages.searchGlobal",

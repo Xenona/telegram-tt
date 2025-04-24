@@ -486,3 +486,17 @@ function processGifResult(gifs: GramJs.TypeDocument[]) {
     })
     .filter(Boolean);
 }
+
+export async function fetchEmojiGroups() {
+  const res = await invokeRequest(new GramJs.messages.GetEmojiGroups({hash:0}));
+
+  if (!res || res instanceof GramJs.messages.EmojiGroupsNotModified) {
+    return undefined;
+  }
+
+  return res.groups.map((e) => ({
+    title: e.title,
+    iconEmojiId: e.iconEmojiId.toString(),
+    emoticons: ("emoticons" in e) ? e.emoticons : [],
+  }));
+}

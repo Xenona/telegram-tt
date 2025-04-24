@@ -123,6 +123,10 @@ export type ApiUpdateChatJoin = {
   id: string;
 };
 
+export type ApiUpdateEmojiGroups = {
+  '@type': 'updateEmojiGroups';
+}
+
 export type ApiUpdateChatLeave = {
   '@type': 'updateChatLeave';
   id: string;
@@ -843,7 +847,7 @@ export type ApiUpdate = (
   ApiDeleteParticipantHistory | ApiUpdateMessageSendSucceeded | ApiUpdateMessageSendFailed |
   ApiUpdateServiceNotification | ApiDeleteContact | ApiUpdateUser | ApiUpdateUserStatus |
   ApiUpdateUserFullInfo | ApiUpdateVideoProcessingPending | ApiUpdatePeerSettings |
-  ApiUpdateAvatar | ApiUpdateMessageImage | ApiUpdateDraftMessage |
+  ApiUpdateAvatar | ApiUpdateMessageImage | ApiUpdateDraftMessage | ApiUpdateEmojiGroups |
   ApiUpdateError | ApiUpdateResetContacts | ApiUpdateStartEmojiInteraction |
   ApiUpdateFavoriteStickers | ApiUpdateStickerSet | ApiUpdateStickerSets | ApiUpdateStickerSetsOrder |
   ApiUpdateRecentStickers | ApiUpdateSavedGifs | ApiUpdateNewScheduledMessage | ApiUpdateMoveStickerSetToTop |

@@ -1897,6 +1897,7 @@ export interface ActionPayloads {
   loadDefaultStatusIcons: undefined;
   loadUserCollectibleStatuses: undefined;
   loadRecentEmojiStatuses: undefined;
+  loadEmojiGroups: undefined;
 
   // Bots
   sendBotCommand: {

@@ -98,6 +98,12 @@ type ApiStickerSetInfoMissing = {
 
 export type ApiStickerSetInfo = ApiStickerSetInfoShortName | ApiStickerSetInfoId | ApiStickerSetInfoMissing;
 
+export type ApiEmojiGroup = {
+  title: string;
+  iconEmojiId: string;
+  emoticons: string[];
+}
+
 export interface ApiVideo {
   mediaType: 'video';
   id: string;
