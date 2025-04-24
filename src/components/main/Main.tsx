@@ -211,6 +211,7 @@ const Main = ({
     onTabFocusChange,
     loadTopInlineBots,
     loadEmojiKeywords,
+    loadEmojiGroups,
     loadCountryList,
     loadAvailableReactions,
     loadStickerSets,
@@ -338,6 +339,7 @@ const Main = ({
       loadNotificationExceptions();
       loadTopInlineBots();
       loadTopReactions();
+      loadEmojiGroups();
       loadStarStatus();
       loadEmojiKeywords({ language: BASE_EMOJI_KEYWORD_LANG });
       loadFeaturedEmojiStickers();

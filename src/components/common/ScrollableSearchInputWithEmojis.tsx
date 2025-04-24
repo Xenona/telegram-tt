@@ -24,6 +24,7 @@ type OwnProps = {
   emojiQuery: string;
   isInputFocused: boolean;
   onChange: (emojiQuery: string) => void;
+  onGroupSelect: (name: string) => void;
   onReset: () => void;
   className?: string;
   inputId?: string;
@@ -38,6 +39,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
   isInputFocused,
   className,
   onChange,
+  onGroupSelect,
   inputId,
 }) => {
   const lang = useLang();
@@ -103,10 +105,10 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
                 </p>
 
                 <div>
-                  <Icon name="msg-emoji-heart" />
-                  <Icon name="msg-emoji-like" />
-                  <Icon name="msg-emoji-dislike" />
-                  <Icon name="msg-emoji-party" />
+                  <Icon name="msg-emoji-heart" onClick={() => onGroupSelect("Love")}/>
+                  <Icon name="msg-emoji-like" onClick={() => onGroupSelect("Approval")} />
+                  <Icon name="msg-emoji-dislike" onClick={() => onGroupSelect("Disapproval")} />
+                  <Icon name="msg-emoji-party" onClick={() => onGroupSelect("Cheers")} />
                   <Icon name="msg-emoji-haha" />
                   <Icon name="msg-emoji-omg" />
                   <Icon name="msg-emoji-sad" />

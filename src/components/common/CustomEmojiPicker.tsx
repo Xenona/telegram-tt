@@ -142,6 +142,7 @@ type StateProps = {
   isCurrentUserPremium?: boolean;
   isWithPaidReaction?: boolean;
   recentEmojis?: GlobalState["recentEmojis"];
+  emojiGroups?: GlobalState["emojiGroups"];
 };
 
 export const HEADER_BUTTON_WIDTH = 2.5 * REM; // px (including margin)
@@ -199,6 +200,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
   customEmojiFeaturedIds,
   canAnimate,
   recentEmojis,
+  emojiGroups,
   isReactionPicker,
   isStatusPicker,
   isTranslucent,
@@ -322,6 +324,25 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     [emojiKeywords, textToEmojiMap],
     300,
     true,
+  );
+
+  const handleEmojiGroupSelect = useLastCallback(
+    (category: string) => {
+      const groupCat = emojiGroups?.find((g) => g.title === category);
+      if(!groupCat) return;
+      setEmojiQuery("Chirp");
+      console.log("XE XX", category, emojiGroups)
+      console.log("XE xx2", emojiKeywords, textToEmojiMap)
+      
+      const arr: Set<Emoji | ApiSticker> = new Set();
+
+      for (const em of groupCat?.emoticons) {
+        for (const e of textToEmojiMap.get(em) ?? []) {
+          arr.add(e);
+        }
+      }
+      setEmojisFound([...arr.values()]);
+    },
   );
 
   // eslint-disable-next-line no-null/no-null
@@ -826,6 +847,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
           // lang pack should have a proper key
           // @ts-ignore
           onChange={handleEmojiSearchQueryChange}
+          onGroupSelect={handleEmojiGroupSelect}
           inputId="emoji-search"
         />
         {!emojiQuery ? (
@@ -1078,6 +1100,7 @@ export default memo(
           defaultTags,
         },
         recentEmojis,
+        emojiGroups
       } = global;
 
       const isSavedMessages = Boolean(
@@ -1112,6 +1135,7 @@ export default memo(
         availableReactions: isReactionPicker ? availableReactions : undefined,
         defaultTagReactions: isReactionPicker ? defaultTags : undefined,
         recentEmojis,
+        emojiGroups
       };
     },
   )(CustomEmojiPicker),
