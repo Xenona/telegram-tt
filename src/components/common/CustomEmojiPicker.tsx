@@ -667,7 +667,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
 
   console.log("XE categore", { categories });
 
-  const fullClassName = buildClassName("StickerPicker", styles.root, className);
+  const fullClassName = buildClassName("StickerPicker", styles.root, className, "esg-searcheable");
 
   if (!shouldRenderContent) {
     return (

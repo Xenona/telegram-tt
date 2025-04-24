@@ -28,6 +28,18 @@
   display: flex;
 }
 
+:global(.SymbolMenu) {
+
+  .headerHide {
+    top: -3rem;
+  }
+
+  .mainHide {
+    top: -3rem;
+    height: 100%;
+  }
+}
+
 .emojiCategoryStripe {
   display: flex;
   align-items: center;
