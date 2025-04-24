@@ -491,6 +491,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
 
   useHorizontalScroll(headerRef, isMobile || !shouldRenderContent);
 
+
   // Initialize data on first render.
   useEffect(() => {
     setTimeout(() => {
@@ -539,6 +540,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     (entries) => {
       entries.forEach((entry) => {
         const { id } = entry.target as HTMLDivElement;
+        console.log('XE id', id)
         if (!id || !id.startsWith("emoji-category-")) {
           return;
         }
@@ -557,7 +559,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       if (minIntersectingIndex === Infinity) {
         return;
       }
-
+      console.log("XE setting index", minIntersectingIndex)
       setActiveCategoryIndex(minIntersectingIndex);
     },
   );
@@ -698,9 +700,19 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
 
   const selectCategory = useLastCallback((index: number) => {
     setActiveCategoryIndex(index);
-    const categoryEl = containerRef.current!.querySelector(
-      `#emoji-category-${index}`,
-    )! as HTMLElement;
+    let categoryEl;
+
+    if (index == 0) {
+      categoryEl = containerRef.current!.querySelector(
+        `#emoji-search`,
+      )! as HTMLElement;
+
+    } else {
+
+      categoryEl = containerRef.current!.querySelector(
+        `#emoji-category-${index}`,
+      )! as HTMLElement;
+    }
 
     animateScroll({
       container: containerRef.current!,
@@ -710,6 +722,13 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       maxDistance: SMOOTH_SCROLL_DISTANCE,
     });
   });
+
+  useEffect(() => {
+    if (containerRef.current) {
+      selectCategory(0);
+    }
+  }, [containerRef.current]);
+
 
   function renderCategoryButton(category: EmojiCategoryData, index: number) {
     const icon = ICONS_BY_CATEGORY[category.id];
@@ -766,7 +785,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
       >
         <div className={styles.categoriesEmojis}>
           {renderCategoryButton(allCategories[0], 0)}
-          <div className={buildClassName(styles.emojiCategoryStripe)}>
+          <div className={buildClassName(styles.emojiCategoryStripe, activeCategoryIndex>0&&activeCategoryIndex<allCategories.length&&styles.activated)}>
             <div className={canAnimate ? styles.animatedWidth : ""}>
               {allCategories
                 .slice(1)
@@ -798,6 +817,7 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
           // @ts-ignore
           placeholder={lang("Search Emoji")}
           onChange={handleEmojiSearchQueryChange}
+          inputId="emoji-search"
         />
         {!emojiQuery ? (
           <>

@@ -12,7 +12,6 @@ const useCustomBackground = (theme: ThemeKey, settingValue?: string, onBgReady?:
   const [value, setValue] = useState(settingValue);
 
   useEffect(() => {
-    console.log("XEE", theme);
     if (!settingValue) {
       setValue(undefined);
       onBgReady?.();
@@ -23,7 +22,6 @@ const useCustomBackground = (theme: ThemeKey, settingValue?: string, onBgReady?:
       setValue(settingValue);
       onBgReady?.();
     } else {
-      console.log('XE 2')
       cacheApi.fetch(CUSTOM_BG_CACHE_NAME, theme, cacheApi.Type.Blob)
         .then((blob) => {
           const url = URL.createObjectURL(blob);

@@ -505,7 +505,6 @@ function MiddleColumn({
 
   const { renderer, bgRef, animDivRef } = usePatternBg(fillSynced);
 
-  console.log("XE", {fillSynced, customBackgroundValue});
   return (
     <div
       ref={animDivRef}

@@ -3,6 +3,7 @@
 
   height: 100%;
   max-height: calc(100 * var(--vh));
+  overflow: hidden;
 
   :global(.symbol-set-container) {
     --symbol-set-gap-size: 0.625rem;
@@ -53,6 +54,12 @@
       /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
       transition: max-width 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
     }
+
+    // &.activated {
+    //   max-width: 18rem;
+    //   background-color: var(--color-background-selected);
+    //   padding: 0.5rem 0.1875rem;
+    // }
 
     &:hover {
       max-width: 18rem;
