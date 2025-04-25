@@ -791,8 +791,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
         ref={headerRef}
         className={buildClassName(
           headerClassName,
-          isInputFocused || emojiQuery ? styles.headerHide : '',
-          canAnimate ? styles.animatedSlide : '',
+          isInputFocused || emojiQuery ? styles.headerHide : "",
+          canAnimate ? styles.animatedSlide : "",
         )}
       >
         <div className={styles.categoriesEmojis}>
@@ -805,7 +805,13 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               //   styles.activated,
             )}
           >
-            <div className={canAnimate ? styles.animatedWidth : ''}>
+            <div
+              className={buildClassName(canAnimate ? styles.animatedWidth : "",
+                activeCategoryIndex > 0 &&
+                  activeCategoryIndex < allCategories.length &&
+                  styles.activated
+              )}
+            >
               {allCategories
                 .slice(1)
                 .map((e, idx) => renderCategoryButton(e, idx + 1))}
@@ -823,8 +829,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
         onScroll={handleContentScroll}
         className={buildClassName(
           listClassName,
-          isInputFocused || emojiQuery ? styles.mainHide : '',
-          canAnimate ? styles.animatedSlide : '',
+          isInputFocused || emojiQuery ? styles.mainHide : "",
+          canAnimate ? styles.animatedSlide : "",
         )}
       >
         <ScrollableSearchInputWithEmojis
@@ -861,19 +867,20 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
 
                 const emojisPerRow = isMobile
                   ? Math.floor(
-                    (windowSize.get().width
-                        - MOBILE_CONTAINER_PADDING
-                        + EMOJI_MARGIN)
-                        / (EMOJI_SIZE_PICKER + EMOJI_MARGIN),
-                  )
+                      (windowSize.get().width -
+                        MOBILE_CONTAINER_PADDING +
+                        EMOJI_MARGIN) /
+                        (EMOJI_SIZE_PICKER + EMOJI_MARGIN),
+                    )
                   : EMOJIS_PER_ROW_ON_DESKTOP;
-                const height = Math.ceil(
-                  (category.emojis.length
-                      + (recentCustomEmojis?.length ?? 0))
-                      / emojisPerRow,
-                )
-                  * (EMOJI_SIZE_PICKER
-                    + (isMobile
+                const height =
+                  Math.ceil(
+                    (category.emojis.length +
+                      (recentCustomEmojis?.length ?? 0)) /
+                      emojisPerRow,
+                  ) *
+                  (EMOJI_SIZE_PICKER +
+                    (isMobile
                       ? EMOJI_VERTICAL_MARGIN_MOBILE
                       : EMOJI_VERTICAL_MARGIN));
 
@@ -889,57 +896,59 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                       className="shared-canvas"
                       style={undefined}
                     />
-                    <div className="symbol-set-header">
+                    {/* <div className="symbol-set-header">
                       <p className="symbol-set-name" dir="auto">
                         {lang('RecentStickers')}
                       </p>
-                    </div>
+                    </div> */}
                     <div
                       className={buildClassName(
-                        'symbol-set-container',
+                        "symbol-set-container",
                         transitionClassNames,
                       )}
                       style={`height: ${height}px;`}
-                      dir={lang.isRtl ? 'rtl' : undefined}
+                      dir={lang.isRtl ? "rtl" : undefined}
                     >
                       {[...(recentCustomEmojis ?? []), ...category.emojis]
                         .filter((e) => e)
-                        .map((e) => (typeof e === 'string' ? (
-                          renderSmiley(e)
-                        ) : (
-                          <StickerButton
-                            key={e.id}
-                            sticker={e}
-                            size={EMOJI_SIZE_PICKER}
-                            observeIntersection={
-                              observeIntersectionForPlayingItems
-                            }
-                            observeIntersectionForShowing={
-                              observeIntersectionForShowingItems
-                            }
-                            noPlay={!loadAndPlay}
-                            isSavedMessages={isSavedMessages}
-                            isStatusPicker={isStatusPicker}
-                            canViewSet
-                            noContextMenu
-                            isCurrentUserPremium={isCurrentUserPremium}
-                            shouldIgnorePremium={false}
-                            sharedCanvasRef={sharedSearchCanvasRef}
-                            withTranslucentThumb={isTranslucent}
-                            onClick={onCustomEmojiSelect}
-                            clickArg={e}
-                            isSelected={false}
-                            onUnfaveClick={undefined}
-                            onFaveClick={undefined}
-                            onRemoveRecentClick={undefined}
-                            onContextMenuOpen={onContextMenuOpen}
-                            onContextMenuClose={onContextMenuClose}
-                            onContextMenuClick={onContextMenuClick}
-                            forcePlayback={false}
-                            isEffectEmoji={false}
-                            noShowPremium
-                          />
-                        )))}
+                        .map((e) =>
+                          typeof e === "string" ? (
+                            renderSmiley(e)
+                          ) : (
+                            <StickerButton
+                              key={e.id}
+                              sticker={e}
+                              size={EMOJI_SIZE_PICKER}
+                              observeIntersection={
+                                observeIntersectionForPlayingItems
+                              }
+                              observeIntersectionForShowing={
+                                observeIntersectionForShowingItems
+                              }
+                              noPlay={!loadAndPlay}
+                              isSavedMessages={isSavedMessages}
+                              isStatusPicker={isStatusPicker}
+                              canViewSet
+                              noContextMenu
+                              isCurrentUserPremium={isCurrentUserPremium}
+                              shouldIgnorePremium={false}
+                              sharedCanvasRef={sharedSearchCanvasRef}
+                              withTranslucentThumb={isTranslucent}
+                              onClick={onCustomEmojiSelect}
+                              clickArg={e}
+                              isSelected={false}
+                              onUnfaveClick={undefined}
+                              onFaveClick={undefined}
+                              onRemoveRecentClick={undefined}
+                              onContextMenuOpen={onContextMenuOpen}
+                              onContextMenuClose={onContextMenuClose}
+                              onContextMenuClick={onContextMenuClick}
+                              forcePlayback={false}
+                              isEffectEmoji={false}
+                              noShowPremium
+                            />
+                          ),
+                        )}
                     </div>
                   </div>
                 );
@@ -952,8 +961,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                     allEmojis={emojis!}
                     observeIntersection={observeIntersection}
                     shouldRender={
-                      activeCategoryIndex >= i - 1
-                      && activeCategoryIndex <= i + 1
+                      activeCategoryIndex >= i - 1 &&
+                      activeCategoryIndex <= i + 1
                     }
                     onEmojiSelect={onEmojiSelect}
                   />
@@ -961,9 +970,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               }
             })}
             {allSets.map((stickerSet, i) => {
-              const shouldHideHeader = stickerSet.id === TOP_SYMBOL_SET_ID
-                || (stickerSet.id === RECENT_SYMBOL_SET_ID
-                  && (withDefaultTopicIcons || isStatusPicker));
+              const shouldHideHeader =
+                stickerSet.id === TOP_SYMBOL_SET_ID ||
+                (stickerSet.id === RECENT_SYMBOL_SET_ID &&
+                  (withDefaultTopicIcons || isStatusPicker));
               const isChatEmojiSet = stickerSet.id === chatEmojiSetId;
 
               if (stickerSet.id === RECENT_SYMBOL_SET_ID) return undefined;
@@ -991,8 +1001,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                   isReactionPicker={isReactionPicker}
                   shouldHideHeader={shouldHideHeader}
                   withDefaultTopicIcon={
-                    withDefaultTopicIcons
-                    && stickerSet.id === RECENT_SYMBOL_SET_ID
+                    withDefaultTopicIcons &&
+                    stickerSet.id === RECENT_SYMBOL_SET_ID
                   }
                   withDefaultStatusIcon={
                     isStatusPicker && stickerSet.id === RECENT_SYMBOL_SET_ID
@@ -1020,40 +1030,42 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               className="shared-canvas"
               style={undefined}
             />
-            {emojisFound.map((e) => ('native' in e ? (
-              <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
-            ) : (
-              <StickerButton
-                key={e.id}
-                sticker={e}
-                size={EMOJI_SIZE_PICKER}
-                observeIntersection={observeIntersectionForPlayingItems}
-                observeIntersectionForShowing={
-                  observeIntersectionForShowingItems
-                }
-                noPlay={!loadAndPlay}
-                isSavedMessages={isSavedMessages}
-                isStatusPicker={isStatusPicker}
-                canViewSet
-                noContextMenu
-                isCurrentUserPremium={isCurrentUserPremium}
-                shouldIgnorePremium={false}
-                sharedCanvasRef={sharedSearchCanvasRef}
-                withTranslucentThumb={isTranslucent}
-                onClick={onCustomEmojiSelect}
-                clickArg={e}
-                isSelected={false}
-                onUnfaveClick={undefined}
-                onFaveClick={undefined}
-                onRemoveRecentClick={undefined}
-                onContextMenuOpen={onContextMenuOpen}
-                onContextMenuClose={onContextMenuClose}
-                onContextMenuClick={onContextMenuClick}
-                forcePlayback={false}
-                isEffectEmoji={false}
-                noShowPremium
-              />
-            )))}
+            {emojisFound.map((e) =>
+              "native" in e ? (
+                <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
+              ) : (
+                <StickerButton
+                  key={e.id}
+                  sticker={e}
+                  size={EMOJI_SIZE_PICKER}
+                  observeIntersection={observeIntersectionForPlayingItems}
+                  observeIntersectionForShowing={
+                    observeIntersectionForShowingItems
+                  }
+                  noPlay={!loadAndPlay}
+                  isSavedMessages={isSavedMessages}
+                  isStatusPicker={isStatusPicker}
+                  canViewSet
+                  noContextMenu
+                  isCurrentUserPremium={isCurrentUserPremium}
+                  shouldIgnorePremium={false}
+                  sharedCanvasRef={sharedSearchCanvasRef}
+                  withTranslucentThumb={isTranslucent}
+                  onClick={onCustomEmojiSelect}
+                  clickArg={e}
+                  isSelected={false}
+                  onUnfaveClick={undefined}
+                  onFaveClick={undefined}
+                  onRemoveRecentClick={undefined}
+                  onContextMenuOpen={onContextMenuOpen}
+                  onContextMenuClose={onContextMenuClose}
+                  onContextMenuClick={onContextMenuClick}
+                  forcePlayback={false}
+                  isEffectEmoji={false}
+                  noShowPremium
+                />
+              ),
+            )}
           </div>
         ) : emojisCategoryFound.length ? (
           <div className="symbol-set symbol-set-container">
@@ -1062,44 +1074,46 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               className="shared-canvas"
               style={undefined}
             />
-            {emojisCategoryFound.map((e) => ('native' in e ? (
-              <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
-            ) : (
-              <StickerButton
-                key={e.id}
-                sticker={e}
-                size={EMOJI_SIZE_PICKER}
-                observeIntersection={observeIntersectionForPlayingItems}
-                observeIntersectionForShowing={
-                  observeIntersectionForShowingItems
-                }
-                noPlay={!loadAndPlay}
-                isSavedMessages={isSavedMessages}
-                isStatusPicker={isStatusPicker}
-                canViewSet
-                noContextMenu
-                isCurrentUserPremium={isCurrentUserPremium}
-                shouldIgnorePremium={false}
-                sharedCanvasRef={sharedSearchCanvasRef}
-                withTranslucentThumb={isTranslucent}
-                onClick={onCustomEmojiSelect}
-                clickArg={e}
-                isSelected={false}
-                onUnfaveClick={undefined}
-                onFaveClick={undefined}
-                onRemoveRecentClick={undefined}
-                onContextMenuOpen={onContextMenuOpen}
-                onContextMenuClose={onContextMenuClose}
-                onContextMenuClick={onContextMenuClick}
-                forcePlayback={false}
-                isEffectEmoji={false}
-                noShowPremium
-              />
-            )))}
+            {emojisCategoryFound.map((e) =>
+              "native" in e ? (
+                <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
+              ) : (
+                <StickerButton
+                  key={e.id}
+                  sticker={e}
+                  size={EMOJI_SIZE_PICKER}
+                  observeIntersection={observeIntersectionForPlayingItems}
+                  observeIntersectionForShowing={
+                    observeIntersectionForShowingItems
+                  }
+                  noPlay={!loadAndPlay}
+                  isSavedMessages={isSavedMessages}
+                  isStatusPicker={isStatusPicker}
+                  canViewSet
+                  noContextMenu
+                  isCurrentUserPremium={isCurrentUserPremium}
+                  shouldIgnorePremium={false}
+                  sharedCanvasRef={sharedSearchCanvasRef}
+                  withTranslucentThumb={isTranslucent}
+                  onClick={onCustomEmojiSelect}
+                  clickArg={e}
+                  isSelected={false}
+                  onUnfaveClick={undefined}
+                  onFaveClick={undefined}
+                  onRemoveRecentClick={undefined}
+                  onContextMenuOpen={onContextMenuOpen}
+                  onContextMenuClose={onContextMenuClose}
+                  onContextMenuClick={onContextMenuClick}
+                  forcePlayback={false}
+                  isEffectEmoji={false}
+                  noShowPremium
+                />
+              ),
+            )}
           </div>
         ) : (
           // @ts-ignore
-          <p>{lang('No emoji found')}</p>
+          <p>{lang("No emoji found")}</p>
         )}
       </div>
     </div>

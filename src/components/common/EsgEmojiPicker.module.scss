@@ -31,11 +31,11 @@
 :global(.SymbolMenu) {
 
   .headerHide {
-    top: -3rem;
+    top: -2.5rem;
   }
 
   .mainHide {
-    top: -3rem;
+    top: -2.5rem;
     height: 100%;
   }
 }
@@ -43,6 +43,12 @@
 .emojiCategoryStripe {
   display: flex;
   align-items: center;
+
+  & .activated{
+
+   &.icon{
+    font-size: 0.5rem!important;
+   }}
 
   & > div {
     border-radius: 2rem;

@@ -174,7 +174,7 @@ const GifPicker: FC<OwnProps & StateProps> = ({
   }
 
   return (
-    <div>
+    <div className="GifPickerWithSearch">
       <ScrollableSearchInputWithEmojis
         onBlur={setUnfocused}
         onFocus={setFocused}

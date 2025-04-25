@@ -3,6 +3,7 @@
 .root {
   --color-primary: var(--color-text);
   --emoji-size: 4.5rem;
+  overflow: hidden;
 
   height: 100%;
 }
@@ -20,14 +21,14 @@
   overflow-y: auto;
   overflow-x: hidden;
 
-  padding: 0.5rem 0.25rem;
+  padding: 0 0.5rem;
 
-  @include mixins.adapt-padding-to-scrollbar(0.25rem);
+  @include mixins.adapt-padding-to-scrollbar(0.5rem);
 
   &_customEmoji {
-    padding: 0.5rem 0.75rem;
+    padding: 0 0.5rem;
 
-    @include mixins.adapt-padding-to-scrollbar(0.75rem);
+    @include mixins.adapt-padding-to-scrollbar(0.5rem);
   }
 
   :global(.bubble) {
@@ -127,7 +128,7 @@
     top: 0;
 
     &:global(.main-hide) {
-      top: -3rem;
+      top: -2.5rem;
       height: 100%;
     }
 
@@ -143,7 +144,7 @@
 
     &:global(.header-hide) {
 
-      top: -3rem;
+      top: -2.5rem;
     }
 
     &:global(.animated-slide) {
@@ -159,7 +160,7 @@
     top: 0;
 
     &:global(.main-hide) {
-      top: -3rem;
+      top: -2.5rem;
       height: 100%;
     }
 
@@ -175,7 +176,7 @@
 
     &:global(.header-hide) {
 
-      top: -3rem;
+      top: -2.5rem;
     }
 
     &:global(.animated-slide) {
@@ -191,7 +192,7 @@
     top: 0;
 
     &:global(.main-hide) {
-      top: -3rem;
+      top: -2.5rem;
       height: 100%;
     }
 
@@ -207,7 +208,7 @@
 
     &:global(.header-hide) {
 
-      top: -3rem;
+      top: -2.5rem;
     }
 
     &:global(.animated-slide) {

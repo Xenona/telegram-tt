@@ -57,7 +57,7 @@ import Button from '../../ui/Button';
 import Loading from '../../ui/Loading';
 import StickerSetCover from './StickerSetCover';
 
-import headerStyles from '../../common/CustomEmojiPicker.module.scss';
+import headerStyles from '../../common/EsgEmojiPicker.module.scss';
 import styles from './StickerPicker.module.scss';
 
 type OwnProps = {

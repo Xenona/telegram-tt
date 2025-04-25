@@ -172,10 +172,14 @@
       display: block;
     }
   }
+
+  .SearchInput {
+    border-radius: 0.75rem;
+  }
 }
 
 .symbol-set {
-  margin-bottom: 0.75rem;
+  margin: 0.75rem 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -183,7 +187,7 @@
   &-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     color: rgba(var(--color-text-secondary-rgb), 0.75);
   }
 
@@ -213,6 +217,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     text-align: center;
+    font-weight: 500;
   }
 
   &-amount {
