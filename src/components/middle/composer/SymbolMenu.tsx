@@ -209,30 +209,30 @@ const SymbolMenu: FC<OwnProps & StateProps> = ({
             onEmojiSelect={handleEmojiSelect}
           />
         );
-    //   case SymbolMenuTabs.Stickers:
-    //     return (
-    //       <StickerPicker
-    //         className="picker-tab"
-    //         isHidden={!isOpen || !isActive}
-    //         loadAndPlay={canSendStickers ? isOpen && (isActive || isFrom) : false}
-    //         idPrefix={idPrefix}
-    //         canSendStickers={canSendStickers}
-    //         noContextMenus={!isMessageComposer}
-    //         chatId={chatId}
-    //         threadId={threadId}
-    //         isTranslucent={!isMobile && isBackgroundTranslucent}
-    //         onStickerSelect={handleStickerSelect}
-    //       />
-    //     );
-    //   case SymbolMenuTabs.GIFs:
-    //     return (
-    //       <GifPicker
-    //         className="picker-tab"
-    //         loadAndPlay={canSendGifs ? isOpen && (isActive || isFrom) : false}
-    //         canSendGifs={canSendGifs}
-    //         onGifSelect={onGifSelect}
-    //       />
-    //     );
+      case SymbolMenuTabs.Stickers:
+        return (
+          <StickerPicker
+            className="picker-tab"
+            isHidden={!isOpen || !isActive}
+            loadAndPlay={canSendStickers ? isOpen && (isActive || isFrom) : false}
+            idPrefix={idPrefix}
+            canSendStickers={canSendStickers}
+            noContextMenus={!isMessageComposer}
+            chatId={chatId}
+            threadId={threadId}
+            isTranslucent={!isMobile && isBackgroundTranslucent}
+            onStickerSelect={handleStickerSelect}
+          />
+        );
+      case SymbolMenuTabs.GIFs:
+        return (
+          <GifPicker
+            className="picker-tab"
+            loadAndPlay={canSendGifs ? isOpen && (isActive || isFrom) : false}
+            canSendGifs={canSendGifs}
+            onGifSelect={onGifSelect}
+          />
+        );
     }
     return undefined;
   }

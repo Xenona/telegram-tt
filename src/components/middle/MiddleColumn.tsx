@@ -433,7 +433,6 @@ function MiddleColumn({
 
   const [fillSynced, setFillSynced] = useState<WallPaperPatternThemeSettings | undefined>(undefined);
   const onBgLoaded = useLastCallback(() => {
-    console.log('XE message')
     setFillSynced(fill);
   });
   const customBackgroundValue = useCustomBackground(theme, customBackground, onBgLoaded);

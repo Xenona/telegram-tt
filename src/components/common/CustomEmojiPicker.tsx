@@ -78,8 +78,6 @@ import {
   SMOOTH_SCROLL_DISTANCE,
 } from "../middle/composer/EmojiPicker";
 import animateScroll from "../../util/animateScroll";
-import SearchInput from "../ui/SearchInput";
-import { EMOTICON_TO_FOLDER_ICON } from "../left/main/ChatFolders";
 import useDebouncedCallback from "../../hooks/useDebouncedCallback";
 import EmojiCategory, {
   EMOJI_MARGIN,
@@ -564,7 +562,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     (entries) => {
       entries.forEach((entry) => {
         const { id } = entry.target as HTMLDivElement;
-        console.log("XE id", id);
         if (!id || !id.startsWith("emoji-category-")) {
           return;
         }
@@ -799,8 +796,6 @@ const CustomEmojiPicker: FC<OwnProps & StateProps> = ({
     );
   }
 
-  console.log("XE", { activeCategoryIndex });
-  console.log("XE", { emojisCategoryFound, emojisFound, emojiQuery });
 
   return (
     <div className={fullClassName}>
