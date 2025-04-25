@@ -185,6 +185,13 @@ export function updateGifSearch<T extends GlobalState>(
     ];
   }
 
+  global = {
+    ...global,
+    gifSearch: {
+      offset: nextOffset,
+      results: newResults,
+    }
+  }
   return updateTabState(global, {
     gifSearch: {
       ...selectTabState(global, tabId).gifSearch,

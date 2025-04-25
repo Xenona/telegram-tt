@@ -130,6 +130,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     unfaveSticker,
     faveSticker,
     removeRecentSticker,
+    setGifSearchQuery,
   } = getActions();
 
   // eslint-disable-next-line no-null/no-null
