@@ -14,7 +14,7 @@ import animateHorizontalScroll from "../../util/animateHorizontalScroll";
 import buildClassName from "../../util/buildClassName";
 import Button from "../ui/Button";
 import SearchInput from "../ui/SearchInput";
-import { HEADER_BUTTON_WIDTH } from "./CustomEmojiPicker";
+import { HEADER_BUTTON_WIDTH } from "./EsgEmojiPicker";
 import emojiPickerStyles from "./CustomEmojiPicker.module.scss";
 import Icon from "./icons/Icon";
 

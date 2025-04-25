@@ -20,7 +20,7 @@ import useMouseInside from '../../../hooks/useMouseInside';
 import useOldLang from '../../../hooks/useOldLang';
 import useShowTransitionDeprecated from '../../../hooks/useShowTransitionDeprecated';
 
-import CustomEmojiPicker from '../../common/CustomEmojiPicker';
+import CustomEmojiPicker from '../../common/EsgEmojiPicker';
 import Icon from '../../common/icons/Icon';
 import Button from '../../ui/Button';
 import Menu from '../../ui/Menu';
