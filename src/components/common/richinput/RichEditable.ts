@@ -2,6 +2,7 @@ import type { ApiFormattedText } from '../../../api/types';
 import type { Signal } from '../../../util/signals';
 import type { RichInputKeyboardListener } from './Keyboard';
 
+import { requestMeasure } from '../../../lib/fasterdom/fasterdom';
 import { betterExecCommand } from '../../../util/execCommand';
 import focusEditableElement from '../../../util/focusEditableElement';
 import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
@@ -9,12 +10,11 @@ import { createSignal } from '../../../util/signals';
 import { IS_MOBILE, IS_SAFARI, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
-import { BlockQuoteEnterHandler } from './BlockquoteEnter';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 
+import { BlockQuoteEnterHandler } from './BlockquoteEnter';
 import { EditableEmojiRender } from './EditableEmojiRender';
 import { Previewer } from './Previewer';
-import { requestMeasure } from '../../../lib/fasterdom/fasterdom';
 
 const SAFARI_BR = '<br>';
 const WHITESPACE_RE = /\s/;
@@ -65,7 +65,9 @@ export class RichEditable {
   private pasteListener: (e: ClipboardEvent) => void;
 
   public emojiRenderer: EditableEmojiRender;
+
   private blockquoteEnter: BlockQuoteEnterHandler;
+
   public preview: Previewer;
 
   constructor() {

@@ -183,14 +183,14 @@ function doCodePass(tokens: Token[]): Token[] {
         if (currentCode === ApiMessageEntityTypes.Pre) {
           const langAndRest = getPreLanguage(accum);
           if (langAndRest) {
-            let trimmedCnt = accum.length - langAndRest[1].length;
+            const trimmedCnt = accum.length - langAndRest[1].length;
 
             res.push({ type: 'text', str: langAndRest[1] });
             res.push({
               ...token,
               entity: ApiMessageEntityTypes.Pre,
               lang: langAndRest[0],
-              trimmedCnt
+              trimmedCnt,
             });
           } else {
             // invalid pre block

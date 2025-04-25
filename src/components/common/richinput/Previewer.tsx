@@ -1,27 +1,34 @@
-import { ApiFormattedText } from "../../../api/types";
-import { requestMutation } from "../../../lib/fasterdom/fasterdom";
-import React from "../../../lib/teact/teact";
-import TeactDOM from "../../../lib/teact/teact-dom";
-import { createSignal, Signal } from "../../../util/signals";
-import { renderTextWithEntities } from "../helpers/renderTextWithEntities";
-import type { RichEditable } from "./RichEditable";
-import styles from "./Previewer.module.scss"
+import React from '../../../lib/teact/teact';
+import TeactDOM from '../../../lib/teact/teact-dom';
+
+import type { Signal } from '../../../util/signals';
+import type { RichEditable } from './RichEditable';
+import { ApiFormattedText } from '../../../api/types';
+
+import { requestMutation } from '../../../lib/fasterdom/fasterdom';
+import { createSignal } from '../../../util/signals';
+import { renderTextWithEntities } from '../helpers/renderTextWithEntities';
+
+import styles from './Previewer.module.scss';
 
 export class Previewer {
   public root: HTMLElement;
+
   private editable: RichEditable;
+
   private hiddenOnPreview: HTMLElement[];
 
   public isPreviewing: Signal<boolean>;
+
   private setIsPreviewing: (isPreviewing: boolean) => void;
 
   constructor(edtiable: RichEditable) {
     this.editable = edtiable;
-    this.root = document.createElement("div");
+    this.root = document.createElement('div');
     this.root.classList.add(styles.inputPreview);
     this.root.classList.add(styles.previewHidden);
     // While not really a form control, it needs same styles
-    this.root.classList.add("form-control"); 
+    this.root.classList.add('form-control');
 
     this.hiddenOnPreview = [
       this.editable.root,
@@ -31,8 +38,8 @@ export class Previewer {
     ];
     [this.isPreviewing, this.setIsPreviewing] = createSignal(false);
 
-    this.editable.root.addEventListener("focus", () => {
-      console.log("RRR FOCUS END PREVIEW")
+    this.editable.root.addEventListener('focus', () => {
+      console.log('RRR FOCUS END PREVIEW');
       this.endPreview();
     });
   }
@@ -50,7 +57,7 @@ export class Previewer {
 
   startPreview() {
     if (this.isPreviewing()) return;
-    console.log("RRR Started preview");
+    console.log('RRR Started preview');
     this.setIsPreviewing(true);
     this.refreshPreview();
 

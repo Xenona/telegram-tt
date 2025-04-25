@@ -3,11 +3,10 @@ import React, {
 } from '../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../global';
 
-import type { ApiFormattedText, ApiMessage, ApiPeer } from '../../../api/types';
 import type { ThemeKey, WallPaperPatternThemeSettings } from '../../../types';
 import type { GiftOption } from './GiftModal';
 import {
-
+  type ApiFormattedText, type ApiMessage, type ApiPeer,
   type ApiStarsAmount, MAIN_THREAD_ID,
 } from '../../../api/types';
 
@@ -29,7 +28,7 @@ import useThrottledCallback from '../../../hooks/useThrottledCallback';
 
 import PremiumProgress from '../../common/PremiumProgress';
 import RichInput from '../../common/richinput/RichInput';
-import ActionMessage from '../../middle/message/ActionMessage';;
+import ActionMessage from '../../middle/message/ActionMessage';
 import Button from '../../ui/Button';
 import Link from '../../ui/Link';
 import ListItem from '../../ui/ListItem';
@@ -79,7 +78,6 @@ function GiftComposer({
   areUniqueStarGiftsDisallowed,
   shouldDisallowLimitedStarGifts,
 }: OwnProps & StateProps) {
-
   const {
     sendStarGift, sendPremiumGiftByStars, openInvoice, openGiftUpgradeModal, openStarsBalanceModal,
   } = getActions();
@@ -225,12 +223,15 @@ function GiftComposer({
     return (
       <div className={styles.optionsSection}>
 
-        <RichInput
-          richInputCtx={solutionInputCtx}
-          placeholder={lang('GiftMessagePlaceholder')}
-          limitRemaining={captionLimit ? captionLimit - giftMessage.text.length : undefined}
-          disablePreview
-        />
+        {!paidMessagesStars && (
+          <RichInput
+            richInputCtx={solutionInputCtx}
+            placeholder={lang('GiftMessagePlaceholder')}
+            limitRemaining={captionLimit ? captionLimit - giftMessage.text.length : undefined}
+            disablePreview
+          />
+        )}
+
         {canUseStarsPayment && (
           <ListItem className={styles.switcher} narrow ripple onClick={toggleShouldPayByStars}>
             <span>

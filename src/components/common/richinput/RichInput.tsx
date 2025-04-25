@@ -23,7 +23,7 @@ type OwnProps = {
 };
 
 const RichInput: FC<OwnProps> = ({
-  richInputCtx, className, placeholder, limitRemaining, disablePreview
+  richInputCtx, className, placeholder, limitRemaining, disablePreview,
 }) => {
   const fullClass = buildClassName(className,
     'form-control',

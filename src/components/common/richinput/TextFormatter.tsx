@@ -7,8 +7,8 @@ import type { IAnchorPosition } from '../../../types';
 import { ApiMessageEntityTypes } from '../../../api/types';
 
 import { EDITABLE_INPUT_ID } from '../../../config';
-import { ensureProtocol } from '../../../util/browser/url';
 import { requestMutation } from '../../../lib/fasterdom/fasterdom';
+import { ensureProtocol } from '../../../util/browser/url';
 import buildClassName from '../../../util/buildClassName';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import getKeyFromEvent from '../../../util/getKeyFromEvent';
@@ -24,10 +24,10 @@ import useVirtualBackdrop from '../../../hooks/useVirtualBackdrop';
 
 import Button from '../../ui/Button';
 import Icon from '../icons/Icon';
+import { isBlockquote } from './BlockquoteEnter';
 import { RichInputKeyboardPriority } from './Keyboard';
 
 import './TextFormatter.scss';
-import { isBlockquote } from './BlockquoteEnter';
 
 export type OwnProps = {
   richInputCtx: RichInputCtx;
@@ -67,7 +67,7 @@ const TextFormatter: FC<OwnProps> = ({
   isOpen: shouldOpen,
   isActive,
   onClose,
-  disablePreview
+  disablePreview,
 }) => {
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,7 +114,7 @@ const TextFormatter: FC<OwnProps> = ({
     const selectedFormats: ISelectedTextFormats = {};
     let formNode: Node | null = sel.range.commonAncestorContainer;
     while (formNode && formNode !== richInputCtx.editable.root) {
-      const textFormat = (formNode && ("tagName" in formNode)) ? TEXT_FORMAT_BY_TAG_NAME[formNode.tagName as string] : null;
+      const textFormat = (formNode && ('tagName' in formNode)) ? TEXT_FORMAT_BY_TAG_NAME[formNode.tagName as string] : null;
       if (textFormat) {
         selectedFormats[textFormat] = true;
       }
@@ -316,10 +316,10 @@ const TextFormatter: FC<OwnProps> = ({
     if (selectedTextFormats.quote) {
       const selection = window.getSelection();
       if (!selection) return;
-      const r = selection.getRangeAt(0)
+      const r = selection.getRangeAt(0);
       let element: Node | null = r.commonAncestorContainer;
-      
-      while(element && !isBlockquote(element)) {
+
+      while (element && !isBlockquote(element)) {
         element = element.parentElement;
       }
 
@@ -511,14 +511,21 @@ const TextFormatter: FC<OwnProps> = ({
           <Icon name="link" />
         </Button>
         {!disablePreview && <div className="TextFormatter-divider" />}
-        {!disablePreview && <Button color="translucent" ariaLabel={"Preview"} style={`
+        {!disablePreview && (
+          <Button
+            color="translucent"
+            ariaLabel="Preview"
+            style={`
               width: 5rem;
               font-size: 1.3rem;
               text-transform: none;
-        `} onClick={handlePreview}>
-          {/* TODO: Support translations */}
-          Preview
-        </Button>}
+        `}
+            onClick={handlePreview}
+          >
+            {/* TODO: Support translations */}
+            Preview
+          </Button>
+        )}
       </div>
 
       <div className="TextFormatter-link-control">

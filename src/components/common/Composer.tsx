@@ -1080,7 +1080,7 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const handleSendCore = useLastCallback(
     (currentAttachments: ApiAttachment[], isSilent = false, scheduledAt?: number) => {
-    const { text, entities } = richInputCtx.editable.getFormattedText(true);
+      const { text, entities } = richInputCtx.editable.getFormattedText(true);
 
       if (currentAttachments.length) {
         if (canSendAttachments(currentAttachments)) {
@@ -1151,8 +1151,6 @@ const Composer: FC<OwnProps & StateProps> = ({
     }
 
     isSilent = isSilent || isSilentPosting;
-
-
 
     let currentAttachments = attachments;
 

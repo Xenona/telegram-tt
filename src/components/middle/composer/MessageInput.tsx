@@ -232,8 +232,8 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   const handleCloseTextFormatter = useLastCallback(() => {
     closeTextFormatter();
     const sel = window.getSelection();
-    if(sel && sel.rangeCount > 0) {
-      sel.collapseToEnd()
+    if (sel && sel.rangeCount > 0) {
+      sel.collapseToEnd();
     }
   });
 
@@ -532,7 +532,7 @@ const MessageInput: FC<OwnProps & StateProps> = ({
             className={className}
             detached={!isActive}
             tabIndex={0}
-            placeholder={typeof placeholder === 'string' ? placeholder : ""}
+            placeholder={typeof placeholder === 'string' ? placeholder : ''}
             disableEdit={!isAttachmentModalInput && !canSendPlainText}
           />
           {!forcedPlaceholder && (

@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
-import { requestMutation } from "../lib/fasterdom/fasterdom";
-import { fastRaf } from "./schedulers";
+import { requestMutation } from '../lib/fasterdom/fasterdom';
+import { fastRaf } from './schedulers';
 
 export type AnimBgColor = [number, number, number, number];
 export type AnimBgColorPoints = [
@@ -111,7 +111,7 @@ export abstract class BaseAnimBgRender {
     if (this.container) {
       this.resObserver = new ResizeObserver((e) => {
         requestMutation(() => {
-          if (e[0]?.contentRect.width == 0) return;
+          if (e[0]?.contentRect.width === 0) return;
           this.canvas.width = e[0]?.contentRect?.width ?? 50;
           this.canvas.height = e[0]?.contentRect?.height ?? 50;
           this.syncState();
@@ -148,8 +148,7 @@ export abstract class BaseAnimBgRender {
   protected abstract render(progress?: number): void;
 
   protected getTransitionProgress(): number {
-    let transitionProgress =
-      (performance.now() - this.transitionStart) / TRANSITION_TIME;
+    let transitionProgress = (performance.now() - this.transitionStart) / TRANSITION_TIME;
     if (transitionProgress > 1) {
       transitionProgress = 1;
     }
