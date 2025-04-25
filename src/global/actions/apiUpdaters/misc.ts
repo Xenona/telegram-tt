@@ -94,7 +94,7 @@ addActionHandler('apiUpdate', (global, actions, update): ActionReturnType => {
 
     case 'updateEmojiGroups':
       actions.loadEmojiGroups();
-     break;
+      break;
 
     case 'updateSavedReactionTags':
       actions.loadSavedReactionTags();

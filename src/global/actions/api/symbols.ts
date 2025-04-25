@@ -833,11 +833,11 @@ addActionHandler('loadEmojiGroups', async (global): Promise<void> => {
     return;
   }
 
-  global = getGlobal(); 
+  global = getGlobal();
   global = {
     ...global,
     emojiGroups: result,
-  }
+  };
   setGlobal(global);
 });
 

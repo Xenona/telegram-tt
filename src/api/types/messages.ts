@@ -102,7 +102,7 @@ export type ApiEmojiGroup = {
   title: string;
   iconEmojiId: string;
   emoticons: string[];
-}
+};
 
 export interface ApiVideo {
   mediaType: 'video';

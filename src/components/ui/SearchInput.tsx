@@ -157,18 +157,18 @@ const SearchInput: FC<OwnProps> = ({
       >
         {isLoading && !withBackIcon ? (
           <Loading color={spinnerColor} backgroundColor={spinnerBackgroundColor} onClick={onSpinnerClick} />
-        ) : withBackIcon ? ( backIconAsButton ? (
+        ) : withBackIcon ? (backIconAsButton ? (
           <Button
-              round
-              size="tiny"
-              color="translucent"
-              onClick={onReset}
-            >
-            <Icon name="arrow-left" className="back-icon"  />
-            </Button>
-        ) :
-        <Icon name="arrow-left" className="back-icon" onClick={onReset} />
-       ): (
+            round
+            size="tiny"
+            color="translucent"
+            onClick={onReset}
+          >
+            <Icon name="arrow-left" className="back-icon" />
+          </Button>
+        )
+          : <Icon name="arrow-left" className="back-icon" onClick={onReset} />
+        ) : (
           <Icon name="search" className="search-icon" />
         )}
       </Transition>
@@ -213,28 +213,30 @@ const SearchInput: FC<OwnProps> = ({
           <Icon name="down" />
         </Button>
       )}
-      {hasTransition &&<Transition
-        name="fade"
-        shouldCleanup
-        activeKey={Number(isLoading)}
-        className="icon-container-right"
-        slideClassName="icon-container-slide"
-      >
-        {withBackIcon && isLoading ? (
-          <Loading color={spinnerColor} backgroundColor={spinnerBackgroundColor} onClick={onSpinnerClick} />
-        ) : (
-          (value || canClose) && onReset && (
-            <Button
-              round
-              size="tiny"
-              color="translucent"
-              onClick={onReset}
-            >
-              <Icon name="close" />
-            </Button>
-          )
-        )}
-      </Transition>}
+      {hasTransition && (
+        <Transition
+          name="fade"
+          shouldCleanup
+          activeKey={Number(isLoading)}
+          className="icon-container-right"
+          slideClassName="icon-container-slide"
+        >
+          {withBackIcon && isLoading ? (
+            <Loading color={spinnerColor} backgroundColor={spinnerBackgroundColor} onClick={onSpinnerClick} />
+          ) : (
+            (value || canClose) && onReset && (
+              <Button
+                round
+                size="tiny"
+                color="translucent"
+                onClick={onReset}
+              >
+                <Icon name="close" />
+              </Button>
+            )
+          )}
+        </Transition>
+      )}
     </div>
   );
 };

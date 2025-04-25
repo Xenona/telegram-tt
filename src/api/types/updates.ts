@@ -125,7 +125,7 @@ export type ApiUpdateChatJoin = {
 
 export type ApiUpdateEmojiGroups = {
   '@type': 'updateEmojiGroups';
-}
+};
 
 export type ApiUpdateChatLeave = {
   '@type': 'updateChatLeave';

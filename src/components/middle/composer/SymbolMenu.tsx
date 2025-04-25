@@ -26,7 +26,6 @@ import Button from '../../ui/Button';
 import Menu from '../../ui/Menu';
 import Portal from '../../ui/Portal';
 import Transition from '../../ui/Transition';
-import EmojiPicker from './EmojiPicker';
 import GifPicker from './GifPicker';
 import StickerPicker from './StickerPicker';
 import SymbolMenuFooter, { SYMBOL_MENU_TAB_TITLES, SymbolMenuTabs } from './SymbolMenuFooter';
