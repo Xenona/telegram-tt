@@ -30,7 +30,6 @@ type OwnProps = {
   inputId?: string;
 };
 
-
 const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
   onBlur,
   onReset,
@@ -64,14 +63,48 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
 
   const canAnimate = selectCanAnimateInterface(getGlobal());
 
+  const groups = [
+    { name: "msg-emoji-heart", group_name: "Love" },
+    { name: "msg-emoji-like", group_name: "Approval" },
+    { name: "msg-emoji-dislike", group_name: "Disapproval" },
+    { name: "msg-emoji-party", group_name: "Cheers" },
+    { name: "msg-emoji-haha", group_name: "Laughter" },
+    { name: "msg-emoji-omg", group_name: "Astonishment" },
+    { name: "msg-emoji-sad", group_name: "Sadness" },
+    { name: "msg-emoji-angry", group_name: "Anger" },
+    { name: "msg-emoji-neutral", group_name: "Neutral" },
+    { name: "msg-emoji-what", group_name: "Doubt" },
+    { name: "msg-emoji-tongue", group_name: "Silly" },
+    { name: "msg-emoji-happy", group_name: "" },
+    { name: "msg-emoji-activities2", group_name: "" },
+    { name: "msg-emoji-away", group_name: "" },
+    { name: "msg-emoji-bath", group_name: "" },
+    { name: "msg-emoji-busy", group_name: "" },
+    { name: "msg-emoji-food", group_name: "" },
+    { name: "msg-emoji-hi2", group_name: "" },
+    { name: "msg-emoji-home", group_name: "" },
+    { name: "msg-emoji-sleep", group_name: "" },
+    { name: "msg-emoji-study", group_name: "" },
+    { name: "msg-emoji-vacation3", group_name: "" },
+    { name: "msg-emoji-work", group_name: "" },
+  ];
+
+  const [activeGroup, setActiveGroup] = useState<string|null>(null);
+
+  const onInputReset = () => {
+    setActiveGroup(null);
+    onReset()
+  }
 
   return (
     <SearchInput
       onBlur={onBlur}
       onFocus={onFocus}
       value={emojiQuery}
-      hasTransition={false}
-      onReset={onReset}
+      // hasTransition={false}
+      withBackIcon={activeGroup !== null}
+      backIconAsButton
+      onReset={onInputReset}
       className={buildClassName(
         emojiPickerStyles.SearchInput,
         className,
@@ -93,52 +126,49 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
                   canAnimate && "animated",
                 )}
                 ref={headerRef}
-                >
+              >
                 <p
                   className={buildClassName(
                     emojiQuery && "hidden",
                     canAnimate && "animated",
                   )}
-                  >
+                >
                   {/* @ts-ignore */}
                   {lang("Search Emoji")}
                 </p>
 
                 <div>
-                  <Icon name="msg-emoji-heart" onClick={() => onGroupSelect("Love")}/>
-                  <Icon name="msg-emoji-like" onClick={() => onGroupSelect("Approval")} />
-                  <Icon name="msg-emoji-dislike" onClick={() => onGroupSelect("Disapproval")} />
-                  <Icon name="msg-emoji-party" onClick={() => onGroupSelect("Cheers")} />
-                  <Icon name="msg-emoji-haha" />
-                  <Icon name="msg-emoji-omg" />
-                  <Icon name="msg-emoji-sad" />
-                  <Icon name="msg-emoji-sad" />
-                  <Icon name="msg-emoji-angry" />
-                  <Icon name="msg-emoji-neutral" />
-                  <Icon name="msg-emoji-what" />
-                  <Icon name="msg-emoji-tongue" />
-                  <Icon name="msg-emoji-happy" />
-                  <Icon name="msg-emoji-activities2" />
-                  <Icon name="msg-emoji-away" />
-                  <Icon name="msg-emoji-bath" />
-                  <Icon name="msg-emoji-busy" />
-                  <Icon name="msg-emoji-food" />
-                  <Icon name="msg-emoji-hi2" />
-                  <Icon name="msg-emoji-home" />
-                  <Icon name="msg-emoji-sleep" />
-                  <Icon name="msg-emoji-study" />
-                  <Icon name="msg-emoji-vacation3" />
-                  <Icon name="msg-emoji-work" />
+                  {groups.map((group, index) => (
+                     <Button
+                     round
+                     size="tiny"
+                     color="translucent"
+                     onClick={()=> {
+                      onFocus();
+                      setActiveGroup(group.group_name);
+                      onGroupSelect(group.group_name);
+                     }}
+                     className={buildClassName(
+                       emojiQuery && "visible",
+                       canAnimate && "animated",
+                     )}
+                   >
+                     <Icon
+                       name={group.name as any}
+                     />
+                   </Button>
+                  ))}
+
                 </div>
               </div>
             </>
           }
-          {
+          {/* {
             <Button
               round
               size="tiny"
               color="translucent"
-              onClick={onReset}
+              onClick={onInputReset}
               className={buildClassName(
                 "close-button",
                 emojiQuery && "visible",
@@ -147,7 +177,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
             >
               <Icon name="close" />
             </Button>
-          }
+          } */}
         </div>
       }
       // withBackIcon={isInputFocused}

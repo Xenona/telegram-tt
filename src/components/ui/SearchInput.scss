@@ -123,22 +123,6 @@
       padding-left: 0.2rem;
     }
 
-    .close-button {
-      position: absolute;
-      right: 2.5rem;
-      opacity: 0;
-      z-index: 1;
-      pointer-events: all;
-
-      &.visible {
-        opacity: 1;
-      }
-
-      &.animated {
-        transition: opacity 0.2s ease;
-      }
-    }
-
     .placeholder-with-categories {
       position: absolute;
       top: 0;
@@ -163,6 +147,7 @@
 
         &.hidden {
           opacity: 0;
+          pointer-events: none;
         }
       }
 
@@ -191,6 +176,7 @@
 
       &.hidden {
         opacity: 0;
+        pointer-events: none;
       }
 
       &.animated {

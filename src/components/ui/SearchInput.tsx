@@ -39,6 +39,7 @@ type OwnProps = {
   hasDownButton?: boolean;
   teactExperimentControlled?: boolean;
   withBackIcon?: boolean;
+  backIconAsButton?: boolean;
   hasTransition?: boolean;
   onChange: (value: string) => void;
   onStartBackspace?: NoneToVoidFunction;
@@ -72,6 +73,7 @@ const SearchInput: FC<OwnProps> = ({
   hasDownButton,
   teactExperimentControlled,
   withBackIcon,
+  backIconAsButton = false,
   onChange,
   onStartBackspace,
   onReset,
@@ -155,9 +157,18 @@ const SearchInput: FC<OwnProps> = ({
       >
         {isLoading && !withBackIcon ? (
           <Loading color={spinnerColor} backgroundColor={spinnerBackgroundColor} onClick={onSpinnerClick} />
-        ) : withBackIcon ? (
-          <Icon name="arrow-left" className="back-icon" onClick={onReset} />
-        ) : (
+        ) : withBackIcon ? ( backIconAsButton ? (
+          <Button
+              round
+              size="tiny"
+              color="translucent"
+              onClick={onReset}
+            >
+            <Icon name="arrow-left" className="back-icon"  />
+            </Button>
+        ) :
+        <Icon name="arrow-left" className="back-icon" onClick={onReset} />
+       ): (
           <Icon name="search" className="search-icon" />
         )}
       </Transition>
