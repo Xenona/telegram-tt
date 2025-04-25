@@ -25,6 +25,8 @@ import "./GifPicker.scss";
 import ScrollableSearchInputWithEmojis from "../../common/ScrollableSearchInputWithEmojis";
 import useFlag from "../../../hooks/useFlag";
 import useLang from "../../../hooks/useLang";
+import { GlobalState } from "../../../global/types";
+import InfiniteScroll from "../../ui/InfiniteScroll";
 
 type OwnProps = {
   className: string;
@@ -40,9 +42,13 @@ type OwnProps = {
 type StateProps = {
   savedGifs?: ApiVideo[];
   isSavedMessages?: boolean;
+  gifSearch: GlobalState["gifSearch"]
 };
 
 const INTERSECTION_DEBOUNCE = 300;
+
+const PRELOAD_BACKWARDS = 96; // GIF Search bot results are multiplied by 24
+
 
 const GifPicker: FC<OwnProps & StateProps> = ({
   className,
@@ -51,8 +57,9 @@ const GifPicker: FC<OwnProps & StateProps> = ({
   savedGifs,
   isSavedMessages,
   onGifSelect,
+  gifSearch,
 }) => {
-  const { loadSavedGifs, saveGif, setGifSearchQuery } = getActions();
+  const { loadSavedGifs, saveGif, setGifSearchQuery, searchMoreGifs } = getActions();
 
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,7 +73,8 @@ const GifPicker: FC<OwnProps & StateProps> = ({
   };
 
   const handleEmojiSearchQueryChange = (e: string) => {
-    setGifSearchQuery({ query: e });
+    console.log("XXX 1", { query: e, tabId: -1 });
+    setGifSearchQuery({ query: e, tabId: -1 });
   };
 
   //   const handleEmojiSearchQueryChange = useDebouncedCallback(
@@ -127,10 +135,43 @@ const GifPicker: FC<OwnProps & StateProps> = ({
 
     // setEmojisCategoryFound([...arr.values()]);
   });
+
+  const handleSearchMoreGifs = useLastCallback(() => {
+    searchMoreGifs({ tabId: -1 });
+  });
+
   const lang = useLang();
 
 
   const canRenderContents = useAsyncRendering([], SLIDE_TRANSITION_DURATION);
+
+  const results = gifSearch.query ? gifSearch.results : savedGifs;
+  console.log("XXX", results, gifSearch);
+  function renderContent() {
+    if (!results) {
+      return (
+        <Loading />
+      );
+    }
+
+    if (!results.length) {
+      return (
+        <p className="helper-text" dir="auto">{lang('NoGIFsFound')}</p>
+      );
+    }
+
+    return results.map((gif) => (
+      <GifButton
+        key={gif.id}
+        gif={gif}
+        observeIntersection={observeIntersection}
+        isDisabled={!loadAndPlay}
+        onClick={canSendGifs ? onGifSelect : undefined}
+        onUnsaveClick={handleUnsaveClick}
+        isSavedMessages={isSavedMessages}
+      />
+    ));
+  }
 
   return (
     <div>
@@ -147,36 +188,29 @@ const GifPicker: FC<OwnProps & StateProps> = ({
         onGroupSelect={handleEmojiGroupSelect}
         inputId="emoji-search"
       />
-      <div
+      <InfiniteScroll
         ref={containerRef}
         className={buildClassName(
           "GifPicker",
           className,
           IS_TOUCH_ENV ? "no-scrollbar" : "custom-scroll",
         )}
+        items={results}
+        itemSelector=".GifButton"
+        preloadBackwards={PRELOAD_BACKWARDS}
+        noFastList
+        onLoadMore={handleSearchMoreGifs}
       >
         {!canSendGifs ? (
           <div className="picker-disabled">
             Sending GIFs is not allowed in this chat.
           </div>
-        ) : canRenderContents && savedGifs && savedGifs.length ? (
-          savedGifs.map((gif) => (
-            <GifButton
-              key={gif.id}
-              gif={gif}
-              observeIntersection={observeIntersection}
-              isDisabled={!loadAndPlay}
-              onClick={canSendGifs ? onGifSelect : undefined}
-              onUnsaveClick={handleUnsaveClick}
-              isSavedMessages={isSavedMessages}
-            />
-          ))
-        ) : canRenderContents && savedGifs ? (
-          <div className="picker-disabled">No saved GIFs.</div>
+        ) : canRenderContents ? (
+            renderContent()
         ) : (
           <Loading />
         )}
-      </div>
+      </InfiniteScroll>
     </div>
   );
 };
@@ -189,6 +223,7 @@ export default memo(
     return {
       savedGifs: global.gifs.saved.gifs,
       isSavedMessages,
+      gifSearch: global.gifSearch,
     };
   })(GifPicker),
 );

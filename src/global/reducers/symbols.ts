@@ -172,7 +172,7 @@ export function updateGifSearch<T extends GlobalState>(
   global: T, isNew: boolean, results: ApiVideo[], nextOffset?: string,
   ...[tabId = getCurrentTabId()]: TabArgs<T>
 ): T {
-  const { results: currentResults } = selectTabState(global, tabId).gifSearch;
+  const { results: currentResults } = tabId < 0 ? global.gifSearch : selectTabState(global, tabId).gifSearch;
 
   let newResults!: ApiVideo[];
   if (isNew || !currentResults) {
@@ -185,13 +185,17 @@ export function updateGifSearch<T extends GlobalState>(
     ];
   }
 
-  global = {
-    ...global,
-    gifSearch: {
-      offset: nextOffset,
-      results: newResults,
+  if(tabId < 0) {
+    return{
+      ...global,
+      gifSearch: {
+        ...global.gifSearch,
+        offset: nextOffset,
+        results: newResults,
+      }
     }
   }
+
   return updateTabState(global, {
     gifSearch: {
       ...selectTabState(global, tabId).gifSearch,

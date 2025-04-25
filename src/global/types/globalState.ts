@@ -383,6 +383,12 @@ export type GlobalState = {
     };
   };
 
+  gifSearch: {
+    query?: string;
+    offset?: string;
+    results?: ApiVideo[];
+  }
+
   topPeers: {
     userIds?: string[];
     lastRequestedAt?: number;

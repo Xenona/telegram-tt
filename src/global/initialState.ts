@@ -250,6 +250,8 @@ export const INITIAL_GLOBAL_STATE: GlobalState = {
     saved: {},
   },
 
+  gifSearch: {},
+
   topPeers: {},
 
   topInlineBots: {},

@@ -702,7 +702,7 @@ addActionHandler('setGifSearchQuery', (global, actions, payload): ActionReturnTy
 
 addActionHandler('searchMoreGifs', (global, actions, payload): ActionReturnType => {
   const { tabId = getCurrentTabId() } = payload || {};
-  const { query, offset } = selectTabState(global, tabId).gifSearch;
+  const { query, offset } = (tabId < 0) ? global.gifSearch : selectTabState(global, tabId).gifSearch;
 
   if (typeof query === 'string') {
     void searchThrottled(() => {
