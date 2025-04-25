@@ -185,15 +185,15 @@ export function updateGifSearch<T extends GlobalState>(
     ];
   }
 
-  if(tabId < 0) {
-    return{
+  if (tabId < 0) {
+    return {
       ...global,
       gifSearch: {
         ...global.gifSearch,
         offset: nextOffset,
         results: newResults,
-      }
-    }
+      },
+    };
   }
 
   return updateTabState(global, {

@@ -18,7 +18,7 @@ addActionHandler('setStickerSearchQuery', (global, actions, payload): ActionRetu
 addActionHandler('setGifSearchQuery', (global, actions, payload): ActionReturnType => {
   const { query, tabId = getCurrentTabId() } = payload!;
 
-  if(tabId < 0) {
+  if (tabId < 0) {
     return {
       ...global,
       gifSearch: {
@@ -27,7 +27,7 @@ addActionHandler('setGifSearchQuery', (global, actions, payload): ActionReturnTy
         // offsetId: undefined,
         results: undefined,
       },
-    }
+    };
   }
 
   return updateTabState(global, {

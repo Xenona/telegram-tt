@@ -5,22 +5,25 @@ import React, {
   useRef,
   useState,
 } from '../../lib/teact/teact';
-import { getActions, getGlobal } from '../../global';
+import { getGlobal } from '../../global';
 
 import { selectCanAnimateInterface } from '../../global/selectors';
 import animateHorizontalScroll from '../../util/animateHorizontalScroll';
 import buildClassName from '../../util/buildClassName';
+import { REM } from './helpers/mediaDimensions';
 
 import useAppLayout from '../../hooks/useAppLayout';
 import useHorizontalScroll from '../../hooks/useHorizontalScroll';
 import useLang from '../../hooks/useLang';
+import useLastCallback from '../../hooks/useLastCallback';
 
 import Button from '../ui/Button';
 import SearchInput from '../ui/SearchInput';
-import { HEADER_BUTTON_WIDTH } from './EsgEmojiPicker';
 import Icon from './icons/Icon';
 
 import emojiPickerStyles from './CustomEmojiPicker.module.scss';
+
+export const HEADER_BUTTON_WIDTH = 2.625 * REM; // px (including margin)
 
 type OwnProps = {
   onBlur: () => void;
@@ -39,17 +42,17 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
   onReset,
   onFocus,
   emojiQuery,
-  isInputFocused,
   className,
   onChange,
   onGroupSelect,
   inputId,
 }) => {
   const lang = useLang();
+  // eslint-disable-next-line no-null/no-null
   const headerRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useAppLayout();
 
-  useHorizontalScroll(headerRef, isMobile);
+  useHorizontalScroll(headerRef, isMobile, true);
   const [activeSetIndex, setActiveSetIndex] = useState(0);
 
   useEffect(() => {
@@ -92,12 +95,12 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
     { name: 'msg-emoji-work', group_name: '' },
   ];
 
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
+  const [activeGroup, setActiveGroup] = useState<string | undefined>(undefined);
 
-  const onInputReset = () => {
-    setActiveGroup(null);
+  const onInputReset = useLastCallback(() => {
+    setActiveGroup(undefined);
     onReset();
-  };
+  });
 
   return (
     <SearchInput
@@ -105,7 +108,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
       onFocus={onFocus}
       value={emojiQuery}
       // hasTransition={false}
-      withBackIcon={activeGroup !== null}
+      withBackIcon={activeGroup !== undefined}
       backIconAsButton
       onReset={onInputReset}
       className={buildClassName(
@@ -117,72 +120,77 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
       // placeholder={lang("Search Emoji")}
       onChange={onChange}
       inputId={inputId ?? ''}
-      children={(
-        <div className={buildClassName('placeholder-with-categories')}>
-          {
-            <div
-              className={buildClassName(
-                'emoji-categories',
-                'no-scrollbar',
-                emojiQuery && 'hidden',
-                canAnimate && 'animated',
-              )}
-              ref={headerRef}
-            >
-              <p
+      // children={(
+
+      //     }
+      //     {/* {
+      //       <Button
+      //         round
+      //         size="tiny"
+      //         color="translucent"
+      //         onClick={onInputReset}
+      //         className={buildClassName(
+      //           "close-button",
+      //           emojiQuery && "visible",
+      //           canAnimate && "animated",
+      //         )}
+      //       >
+      //         <Icon name="close" />
+      //       </Button>
+      //     } */}
+      // )}
+      // withBackIcon={isInputFocused}
+    >
+      <div className={buildClassName('placeholder-with-categories')}>
+
+        <div
+          className={buildClassName(
+            'emoji-categories',
+            'no-scrollbar',
+            emojiQuery && 'hidden',
+            canAnimate && 'animated',
+          )}
+          ref={headerRef}
+        >
+          <p
+            className={buildClassName(
+              emojiQuery && 'hidden',
+              canAnimate && 'animated',
+            )}
+          >
+            {/* @ts-ignore */}
+            {lang('Search Emoji')}
+          </p>
+
+          <div>
+            {groups.map((group, index) => (
+              <Button
+                round
+                size="tiny"
+                color="translucent"
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={() => {
+                  onFocus();
+                  setActiveSetIndex(index);
+                  setActiveGroup(group.group_name);
+                  onGroupSelect(group.group_name);
+                }}
                 className={buildClassName(
-                  emojiQuery && 'hidden',
+                  emojiQuery && 'visible',
                   canAnimate && 'animated',
                 )}
               >
-                {/* @ts-ignore */}
-                {lang('Search Emoji')}
-              </p>
+                <Icon
+                  name={group.name as any}
+                />
+              </Button>
+            ))}
 
-              <div>
-                {groups.map((group, index) => (
-                  <Button
-                    round
-                    size="tiny"
-                    color="translucent"
-                    onClick={() => {
-                      onFocus();
-                      setActiveGroup(group.group_name);
-                      onGroupSelect(group.group_name);
-                    }}
-                    className={buildClassName(
-                      emojiQuery && 'visible',
-                      canAnimate && 'animated',
-                    )}
-                  >
-                    <Icon
-                      name={group.name as any}
-                    />
-                  </Button>
-                ))}
-
-              </div>
-            </div>
-          }
-          {/* {
-            <Button
-              round
-              size="tiny"
-              color="translucent"
-              onClick={onInputReset}
-              className={buildClassName(
-                "close-button",
-                emojiQuery && "visible",
-                canAnimate && "animated",
-              )}
-            >
-              <Icon name="close" />
-            </Button>
-          } */}
+          </div>
         </div>
-      )}
-      // withBackIcon={isInputFocused}
-    />
+
+      </div>
+    </SearchInput>
   );
 };
 

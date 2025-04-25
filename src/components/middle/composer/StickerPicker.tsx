@@ -106,7 +106,6 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
   isHidden,
   isTranslucent,
   loadAndPlay,
-  customEmojisById,
   canSendStickers,
   emojiGroups,
   recentStickers,
@@ -130,7 +129,6 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     unfaveSticker,
     faveSticker,
     removeRecentSticker,
-    setGifSearchQuery,
   } = getActions();
 
   // eslint-disable-next-line no-null/no-null
@@ -147,7 +145,6 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
   // eslint-disable-next-line no-null/no-null
   const sharedSearchCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [emojis, setEmojis] = useState<ApiSticker[]>([]);
   const [emojiQuery, setEmojiQuery] = useState<string>('');
 
   const textToEmojiMap = useMemo(() => {
@@ -176,7 +173,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     }
 
     return textToEmoji;
-  }, [emojis, customEmojisById]);
+  }, []);
 
   const handleEmojiSearchQueryChange = useDebouncedCallback(
     (query: string) => {
@@ -212,7 +209,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
 
     const arr: Set<ApiSticker> = new Set();
 
-    for (const em of groupCat?.emoticons) {
+    for (const em of groupCat?.emoticons ?? []) {
       for (const e of textToEmojiMap.get(em) ?? []) {
         arr.add(e);
       }
@@ -377,6 +374,12 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     removeRecentSticker({ sticker });
   });
 
+  const onReset = useLastCallback(() => {
+    setEmojiQuery('');
+    setEmojisFound([]);
+    setEmojisCategoryFound([]);
+  });
+
   if (!chat) return undefined;
 
   function renderCover(
@@ -449,11 +452,6 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
       );
     }
   }
-  const onReset = () => {
-    setEmojiQuery('');
-    setEmojisFound([]);
-    setEmojisCategoryFound([]);
-  };
 
   const fullClassName = buildClassName(
     'StickerPicker',

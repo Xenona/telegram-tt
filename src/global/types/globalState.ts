@@ -387,7 +387,7 @@ export type GlobalState = {
     query?: string;
     offset?: string;
     results?: ApiVideo[];
-  }
+  };
 
   topPeers: {
     userIds?: string[];

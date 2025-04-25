@@ -1,32 +1,32 @@
-import type { FC } from "../../../lib/teact/teact";
+import type { FC } from '../../../lib/teact/teact';
 import React, {
   memo,
   useEffect,
   useRef,
   useState,
-} from "../../../lib/teact/teact";
-import { getActions, withGlobal } from "../../../global";
+} from '../../../lib/teact/teact';
+import { getActions, withGlobal } from '../../../global';
 
-import type { ApiVideo } from "../../../api/types";
+import type { ApiVideo } from '../../../api/types';
+import type { GlobalState } from '../../../global/types';
 
 import { SLIDE_TRANSITION_DURATION } from '../../../config';
 import { selectCurrentMessageList, selectIsChatWithSelf } from '../../../global/selectors';
 import { IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
 
-import { useIntersectionObserver } from "../../../hooks/useIntersectionObserver";
-import useLastCallback from "../../../hooks/useLastCallback";
-import useAsyncRendering from "../../right/hooks/useAsyncRendering";
+import useFlag from '../../../hooks/useFlag';
+import { useIntersectionObserver } from '../../../hooks/useIntersectionObserver';
+import useLang from '../../../hooks/useLang';
+import useLastCallback from '../../../hooks/useLastCallback';
+import useAsyncRendering from '../../right/hooks/useAsyncRendering';
 
-import GifButton from "../../common/GifButton";
-import Loading from "../../ui/Loading";
+import GifButton from '../../common/GifButton';
+import ScrollableSearchInputWithEmojis from '../../common/ScrollableSearchInputWithEmojis';
+import InfiniteScroll from '../../ui/InfiniteScroll';
+import Loading from '../../ui/Loading';
 
-import "./GifPicker.scss";
-import ScrollableSearchInputWithEmojis from "../../common/ScrollableSearchInputWithEmojis";
-import useFlag from "../../../hooks/useFlag";
-import useLang from "../../../hooks/useLang";
-import { GlobalState } from "../../../global/types";
-import InfiniteScroll from "../../ui/InfiniteScroll";
+import './GifPicker.scss';
 
 type OwnProps = {
   className: string;
@@ -42,13 +42,12 @@ type OwnProps = {
 type StateProps = {
   savedGifs?: ApiVideo[];
   isSavedMessages?: boolean;
-  gifSearch: GlobalState["gifSearch"]
+  gifSearch: GlobalState['gifSearch'];
 };
 
 const INTERSECTION_DEBOUNCE = 300;
 
 const PRELOAD_BACKWARDS = 96; // GIF Search bot results are multiplied by 24
-
 
 const GifPicker: FC<OwnProps & StateProps> = ({
   className,
@@ -59,23 +58,24 @@ const GifPicker: FC<OwnProps & StateProps> = ({
   onGifSelect,
   gifSearch,
 }) => {
-  const { loadSavedGifs, saveGif, setGifSearchQuery, searchMoreGifs } = getActions();
+  const {
+    loadSavedGifs, saveGif, setGifSearchQuery, searchMoreGifs,
+  } = getActions();
 
   // eslint-disable-next-line no-null/no-null
   const containerRef = useRef<HTMLDivElement>(null);
-  const [emojiQuery, setEmojiQuery] = useState<string>("");
+  const [emojiQuery, setEmojiQuery] = useState<string>('');
 
   const [isInputFocused, setFocused, setUnfocused] = useFlag();
-  const onReset = () => {
-    setEmojiQuery("");
+  const onReset = useLastCallback(() => {
+    setEmojiQuery('');
     // setEmojisFound([]);
     // setEmojisCategoryFound([]);
-  };
+  });
 
-  const handleEmojiSearchQueryChange = (e: string) => {
-    console.log("XXX 1", { query: e, tabId: -1 });
+  const handleEmojiSearchQueryChange = useLastCallback((e: string) => {
     setGifSearchQuery({ query: e, tabId: -1 });
-  };
+  });
 
   //   const handleEmojiSearchQueryChange = useDebouncedCallback(
   //   (query: string) => {
@@ -142,11 +142,9 @@ const GifPicker: FC<OwnProps & StateProps> = ({
 
   const lang = useLang();
 
-
   const canRenderContents = useAsyncRendering([], SLIDE_TRANSITION_DURATION);
 
   const results = gifSearch.query ? gifSearch.results : savedGifs;
-  console.log("XXX", results, gifSearch);
   function renderContent() {
     if (!results) {
       return (
@@ -183,7 +181,7 @@ const GifPicker: FC<OwnProps & StateProps> = ({
         isInputFocused={isInputFocused}
         // lang pack should have a proper key
         // @ts-ignore
-        placeholder={lang("Search Stickers")}
+        placeholder={lang('Search Stickers')}
         onChange={handleEmojiSearchQueryChange}
         onGroupSelect={handleEmojiGroupSelect}
         inputId="emoji-search"
@@ -191,9 +189,9 @@ const GifPicker: FC<OwnProps & StateProps> = ({
       <InfiniteScroll
         ref={containerRef}
         className={buildClassName(
-          "GifPicker",
+          'GifPicker',
           className,
-          IS_TOUCH_ENV ? "no-scrollbar" : "custom-scroll",
+          IS_TOUCH_ENV ? 'no-scrollbar' : 'custom-scroll',
         )}
         items={results}
         itemSelector=".GifButton"
@@ -206,7 +204,7 @@ const GifPicker: FC<OwnProps & StateProps> = ({
             Sending GIFs is not allowed in this chat.
           </div>
         ) : canRenderContents ? (
-            renderContent()
+          renderContent()
         ) : (
           <Loading />
         )}
@@ -218,8 +216,7 @@ const GifPicker: FC<OwnProps & StateProps> = ({
 export default memo(
   withGlobal<OwnProps>((global): StateProps => {
     const { chatId } = selectCurrentMessageList(global) || {};
-    const isSavedMessages =
-      Boolean(chatId) && selectIsChatWithSelf(global, chatId);
+    const isSavedMessages = Boolean(chatId) && selectIsChatWithSelf(global, chatId);
     return {
       savedGifs: global.gifs.saved.gifs,
       isSavedMessages,
