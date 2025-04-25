@@ -28,6 +28,7 @@ type Token = (
     type: 'entity';
     entity: ApiMessageEntityTypes.Pre;
     lang?: string;
+    trimmedCnt?: number;
   }
   | {
     type: 'entity';
@@ -182,11 +183,14 @@ function doCodePass(tokens: Token[]): Token[] {
         if (currentCode === ApiMessageEntityTypes.Pre) {
           const langAndRest = getPreLanguage(accum);
           if (langAndRest) {
+            let trimmedCnt = accum.length - langAndRest[1].length;
+
             res.push({ type: 'text', str: langAndRest[1] });
             res.push({
               ...token,
               entity: ApiMessageEntityTypes.Pre,
               lang: langAndRest[0],
+              trimmedCnt
             });
           } else {
             // invalid pre block
@@ -249,6 +253,11 @@ function tokensToEntities(tokens: Token[]): [ApiFormattedText, ConsumedInfo[]] {
           && token.entity === ApiMessageEntityTypes.Pre
         ) {
           newt.language = token.lang;
+
+          resConsumed.push({
+            pos: resStr.length,
+            consumed: token.trimmedCnt ?? 0,
+          });
         }
 
         resEnt.push(newt);
