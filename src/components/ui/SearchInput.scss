@@ -120,7 +120,7 @@
     pointer-events: all;
 
     input {
-      padding-left: 0.2rem;
+      padding-left: 0.1875rem;
     }
 
     .placeholder-with-categories {
@@ -132,7 +132,6 @@
       gap: 4rem;
       pointer-events: none;
       max-width: 89%;
-
 
       p {
         line-height: 2.5rem;
@@ -150,10 +149,7 @@
           pointer-events: none;
         }
       }
-
     }
-
-
 
     .emoji-categories {
       line-height: normal;
@@ -165,7 +161,7 @@
       opacity: 1;
       pointer-events: none;
 
-      &>div {
+      & > div {
         font-size: 2rem;
         display: flex;
         pointer-events: all;
@@ -185,4 +181,3 @@
     }
   }
 }
-
