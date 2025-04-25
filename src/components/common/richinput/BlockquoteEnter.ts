@@ -1,4 +1,4 @@
-export const isBlockquote = (noteAnc: Node) => 'tagName' in noteAnc && noteAnc.tagName == 'BLOCKQUOTE';
+export const isBlockquote = (noteAnc: Node) => 'tagName' in noteAnc && noteAnc.tagName === 'BLOCKQUOTE';
 
 export class BlockQuoteEnterHandler {
   private wasEnter = false;
@@ -8,14 +8,14 @@ export class BlockQuoteEnterHandler {
   }
 
   evHandler(e: InputEvent) {
-    if (e.inputType != 'insertLineBreak' && e.inputType != 'insertParagraph') {
+    if (e.inputType !== 'insertLineBreak' && e.inputType !== 'insertParagraph') {
       this.wasEnter = false;
       return;
     }
 
     this.insertEnterInsideBlockquote(e);
 
-    if (e.inputType == 'insertParagraph') {
+    if (e.inputType === 'insertParagraph') {
       const s = window.getSelection();
 
       if (s) {
@@ -43,11 +43,11 @@ export class BlockQuoteEnterHandler {
       let noteAnc: Node | null = r.endContainer;
 
       const remEnd = r.endContainer.textContent?.substring(r.endOffset);
-      if (this.wasEnter && (remEnd == '\n' || remEnd == '')) {
+      if (this.wasEnter && (remEnd === '\n' || remEnd === '')) {
         let isEnd = true;
         while (noteAnc && !isBlockquote(noteAnc)) {
           if (noteAnc.nextSibling) {
-            if (noteAnc.nextSibling.textContent == '') {
+            if (noteAnc.nextSibling.textContent === '') {
               noteAnc = noteAnc.nextSibling;
               continue;
             }

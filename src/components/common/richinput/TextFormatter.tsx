@@ -6,7 +6,6 @@ import React, {
 import type { IAnchorPosition } from '../../../types';
 import { ApiMessageEntityTypes } from '../../../api/types';
 
-import { EDITABLE_INPUT_ID } from '../../../config';
 import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import { ensureProtocol } from '../../../util/browser/url';
 import buildClassName from '../../../util/buildClassName';
@@ -114,7 +113,8 @@ const TextFormatter: FC<OwnProps> = ({
     const selectedFormats: ISelectedTextFormats = {};
     let formNode: Node | null = sel.range.commonAncestorContainer;
     while (formNode && formNode !== richInputCtx.editable.root) {
-      const textFormat = (formNode && ('tagName' in formNode)) ? TEXT_FORMAT_BY_TAG_NAME[formNode.tagName as string] : null;
+      const textFormat = (formNode && ('tagName' in formNode))
+        ? TEXT_FORMAT_BY_TAG_NAME[formNode.tagName as string] : undefined;
       if (textFormat) {
         selectedFormats[textFormat] = true;
       }

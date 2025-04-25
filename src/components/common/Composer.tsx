@@ -456,7 +456,6 @@ const Composer: FC<OwnProps & StateProps> = ({
 
   const { getHtml, ctx: richInputCtx } = useRichEditable();
 
-  const inputRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
   const counterRef = useRef<HTMLSpanElement>(null);
 
@@ -1501,7 +1500,11 @@ const Composer: FC<OwnProps & StateProps> = ({
     }
   }, [isSelectModeActive, enableHover, disableHover, isReady]);
 
-  const hasText = useDerivedState(() => !richInputCtx.editable.emptyS(), [richInputCtx.editable.emptyS]);
+  const hasText = useDerivedState(
+    () => !richInputCtx.editable.emptyS(),
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+    [richInputCtx.editable, richInputCtx.editable.emptyS],
+  );
 
   const withBotMenuButton = isChatWithBot && botMenuButton?.type === 'webApp' && !editingMessage
     && messageListType === 'thread';
@@ -1747,7 +1750,7 @@ const Composer: FC<OwnProps & StateProps> = ({
       default:
         return handleSendWithConfirmation;
     }
-  }, [mainButtonState, handleEditComplete, handleSendWithConfirmation, renderer]);
+  }, [mainButtonState, handleEditComplete, handleSendWithConfirmation]);
 
   const withBotCommands = isChatWithBot && botMenuButton?.type === 'commands' && !editingMessage
     && botCommands !== false && !activeVoiceRecording;

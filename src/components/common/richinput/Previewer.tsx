@@ -3,7 +3,6 @@ import TeactDOM from '../../../lib/teact/teact-dom';
 
 import type { Signal } from '../../../util/signals';
 import type { RichEditable } from './RichEditable';
-import { ApiFormattedText } from '../../../api/types';
 
 import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import { createSignal } from '../../../util/signals';
@@ -39,7 +38,6 @@ export class Previewer {
     [this.isPreviewing, this.setIsPreviewing] = createSignal(false);
 
     this.editable.root.addEventListener('focus', () => {
-      console.log('RRR FOCUS END PREVIEW');
       this.endPreview();
     });
   }
@@ -57,7 +55,6 @@ export class Previewer {
 
   startPreview() {
     if (this.isPreviewing()) return;
-    console.log('RRR Started preview');
     this.setIsPreviewing(true);
     this.refreshPreview();
 

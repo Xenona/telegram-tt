@@ -8,9 +8,8 @@ import { getActions, withGlobal } from '../../../global';
 
 import type { ApiInputMessageReplyInfo } from '../../../api/types';
 import type {
-  IAnchorPosition, MessageListType, SharedSettings, ThreadId,
+  MessageListType, SharedSettings, ThreadId,
 } from '../../../types';
-import type { Signal } from '../../../util/signals';
 import type { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 import { EDITABLE_INPUT_ID } from '../../../config';
@@ -512,7 +511,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   );
 
   const inputScrollerContentClass = buildClassName('input-scroller-content', isNeedPremium && 'is-need-premium');
-  const placeholderAriaLabel = typeof placeholder === 'string' ? placeholder : undefined;
 
   return (
     <div id={id} onClick={shouldSuppressFocus ? onSuppressedFocus : undefined} dir={oldLang.isRtl ? 'rtl' : undefined}>

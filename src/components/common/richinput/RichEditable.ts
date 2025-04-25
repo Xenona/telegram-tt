@@ -7,7 +7,7 @@ import { betterExecCommand } from '../../../util/execCommand';
 import focusEditableElement from '../../../util/focusEditableElement';
 import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
 import { createSignal } from '../../../util/signals';
-import { IS_MOBILE, IS_SAFARI, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
+import { IS_MOBILE, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
