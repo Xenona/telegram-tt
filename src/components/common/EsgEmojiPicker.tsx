@@ -862,11 +862,6 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
           inputId="emoji-search"
         />
 
-        <canvas
-          ref={sharedSearchCanvasRef}
-          className="shared-canvas"
-          style={undefined}
-        />
         {!emojiQuery && !emojisCategoryFound.length ? (
           <>
             {/* <div className="symbol-set symbol-set-container custom-folder-icon-container">
