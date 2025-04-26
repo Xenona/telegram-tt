@@ -94,7 +94,7 @@ import StickerSetCover from '../middle/composer/StickerSetCover';
 import Button from '../ui/Button';
 import Loading from '../ui/Loading';
 import Icon from './icons/Icon';
-import ScrollableSearchInputWithEmojis from './ScrollableSearchInputWithEmojis';
+import ScrollableSearchInputWithEmojis, { manualGroupNames, manualGroups } from './ScrollableSearchInputWithEmojis';
 import StickerButton from './StickerButton';
 import StickerSet from './StickerSet';
 
@@ -319,25 +319,31 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   const oldLang = useOldLang();
   const lang = useLang();
 
+  function getEmojisSearch(query: string, emojiKeywords:Record<string,EmojiKeywords|undefined> | undefined) {
+    const arr: Set<Emoji | ApiSticker> = new Set();
+
+    for (const emKw of Object.values(emojiKeywords ?? {})) {
+      if (!emKw || !emKw.keywords) continue;
+      for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
+        if (!kw.includes(query)) continue;
+
+        for (const em of emojisKws) {
+          for (const e of textToEmojiMap.get(em) ?? []) {
+            arr.add(e);
+          }
+        }
+      }
+    }
+    return [...arr.values()];
+  }
+
   const areAddedLoaded = Boolean(addedCustomEmojiIds);
   const handleEmojiSearchQueryChange = useDebouncedCallback(
     (query: string) => {
       setEmojiQuery(query.toLowerCase());
 
-      const arr: Set<Emoji | ApiSticker> = new Set();
+      const arr = getEmojisSearch(query, emojiKeywords);
 
-      for (const emKw of Object.values(emojiKeywords ?? {})) {
-        if (!emKw || !emKw.keywords) continue;
-        for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
-          if (!kw.includes(query)) continue;
-
-          for (const em of emojisKws) {
-            for (const e of textToEmojiMap.get(em) ?? []) {
-              arr.add(e);
-            }
-          }
-        }
-      }
       setEmojisFound([...arr.values()]);
       if (query === '') {
         setEmojisFound([]);
@@ -349,7 +355,35 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     true,
   );
 
+
+  function onlyUniqueById(array: (ApiSticker|Emoji)[]) {
+    const seenIds = new Set();
+    return array.filter((obj) => {
+      if (seenIds.has(obj.id)) {
+        return false;
+      }
+      seenIds.add(obj.id);
+      return true;
+    });
+  }
+
+
+
   const handleEmojiGroupSelect = useLastCallback((category: string) => {
+    if (manualGroupNames.includes(category)) {
+      const keywords = manualGroups.find((g) => g.name === category)?.keywords!;
+
+      const arr: (Emoji | ApiSticker)[] = [];
+
+      for (const kw of keywords) {
+        arr.push(...getEmojisSearch(kw, emojiKeywords));
+      }
+
+      setEmojisCategoryFound(onlyUniqueById(arr));
+      return;
+    }
+
+
     const groupCat = emojiGroups?.find((g) => g.title === category);
     if (!groupCat) return;
 

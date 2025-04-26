@@ -25,6 +25,22 @@ import emojiPickerStyles from './CustomEmojiPicker.module.scss';
 
 export const HEADER_BUTTON_WIDTH = 2.625 * REM; // px (including margin)
 
+export const manualGroups = [
+  { name: 'msg-emoji-happy', keywords: ['happy', 'smile'] },
+  { name: 'msg-emoji-activities2', keywords: ['sport', 'art', ] },
+  { name: 'msg-emoji-away', keywords: ['vacation', 'holiday'] },
+  { name: 'msg-emoji-bath', keywords: ['bath', 'clean', 'shower', 'nail'] },
+  { name: 'msg-emoji-busy', keywords: ['busy', 'stop', 'time', 'work'] },
+  { name: 'msg-emoji-food', keywords: ['food', 'tasty'] },
+  { name: 'msg-emoji-hi2', keywords: ['hello', 'nice', 'hand'] },
+  { name: 'msg-emoji-home', keywords: ['home', 'city', 'house'] },
+  { name: 'msg-emoji-sleep', keywords: ['sleep', 'tired'] },
+  { name: 'msg-emoji-study', keywords: ['study', 'school', 'write', 'book'] },
+  { name: 'msg-emoji-vacation3', keywords: ['vacation', 'holiday'] },
+  { name: 'msg-emoji-work', keywords: ['work'] },
+]
+export const manualGroupNames = manualGroups.map((group) => group.name);
+
 type OwnProps = {
   onBlur: () => void;
   onFocus: () => void;
@@ -153,7 +169,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
                   onFocus();
                   setActiveSetIndex(index);
                   setActiveGroup(group.name);
-                  onGroupSelect(group.group_name);
+                  onGroupSelect(group.group_name ? group.group_name : group.name);
                 }}
                 className={buildClassName(
                   emojiQuery && 'visible',
