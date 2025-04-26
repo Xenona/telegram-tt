@@ -133,6 +133,12 @@
       pointer-events: none;
       max-width: 89%;
 
+      .Button {
+        &.activatedIcon {
+          background-color: var(--color-interactive-element-hover);
+        }
+      }
+
       p {
         line-height: 2.5rem;
         margin: 0;

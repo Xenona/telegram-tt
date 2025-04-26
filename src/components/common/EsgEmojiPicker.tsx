@@ -716,6 +716,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     setEmojiQuery('');
     setEmojisFound([]);
     setEmojisCategoryFound([]);
+    setUnfocused();
   });
 
   const selectCategory = useLastCallback((index: number) => {

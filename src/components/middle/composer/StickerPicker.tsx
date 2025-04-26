@@ -197,6 +197,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
       if (query === '') {
         setEmojisFound([]);
         setEmojisCategoryFound([]);
+        setUnfocused();
       }
     },
     [emojiKeywords, textToEmojiMap],
@@ -378,6 +379,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     setEmojiQuery('');
     setEmojisFound([]);
     setEmojisCategoryFound([]);
+    setUnfocused();
   });
 
   if (!chat) return undefined;

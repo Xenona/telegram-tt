@@ -120,26 +120,6 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
       // placeholder={lang("Search Emoji")}
       onChange={onChange}
       inputId={inputId ?? ''}
-      // children={(
-
-      //     }
-      //     {/* {
-      //       <Button
-      //         round
-      //         size="tiny"
-      //         color="translucent"
-      //         onClick={onInputReset}
-      //         className={buildClassName(
-      //           "close-button",
-      //           emojiQuery && "visible",
-      //           canAnimate && "animated",
-      //         )}
-      //       >
-      //         <Icon name="close" />
-      //       </Button>
-      //     } */}
-      // )}
-      // withBackIcon={isInputFocused}
     >
       <div className={buildClassName('placeholder-with-categories')}>
 
@@ -172,12 +152,13 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
                 onClick={() => {
                   onFocus();
                   setActiveSetIndex(index);
-                  setActiveGroup(group.group_name);
+                  setActiveGroup(group.name);
                   onGroupSelect(group.group_name);
                 }}
                 className={buildClassName(
                   emojiQuery && 'visible',
                   canAnimate && 'animated',
+                  activeGroup === group.name && 'activatedIcon',
                 )}
               >
                 <Icon
