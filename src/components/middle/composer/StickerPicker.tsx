@@ -1,6 +1,7 @@
 import type { FC } from '../../../lib/teact/teact';
 import React, {
   memo,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -50,7 +51,10 @@ import useAsyncRendering from '../../right/hooks/useAsyncRendering';
 
 import Avatar from '../../common/Avatar';
 import Icon from '../../common/icons/Icon';
-import ScrollableSearchInputWithEmojis, { manualGroupNames, manualGroups } from '../../common/ScrollableSearchInputWithEmojis';
+import ScrollableSearchInputWithEmojis, {
+  manualGroupNames,
+  manualGroups,
+} from '../../common/ScrollableSearchInputWithEmojis';
 import StickerButton from '../../common/StickerButton';
 import StickerSet from '../../common/StickerSet';
 import Button from '../../ui/Button';
@@ -143,6 +147,9 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     [],
   );
   // eslint-disable-next-line no-null/no-null
+  const ref = useRef<HTMLDivElement>(null);
+
+  // eslint-disable-next-line no-null/no-null
   const sharedSearchCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [emojiQuery, setEmojiQuery] = useState<string>('');
@@ -175,10 +182,13 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     return textToEmoji;
   }, []);
 
-  function getStickerSearch(query: string, emojiKeywords: Record<string,EmojiKeywords|undefined> | undefined){
+  const getStickerSearch = useCallback((
+    query: string,
+    _emojiKeywords: Record<string, EmojiKeywords | undefined> | undefined,
+  ) => {
     const arr: Set<ApiSticker> = new Set();
 
-    for (const emKw of Object.values(emojiKeywords ?? {})) {
+    for (const emKw of Object.values(_emojiKeywords ?? {})) {
       if (!emKw || !emKw.keywords) continue;
       for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
         if (!kw.includes(query)) continue;
@@ -191,8 +201,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
       }
     }
     return [...arr.values()];
-  }
-
+  }, [textToEmojiMap]);
 
   const handleEmojiSearchQueryChange = useDebouncedCallback(
     (query: string) => {
@@ -208,7 +217,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
         setEmojisCategoryFound([]);
       }
     },
-    [emojiKeywords, textToEmojiMap],
+    [emojiKeywords, getStickerSearch],
     300,
     true,
   );
@@ -221,7 +230,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     if (manualGroupNames.includes(category)) {
       const keywords = manualGroups.find((g) => g.name === category)?.keywords!;
 
-      const arr: (ApiSticker)[] = [];
+      const arr: ApiSticker[] = [];
 
       for (const kw of keywords) {
         arr.push(...getStickerSearch(kw, emojiKeywords));
@@ -410,8 +419,6 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     setUnfocused();
   });
 
-  console.log("XE", {emojiQuery, emojisCategoryFound, emojisFound})
-
   if (!chat) return undefined;
 
   function renderCover(
@@ -529,13 +536,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
   return (
     <div className={fullClassName}>
       {!isForEffects && (
-        <div
-          ref={headerRef}
-          className={buildClassName(
-            headerClassName,
-
-          )}
-        >
+        <div ref={headerRef} className={buildClassName(headerClassName)}>
           <div className="shared-canvas-container">
             <canvas ref={sharedCanvasRef} className="shared-canvas" />
             {allSets.map(renderCover)}
@@ -567,7 +568,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
           onGroupSelect={handleEmojiGroupSelect}
           inputId="emoji-search"
         />
-        {!emojiQuery && !emojisCategoryFound.length && !groupSelected? (
+        {!emojiQuery && !emojisCategoryFound.length && !groupSelected ? (
           <>
             {allSets.map((stickerSet, i) => (
               <StickerSet
@@ -602,8 +603,8 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
             ))}
           </>
         ) : emojisFound.length ? (
-          // "Query worked"
-          <div className="symbol-set symbol-set-container">
+
+          <div ref={ref} className="symbol-set symbol-set-container">
             <canvas
               ref={sharedSearchCanvasRef}
               className="shared-canvas"

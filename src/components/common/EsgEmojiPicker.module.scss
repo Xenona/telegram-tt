@@ -48,7 +48,14 @@
   &.activated {
     min-width: 10rem;
     background-color: var(--color-background-selected);
+    & :global(.icon) {
+      font-size: 1.4rem;
 
+    }
+
+  }
+  & :global(.icon) {
+    transition: font-size 0.2s ease;
   }
 
   &:hover {
