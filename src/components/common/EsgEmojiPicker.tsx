@@ -1,13 +1,13 @@
-import type { HTMLProps } from 'react';
-import type { FC } from '../../lib/teact/teact';
+import type { HTMLProps } from "react";
+import type { FC } from "../../lib/teact/teact";
 import React, {
   memo,
   useEffect,
   useMemo,
   useRef,
   useState,
-} from '../../lib/teact/teact';
-import { getActions, getGlobal, withGlobal } from '../../global';
+} from "../../lib/teact/teact";
+import { getActions, getGlobal, withGlobal } from "../../global";
 
 import type {
   ApiAvailableReaction,
@@ -16,17 +16,17 @@ import type {
   ApiReactionWithPaid,
   ApiSticker,
   ApiStickerSet,
-} from '../../api/types';
-import type { GlobalState } from '../../global/types';
+} from "../../api/types";
+import type { GlobalState } from "../../global/types";
 import type {
   EmojiKeywords,
   StickerSetOrReactionsSetOrRecent,
-} from '../../types';
+} from "../../types";
 import type {
   EmojiData,
   EmojiModule,
   EmojiRawData,
-} from '../../util/emoji/emoji';
+} from "../../util/emoji/emoji";
 
 import {
   BASE_EMOJI_KEYWORD_LANG,
@@ -39,67 +39,68 @@ import {
   STICKER_PICKER_MAX_SHARED_COVERS,
   STICKER_SIZE_PICKER_HEADER,
   TOP_SYMBOL_SET_ID,
-} from '../../config';
-import { isSameReaction } from '../../global/helpers';
+} from "../../config";
+import { isSameReaction } from "../../global/helpers";
 import {
   selectCanPlayAnimatedEmojis,
   selectChatFullInfo,
   selectIsAlwaysHighPriorityEmoji,
   selectIsChatWithSelf,
   selectIsCurrentUserPremium,
-} from '../../global/selectors';
-import animateHorizontalScroll from '../../util/animateHorizontalScroll';
-import animateScroll from '../../util/animateScroll';
-import buildClassName from '../../util/buildClassName';
-import {
-  uncompressEmoji,
-} from '../../util/emoji/emoji';
-import { pickTruthy, unique } from '../../util/iteratees';
-import { MEMO_EMPTY_ARRAY } from '../../util/memo';
-import { IS_TOUCH_ENV } from '../../util/windowEnvironment';
-import windowSize from '../../util/windowSize';
-import { REM } from './helpers/mediaDimensions';
+} from "../../global/selectors";
+import animateHorizontalScroll from "../../util/animateHorizontalScroll";
+import animateScroll from "../../util/animateScroll";
+import buildClassName from "../../util/buildClassName";
+import { uncompressEmoji } from "../../util/emoji/emoji";
+import { pickTruthy, unique } from "../../util/iteratees";
+import { MEMO_EMPTY_ARRAY } from "../../util/memo";
+import { IS_TOUCH_ENV } from "../../util/windowEnvironment";
+import windowSize from "../../util/windowSize";
+import { REM } from "./helpers/mediaDimensions";
 
-import useAppLayout from '../../hooks/useAppLayout';
-import useDebouncedCallback from '../../hooks/useDebouncedCallback';
-import useFlag from '../../hooks/useFlag';
-import useHorizontalScroll from '../../hooks/useHorizontalScroll';
-import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
-import useLang from '../../hooks/useLang';
-import useLastCallback from '../../hooks/useLastCallback';
-import useMediaTransitionDeprecated from '../../hooks/useMediaTransitionDeprecated';
-import useOldLang from '../../hooks/useOldLang';
-import usePrevDuringAnimation from '../../hooks/usePrevDuringAnimation';
-import useScrolledState from '../../hooks/useScrolledState';
-import useAsyncRendering from '../right/hooks/useAsyncRendering';
+import useAppLayout from "../../hooks/useAppLayout";
+import useDebouncedCallback from "../../hooks/useDebouncedCallback";
+import useFlag from "../../hooks/useFlag";
+import useHorizontalScroll from "../../hooks/useHorizontalScroll";
+import { useIntersectionObserver } from "../../hooks/useIntersectionObserver";
+import useLang from "../../hooks/useLang";
+import useLastCallback from "../../hooks/useLastCallback";
+import useMediaTransitionDeprecated from "../../hooks/useMediaTransitionDeprecated";
+import useOldLang from "../../hooks/useOldLang";
+import usePrevDuringAnimation from "../../hooks/usePrevDuringAnimation";
+import useScrolledState from "../../hooks/useScrolledState";
+import useAsyncRendering from "../right/hooks/useAsyncRendering";
 import {
   FOCUS_MARGIN,
   useStickerPickerObservers,
-} from './hooks/useStickerPickerObservers';
+} from "./hooks/useStickerPickerObservers";
 
-import EmojiButton from '../middle/composer/EmojiButton';
+import EmojiButton from "../middle/composer/EmojiButton";
 import EmojiCategory, {
   EMOJI_MARGIN,
   EMOJI_VERTICAL_MARGIN,
   EMOJI_VERTICAL_MARGIN_MOBILE,
   EMOJIS_PER_ROW_ON_DESKTOP,
   MOBILE_CONTAINER_PADDING,
-} from '../middle/composer/EmojiCategory';
+} from "../middle/composer/EmojiCategory";
 import {
   ICONS_BY_CATEGORY,
   INTERSECTION_THROTTLE,
   SMOOTH_SCROLL_DISTANCE,
-} from '../middle/composer/EmojiPicker';
-import StickerSetCover from '../middle/composer/StickerSetCover';
-import Button from '../ui/Button';
-import Loading from '../ui/Loading';
-import Icon from './icons/Icon';
-import ScrollableSearchInputWithEmojis, { manualGroupNames, manualGroups } from './ScrollableSearchInputWithEmojis';
-import StickerButton from './StickerButton';
-import StickerSet from './StickerSet';
+} from "../middle/composer/EmojiPicker";
+import StickerSetCover from "../middle/composer/StickerSetCover";
+import Button from "../ui/Button";
+import Loading from "../ui/Loading";
+import Icon from "./icons/Icon";
+import ScrollableSearchInputWithEmojis, {
+  manualGroupNames,
+  manualGroups,
+} from "./ScrollableSearchInputWithEmojis";
+import StickerButton from "./StickerButton";
+import StickerSet from "./StickerSet";
 
-import pickerStyles from '../middle/composer/StickerPicker.module.scss';
-import styles from './EsgEmojiPicker.module.scss';
+import pickerStyles from "../middle/composer/StickerPicker.module.scss";
+import styles from "./EsgEmojiPicker.module.scss";
 
 type OwnProps = {
   chatId?: string;
@@ -142,13 +143,13 @@ type StateProps = {
   isSavedMessages?: boolean;
   isCurrentUserPremium?: boolean;
   isWithPaidReaction?: boolean;
-  recentEmojis?: GlobalState['recentEmojis'];
-  emojiGroups?: GlobalState['emojiGroups'];
+  recentEmojis?: GlobalState["recentEmojis"];
+  emojiGroups?: GlobalState["emojiGroups"];
 };
 
 const HEADER_BUTTON_WIDTH = 2.5 * REM; // px (including margin)
 
-const DEFAULT_ID_PREFIX = 'custom-emoji-set';
+const DEFAULT_ID_PREFIX = "custom-emoji-set";
 const TOP_REACTIONS_COUNT = 16;
 const RECENT_REACTIONS_COUNT = 32;
 const FADED_BUTTON_SET_IDS = new Set([
@@ -168,7 +169,7 @@ const { loadEmojiKeywords } = getActions();
 
 async function ensureEmojiData() {
   if (!emojiDataPromise) {
-    emojiDataPromise = import('emoji-data-ios/emoji-data.json');
+    emojiDataPromise = import("emoji-data-ios/emoji-data.json");
     emojiRawData = (await emojiDataPromise).default;
     loadEmojiKeywords({ language: BASE_EMOJI_KEYWORD_LANG });
     emojiData = uncompressEmoji(emojiRawData);
@@ -178,20 +179,18 @@ async function ensureEmojiData() {
 }
 type EmojiCategoryData = { id: string; name: string; emojis: string[] };
 
-const TransitionHelper: FC<HTMLProps<HTMLDivElement> & { isTransitioned: boolean }> = ({
-  children, className, isTransitioned, ...props
-}) => {
+const TransitionHelper: FC<
+  HTMLProps<HTMLDivElement> & { isTransitioned: boolean }
+> = ({ children, className, isTransitioned, ...props }) => {
   const transitionClassNames = useMediaTransitionDeprecated(isTransitioned);
 
   return (
     <div
-      className={buildClassName(
-        className,
-        transitionClassNames,
-      )}
+      className={buildClassName(className, transitionClassNames)}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
-    >{children}
+    >
+      {children}
     </div>
   );
 };
@@ -240,6 +239,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
   const headerRef = useRef<HTMLDivElement>(null);
+  const stripeRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
   const sharedCanvasRef = useRef<HTMLCanvasElement>(null);
   // eslint-disable-next-line no-null/no-null
@@ -248,8 +248,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   const sharedCanvasHqRef = useRef<HTMLCanvasElement>(null);
   const [isInputFocused, setFocused, setUnfocused] = useFlag();
   const [emojisFound, setEmojisFound] = useState<(Emoji | ApiSticker)[]>([]);
-  const [emojisCategoryFound, setEmojisCategoryFound] = useState<(Emoji | ApiSticker)[]>([]);
-  const [emojiQuery, setEmojiQuery] = useState<string>('');
+  const [emojisCategoryFound, setEmojisCategoryFound] = useState<
+    (Emoji | ApiSticker)[]
+  >([]);
+  const [emojiQuery, setEmojiQuery] = useState<string>("");
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [emojis, setEmojis] = useState<AllEmojis>();
 
@@ -261,7 +263,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   const textToEmojiMap = useMemo(() => {
     const textToEmoji: Map<string, (Emoji | ApiSticker)[]> = new Map();
     for (const emoji of Object.values(emojis ?? {})) {
-      const em = 'native' in emoji ? emoji : Object.values(emoji)[0];
+      const em = "native" in emoji ? emoji : Object.values(emoji)[0];
       const arr = textToEmoji.get(em.native) ?? [];
       arr.push(em);
       textToEmoji.set(em.native, arr);
@@ -294,8 +296,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       (status) => status.documentId,
     );
     return (
-      customEmojisById
-      && collectibleStatusEmojiIds
+      customEmojisById &&
+      collectibleStatusEmojiIds
         ?.map((id) => customEmojisById[id])
         .filter(Boolean)
     );
@@ -319,7 +321,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   const oldLang = useOldLang();
   const lang = useLang();
 
-  function getEmojisSearch(query: string, emojiKeywords:Record<string,EmojiKeywords|undefined> | undefined) {
+  function getEmojisSearch(
+    query: string,
+    emojiKeywords: Record<string, EmojiKeywords | undefined> | undefined,
+  ) {
     const arr: Set<Emoji | ApiSticker> = new Set();
 
     for (const emKw of Object.values(emojiKeywords ?? {})) {
@@ -345,7 +350,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       const arr = getEmojisSearch(query, emojiKeywords);
 
       setEmojisFound([...arr.values()]);
-      if (query === '') {
+      if (query === "") {
         setEmojisFound([]);
         setEmojisCategoryFound([]);
       }
@@ -355,8 +360,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     true,
   );
 
-
-  function onlyUniqueById(array: (ApiSticker|Emoji)[]) {
+  function onlyUniqueById(array: (ApiSticker | Emoji)[]) {
     const seenIds = new Set();
     return array.filter((obj) => {
       if (seenIds.has(obj.id)) {
@@ -366,8 +370,6 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       return true;
     });
   }
-
-
 
   const handleEmojiGroupSelect = useLastCallback((category: string) => {
     if (manualGroupNames.includes(category)) {
@@ -382,7 +384,6 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       setEmojisCategoryFound(onlyUniqueById(arr));
       return;
     }
-
 
     const groupCat = emojiGroups?.find((g) => g.title === category);
     if (!groupCat) return;
@@ -408,8 +409,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       if (defaultTagReactions?.length) {
         defaultSets.push({
           id: TOP_SYMBOL_SET_ID,
-          accessHash: '',
-          title: oldLang('PremiumPreviewTags'),
+          accessHash: "",
+          title: oldLang("PremiumPreviewTags"),
           reactions: defaultTagReactions,
           count: defaultTagReactions.length,
           isEmoji: true,
@@ -418,15 +419,16 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     }
 
     if (isReactionPicker && !isSavedMessages) {
-      const topReactionsSlice: ApiReactionWithPaid[] = topReactions?.slice(0, TOP_REACTIONS_COUNT) || [];
+      const topReactionsSlice: ApiReactionWithPaid[] =
+        topReactions?.slice(0, TOP_REACTIONS_COUNT) || [];
       if (isWithPaidReaction) {
-        topReactionsSlice.unshift({ type: 'paid' });
+        topReactionsSlice.unshift({ type: "paid" });
       }
       if (topReactionsSlice?.length) {
         defaultSets.push({
           id: TOP_SYMBOL_SET_ID,
-          accessHash: '',
-          title: oldLang('Reactions'),
+          accessHash: "",
+          title: oldLang("Reactions"),
           reactions: topReactionsSlice,
           count: topReactionsSlice.length,
           isEmoji: true,
@@ -435,7 +437,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
 
       const cleanRecentReactions = (recentReactions || [])
         .filter(
-          (reaction) => !topReactionsSlice.some((topReaction) => isSameReaction(topReaction, reaction)),
+          (reaction) =>
+            !topReactionsSlice.some((topReaction) =>
+              isSameReaction(topReaction, reaction),
+            ),
         )
         .slice(0, RECENT_REACTIONS_COUNT);
       const cleanAvailableReactions = (availableReactions || [])
@@ -443,8 +448,12 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
         .map(({ reaction }) => reaction)
         .filter((reaction) => {
           return (
-            !topReactionsSlice.some((topReaction) => isSameReaction(topReaction, reaction))
-            && !cleanRecentReactions.some((topReaction) => isSameReaction(topReaction, reaction))
+            !topReactionsSlice.some((topReaction) =>
+              isSameReaction(topReaction, reaction),
+            ) &&
+            !cleanRecentReactions.some((topReaction) =>
+              isSameReaction(topReaction, reaction),
+            )
           );
         });
       if (cleanAvailableReactions?.length || cleanRecentReactions?.length) {
@@ -454,8 +463,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
         );
         defaultSets.push({
           id: isPopular ? POPULAR_SYMBOL_SET_ID : RECENT_SYMBOL_SET_ID,
-          accessHash: '',
-          title: oldLang(isPopular ? 'PopularReactions' : 'RecentStickers'),
+          accessHash: "",
+          title: oldLang(isPopular ? "PopularReactions" : "RecentStickers"),
           reactions: allRecentReactions,
           count: allRecentReactions.length,
           isEmoji: true,
@@ -482,10 +491,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       if (collectibleStatusEmojis?.length) {
         defaultSets.push({
           id: COLLECTIBLE_STATUS_SET_ID,
-          accessHash: '',
+          accessHash: "",
           count: collectibleStatusEmojis.length,
           stickers: collectibleStatusEmojis,
-          title: lang('CollectibleStatusesCategory'),
+          title: lang("CollectibleStatusesCategory"),
           isEmoji: true,
         });
       }
@@ -546,15 +555,18 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   ]);
 
   const noPopulatedSets = useMemo(
-    () => areAddedLoaded
-      && allSets.filter((set) => set.stickers?.length).length === 0,
+    () =>
+      areAddedLoaded &&
+      allSets.filter((set) => set.stickers?.length).length === 0,
     [allSets, areAddedLoaded],
   );
 
   const canRenderContent = useAsyncRendering([], SLIDE_TRANSITION_DURATION);
-  const shouldRenderContent = areAddedLoaded && canRenderContent && !noPopulatedSets;
+  const shouldRenderContent =
+    areAddedLoaded && canRenderContent && !noPopulatedSets;
 
   useHorizontalScroll(headerRef, isMobile || !shouldRenderContent);
+  useHorizontalScroll(stripeRef, isMobile || !shouldRenderContent);
 
   // Initialize data on first render.
   useEffect(() => {
@@ -584,8 +596,9 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       return;
     }
 
-    const newLeft = activeSetIndex * HEADER_BUTTON_WIDTH
-      - (header.offsetWidth / 2 - HEADER_BUTTON_WIDTH / 2);
+    const newLeft =
+      activeSetIndex * HEADER_BUTTON_WIDTH -
+      (header.offsetWidth / 2 - HEADER_BUTTON_WIDTH / 2);
 
     animateHorizontalScroll(header, newLeft);
   }, [areAddedLoaded, activeSetIndex]);
@@ -603,11 +616,11 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     (entries) => {
       entries.forEach((entry) => {
         const { id } = entry.target as HTMLDivElement;
-        if (!id || !id.startsWith('emoji-category-')) {
+        if (!id || !id.startsWith("emoji-category-")) {
           return;
         }
 
-        const index = Number(id.replace('emoji-category-', ''));
+        const index = Number(id.replace("emoji-category-", ""));
         categoryIntersections[index] = entry.isIntersecting;
       });
 
@@ -646,12 +659,13 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     }
 
     if (
-      STICKER_SET_IDS_WITH_COVER.has(stickerSet.id)
-      || stickerSet.hasThumbnail
-      || !firstSticker
+      STICKER_SET_IDS_WITH_COVER.has(stickerSet.id) ||
+      stickerSet.hasThumbnail ||
+      !firstSticker
     ) {
-      const isRecent = stickerSet.id === RECENT_SYMBOL_SET_ID
-        || stickerSet.id === POPULAR_SYMBOL_SET_ID;
+      const isRecent =
+        stickerSet.id === RECENT_SYMBOL_SET_ID ||
+        stickerSet.id === POPULAR_SYMBOL_SET_ID;
       const isFaded = FADED_BUTTON_SET_IDS.has(stickerSet.id);
       return (
         <Button
@@ -718,7 +732,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     if (recentEmojis?.length) {
       themeCategories.unshift({
         id: RECENT_SYMBOL_SET_ID,
-        name: lang('RecentStickers'),
+        name: lang("RecentStickers"),
         emojis: recentEmojis,
       });
     }
@@ -727,27 +741,27 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   }, [categories, lang, recentEmojis]);
 
   const fullClassName = buildClassName(
-    'StickerPicker',
+    "StickerPicker",
     styles.root,
     className,
-    'esg-searcheable',
+    "esg-searcheable",
   );
 
   const headerClassName = buildClassName(
     pickerStyles.header,
-    'no-scrollbar',
+    "no-scrollbar",
     !shouldHideTopBorder && pickerStyles.headerWithBorder,
   );
   const listClassName = buildClassName(
     pickerStyles.main,
     pickerStyles.main_customEmoji,
-    IS_TOUCH_ENV ? 'no-scrollbar' : 'custom-scroll',
+    IS_TOUCH_ENV ? "no-scrollbar" : "custom-scroll",
     pickerListClassName,
     pickerStyles.hasHeader,
   );
 
   const onReset = useLastCallback(() => {
-    setEmojiQuery('');
+    setEmojiQuery("");
     setEmojisFound([]);
     setEmojisCategoryFound([]);
     setUnfocused();
@@ -759,7 +773,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
 
     if (index === 0) {
       categoryEl = containerRef.current!.querySelector(
-        '#emoji-search',
+        "#emoji-search",
       )! as HTMLElement;
     } else {
       categoryEl = containerRef.current!.querySelector(
@@ -770,7 +784,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     animateScroll({
       container: containerRef.current!,
       element: categoryEl,
-      position: 'start',
+      position: "start",
       margin: FOCUS_MARGIN,
       maxDistance: SMOOTH_SCROLL_DISTANCE,
     });
@@ -789,7 +803,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       icon && (
         <Button
           className={`${pickerStyles.stickerCover} ${styles.symbolSetButton} ${
-            index === activeCategoryIndex ? 'activated' : ''
+            index === activeCategoryIndex ? "activated" : ""
           }`}
           round
           faded
@@ -804,6 +818,19 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     );
   }
 
+  useEffect(() => {
+    const header = stripeRef.current;
+    if (!header) {
+      return;
+    }
+
+    const newLeft =
+      activeCategoryIndex * HEADER_BUTTON_WIDTH -
+      (header.offsetWidth / 2 - HEADER_BUTTON_WIDTH / 2);
+
+    animateHorizontalScroll(header, newLeft);
+  }, [activeCategoryIndex]);
+
   function renderSmiley(smiley: string) {
     const emoji = emojis![smiley];
     // Recent emojis may contain emoticons that are no longer in the list
@@ -812,7 +839,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     }
     // Some emojis have multiple skins and are represented as an Object with emojis for all skins.
     // For now, we select only the first emoji with 'neutral' skin.
-    const displayedEmoji = 'id' in emoji ? emoji : emoji[1];
+    const displayedEmoji = "id" in emoji ? emoji : emoji[1];
 
     return (
       <EmojiButton
@@ -828,7 +855,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       <div className={fullClassName}>
         {noPopulatedSets ? (
           <div className={pickerStyles.pickerDisabled}>
-            {oldLang('NoStickers')}
+            {oldLang("NoStickers")}
           </div>
         ) : (
           <Loading />
@@ -843,25 +870,25 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
         ref={headerRef}
         className={buildClassName(
           headerClassName,
-          isInputFocused || emojiQuery ? styles.headerHide : '',
-          canAnimate ? styles.animatedSlide : '',
+          isInputFocused || emojiQuery ? styles.headerHide : "",
+          canAnimate ? styles.animatedSlide : "",
         )}
       >
         <div className={styles.categoriesEmojis}>
           {renderCategoryButton(allCategories[0], 0)}
+
           <div
+            ref={stripeRef}
             className={buildClassName(
               styles.emojiCategoryStripe,
-              // activeCategoryIndex > 0 &&
-              //   activeCategoryIndex < allCategories.length &&
-              //   styles.activated,
+              activeCategoryIndex > 0 &&
+                activeCategoryIndex < allCategories.length &&
+                styles.activated,
+                canAnimate ? styles.animatedWidth : ""
             )}
           >
             <div
-              className={buildClassName(canAnimate ? styles.animatedWidth : '',
-                activeCategoryIndex > 0
-                  && activeCategoryIndex < allCategories.length
-                  && styles.activated)}
+              className={""}
             >
               {allCategories
                 .slice(1)
@@ -880,8 +907,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
         onScroll={handleContentScroll}
         className={buildClassName(
           listClassName,
-          isInputFocused || emojiQuery ? styles.mainHide : '',
-          canAnimate ? styles.animatedSlide : '',
+          isInputFocused || emojiQuery ? styles.mainHide : "",
+          canAnimate ? styles.animatedSlide : "",
         )}
       >
         <ScrollableSearchInputWithEmojis
@@ -913,19 +940,20 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               if (category.id === RECENT_SYMBOL_SET_ID) {
                 const emojisPerRow = isMobile
                   ? Math.floor(
-                    (windowSize.get().width
-                        - MOBILE_CONTAINER_PADDING
-                        + EMOJI_MARGIN)
-                        / (EMOJI_SIZE_PICKER + EMOJI_MARGIN),
-                  )
+                      (windowSize.get().width -
+                        MOBILE_CONTAINER_PADDING +
+                        EMOJI_MARGIN) /
+                        (EMOJI_SIZE_PICKER + EMOJI_MARGIN),
+                    )
                   : EMOJIS_PER_ROW_ON_DESKTOP;
-                const height = Math.ceil(
-                  (category.emojis.length
-                      + (recentCustomEmojis?.length ?? 0))
-                      / emojisPerRow,
-                )
-                  * (EMOJI_SIZE_PICKER
-                    + (isMobile
+                const height =
+                  Math.ceil(
+                    (category.emojis.length +
+                      (recentCustomEmojis?.length ?? 0)) /
+                      emojisPerRow,
+                  ) *
+                  (EMOJI_SIZE_PICKER +
+                    (isMobile
                       ? EMOJI_VERTICAL_MARGIN_MOBILE
                       : EMOJI_VERTICAL_MARGIN));
 
@@ -947,48 +975,53 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                     </div> */}
                     <TransitionHelper
                       className="symbol-set-container"
-                      isTransitioned={activeCategoryIndex >= i - 1 && activeCategoryIndex <= i + 1}
+                      isTransitioned={
+                        activeCategoryIndex >= i - 1 &&
+                        activeCategoryIndex <= i + 1
+                      }
                       style={`height: ${height}px;`}
-                      dir={lang.isRtl ? 'rtl' : undefined}
+                      dir={lang.isRtl ? "rtl" : undefined}
                     >
                       {[...(recentCustomEmojis ?? []), ...category.emojis]
                         .filter((e) => e)
-                        .map((e) => (typeof e === 'string' ? (
-                          renderSmiley(e)
-                        ) : (
-                          <StickerButton
-                            key={e.id}
-                            sticker={e}
-                            size={EMOJI_SIZE_PICKER}
-                            observeIntersection={
-                              observeIntersectionForPlayingItems
-                            }
-                            observeIntersectionForShowing={
-                              observeIntersectionForShowingItems
-                            }
-                            noPlay={!loadAndPlay}
-                            isSavedMessages={isSavedMessages}
-                            isStatusPicker={isStatusPicker}
-                            canViewSet
-                            noContextMenu
-                            isCurrentUserPremium={isCurrentUserPremium}
-                            shouldIgnorePremium={false}
-                            sharedCanvasRef={sharedSearchCanvasRef}
-                            withTranslucentThumb={isTranslucent}
-                            onClick={onCustomEmojiSelect}
-                            clickArg={e}
-                            isSelected={false}
-                            onUnfaveClick={undefined}
-                            onFaveClick={undefined}
-                            onRemoveRecentClick={undefined}
-                            onContextMenuOpen={onContextMenuOpen}
-                            onContextMenuClose={onContextMenuClose}
-                            onContextMenuClick={onContextMenuClick}
-                            forcePlayback={false}
-                            isEffectEmoji={false}
-                            noShowPremium
-                          />
-                        )))}
+                        .map((e) =>
+                          typeof e === "string" ? (
+                            renderSmiley(e)
+                          ) : (
+                            <StickerButton
+                              key={e.id}
+                              sticker={e}
+                              size={EMOJI_SIZE_PICKER}
+                              observeIntersection={
+                                observeIntersectionForPlayingItems
+                              }
+                              observeIntersectionForShowing={
+                                observeIntersectionForShowingItems
+                              }
+                              noPlay={!loadAndPlay}
+                              isSavedMessages={isSavedMessages}
+                              isStatusPicker={isStatusPicker}
+                              canViewSet
+                              noContextMenu
+                              isCurrentUserPremium={isCurrentUserPremium}
+                              shouldIgnorePremium={false}
+                              sharedCanvasRef={sharedSearchCanvasRef}
+                              withTranslucentThumb={isTranslucent}
+                              onClick={onCustomEmojiSelect}
+                              clickArg={e}
+                              isSelected={false}
+                              onUnfaveClick={undefined}
+                              onFaveClick={undefined}
+                              onRemoveRecentClick={undefined}
+                              onContextMenuOpen={onContextMenuOpen}
+                              onContextMenuClose={onContextMenuClose}
+                              onContextMenuClick={onContextMenuClick}
+                              forcePlayback={false}
+                              isEffectEmoji={false}
+                              noShowPremium
+                            />
+                          ),
+                        )}
                     </TransitionHelper>
                   </div>
                 );
@@ -1001,8 +1034,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                     allEmojis={emojis!}
                     observeIntersection={observeIntersection}
                     shouldRender={
-                      activeCategoryIndex >= i - 1
-                      && activeCategoryIndex <= i + 1
+                      activeCategoryIndex >= i - 1 &&
+                      activeCategoryIndex <= i + 1
                     }
                     onEmojiSelect={onEmojiSelect}
                   />
@@ -1010,9 +1043,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               }
             })}
             {allSets.map((stickerSet, i) => {
-              const shouldHideHeader = stickerSet.id === TOP_SYMBOL_SET_ID
-                || (stickerSet.id === RECENT_SYMBOL_SET_ID
-                  && (withDefaultTopicIcons || isStatusPicker));
+              const shouldHideHeader =
+                stickerSet.id === TOP_SYMBOL_SET_ID ||
+                (stickerSet.id === RECENT_SYMBOL_SET_ID &&
+                  (withDefaultTopicIcons || isStatusPicker));
               const isChatEmojiSet = stickerSet.id === chatEmojiSetId;
 
               if (stickerSet.id === RECENT_SYMBOL_SET_ID) return undefined;
@@ -1040,8 +1074,8 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                   isReactionPicker={isReactionPicker}
                   shouldHideHeader={shouldHideHeader}
                   withDefaultTopicIcon={
-                    withDefaultTopicIcons
-                    && stickerSet.id === RECENT_SYMBOL_SET_ID
+                    withDefaultTopicIcons &&
+                    stickerSet.id === RECENT_SYMBOL_SET_ID
                   }
                   withDefaultStatusIcon={
                     isStatusPicker && stickerSet.id === RECENT_SYMBOL_SET_ID
@@ -1069,81 +1103,85 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
               className="shared-canvas"
               style={undefined}
             />
-            {emojisFound.map((e) => ('native' in e ? (
-              <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
-            ) : (
-              <StickerButton
-                key={e.id}
-                sticker={e}
-                size={EMOJI_SIZE_PICKER}
-                observeIntersection={observeIntersectionForPlayingItems}
-                observeIntersectionForShowing={
-                  observeIntersectionForShowingItems
-                }
-                noPlay={!loadAndPlay}
-                isSavedMessages={isSavedMessages}
-                isStatusPicker={isStatusPicker}
-                canViewSet
-                noContextMenu
-                isCurrentUserPremium={isCurrentUserPremium}
-                shouldIgnorePremium={false}
-                sharedCanvasRef={sharedSearchCanvasRef}
-                withTranslucentThumb={isTranslucent}
-                onClick={onCustomEmojiSelect}
-                clickArg={e}
-                isSelected={false}
-                onUnfaveClick={undefined}
-                onFaveClick={undefined}
-                onRemoveRecentClick={undefined}
-                onContextMenuOpen={onContextMenuOpen}
-                onContextMenuClose={onContextMenuClose}
-                onContextMenuClick={onContextMenuClick}
-                forcePlayback={false}
-                isEffectEmoji={false}
-                noShowPremium
-              />
-            )))}
+            {emojisFound.map((e) =>
+              "native" in e ? (
+                <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
+              ) : (
+                <StickerButton
+                  key={e.id}
+                  sticker={e}
+                  size={EMOJI_SIZE_PICKER}
+                  observeIntersection={observeIntersectionForPlayingItems}
+                  observeIntersectionForShowing={
+                    observeIntersectionForShowingItems
+                  }
+                  noPlay={!loadAndPlay}
+                  isSavedMessages={isSavedMessages}
+                  isStatusPicker={isStatusPicker}
+                  canViewSet
+                  noContextMenu
+                  isCurrentUserPremium={isCurrentUserPremium}
+                  shouldIgnorePremium={false}
+                  sharedCanvasRef={sharedSearchCanvasRef}
+                  withTranslucentThumb={isTranslucent}
+                  onClick={onCustomEmojiSelect}
+                  clickArg={e}
+                  isSelected={false}
+                  onUnfaveClick={undefined}
+                  onFaveClick={undefined}
+                  onRemoveRecentClick={undefined}
+                  onContextMenuOpen={onContextMenuOpen}
+                  onContextMenuClose={onContextMenuClose}
+                  onContextMenuClick={onContextMenuClick}
+                  forcePlayback={false}
+                  isEffectEmoji={false}
+                  noShowPremium
+                />
+              ),
+            )}
           </div>
         ) : emojisCategoryFound.length ? (
           <div className="symbol-set symbol-set-container">
-            {emojisCategoryFound.map((e) => ('native' in e ? (
-              <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
-            ) : (
-              <StickerButton
-                key={e.id}
-                sticker={e}
-                size={EMOJI_SIZE_PICKER}
-                observeIntersection={observeIntersectionForPlayingItems}
-                observeIntersectionForShowing={
-                  observeIntersectionForShowingItems
-                }
-                noPlay={!loadAndPlay}
-                isSavedMessages={isSavedMessages}
-                isStatusPicker={isStatusPicker}
-                canViewSet
-                noContextMenu
-                isCurrentUserPremium={isCurrentUserPremium}
-                shouldIgnorePremium={false}
-                sharedCanvasRef={sharedSearchCanvasRef}
-                withTranslucentThumb={isTranslucent}
-                onClick={onCustomEmojiSelect}
-                clickArg={e}
-                isSelected={false}
-                onUnfaveClick={undefined}
-                onFaveClick={undefined}
-                onRemoveRecentClick={undefined}
-                onContextMenuOpen={onContextMenuOpen}
-                onContextMenuClose={onContextMenuClose}
-                onContextMenuClick={onContextMenuClick}
-                forcePlayback={false}
-                isEffectEmoji={false}
-                noShowPremium
-              />
-            )))}
+            {emojisCategoryFound.map((e) =>
+              "native" in e ? (
+                <EmojiButton key={e.id} emoji={e} onClick={onEmojiSelect} />
+              ) : (
+                <StickerButton
+                  key={e.id}
+                  sticker={e}
+                  size={EMOJI_SIZE_PICKER}
+                  observeIntersection={observeIntersectionForPlayingItems}
+                  observeIntersectionForShowing={
+                    observeIntersectionForShowingItems
+                  }
+                  noPlay={!loadAndPlay}
+                  isSavedMessages={isSavedMessages}
+                  isStatusPicker={isStatusPicker}
+                  canViewSet
+                  noContextMenu
+                  isCurrentUserPremium={isCurrentUserPremium}
+                  shouldIgnorePremium={false}
+                  sharedCanvasRef={sharedSearchCanvasRef}
+                  withTranslucentThumb={isTranslucent}
+                  onClick={onCustomEmojiSelect}
+                  clickArg={e}
+                  isSelected={false}
+                  onUnfaveClick={undefined}
+                  onFaveClick={undefined}
+                  onRemoveRecentClick={undefined}
+                  onContextMenuOpen={onContextMenuOpen}
+                  onContextMenuClose={onContextMenuClose}
+                  onContextMenuClick={onContextMenuClick}
+                  forcePlayback={false}
+                  isEffectEmoji={false}
+                  noShowPremium
+                />
+              ),
+            )}
           </div>
         ) : (
           // @ts-ignore
-          <p>{lang('No emoji found')}</p>
+          <p>{lang("No emoji found")}</p>
         )}
       </div>
     </div>
