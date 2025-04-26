@@ -50,7 +50,7 @@ import useAsyncRendering from '../../right/hooks/useAsyncRendering';
 
 import Avatar from '../../common/Avatar';
 import Icon from '../../common/icons/Icon';
-import ScrollableSearchInputWithEmojis from '../../common/ScrollableSearchInputWithEmojis';
+import ScrollableSearchInputWithEmojis, { manualGroupNames, manualGroups } from '../../common/ScrollableSearchInputWithEmojis';
 import StickerButton from '../../common/StickerButton';
 import StickerSet from '../../common/StickerSet';
 import Button from '../../ui/Button';
@@ -175,36 +175,63 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     return textToEmoji;
   }, []);
 
+  function getStickerSearch(query: string, emojiKeywords: Record<string,EmojiKeywords|undefined> | undefined){
+    const arr: Set<ApiSticker> = new Set();
+
+    for (const emKw of Object.values(emojiKeywords ?? {})) {
+      if (!emKw || !emKw.keywords) continue;
+      for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
+        if (!kw.includes(query)) continue;
+
+        for (const em of emojisKws) {
+          for (const e of textToEmojiMap.get(em) ?? []) {
+            arr.add(e);
+          }
+        }
+      }
+    }
+    return [...arr.values()];
+  }
+
+
   const handleEmojiSearchQueryChange = useDebouncedCallback(
     (query: string) => {
       setEmojiQuery(query.toLowerCase());
 
-      const arr: Set<ApiSticker> = new Set();
-
-      for (const emKw of Object.values(emojiKeywords ?? {})) {
-        if (!emKw || !emKw.keywords) continue;
-        for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
-          if (!kw.includes(query)) continue;
-
-          for (const em of emojisKws) {
-            for (const e of textToEmojiMap.get(em) ?? []) {
-              arr.add(e);
-            }
-          }
-        }
-      }
+      const arr = getStickerSearch(query, emojiKeywords);
       setEmojisFound([...arr.values()]);
       if (query === '') {
         setEmojisFound([]);
         setEmojisCategoryFound([]);
         setUnfocused();
+      } else {
+        setEmojisCategoryFound([]);
       }
     },
     [emojiKeywords, textToEmojiMap],
     300,
     true,
   );
+
+  const [groupSelected, setGroupSelected] = useState<boolean>(false);
   const handleEmojiGroupSelect = useLastCallback((category: string) => {
+    if (category === '') {
+      setGroupSelected(false);
+    }
+    if (manualGroupNames.includes(category)) {
+      const keywords = manualGroups.find((g) => g.name === category)?.keywords!;
+
+      const arr: (ApiSticker)[] = [];
+
+      for (const kw of keywords) {
+        arr.push(...getStickerSearch(kw, emojiKeywords));
+      }
+
+      setEmojisCategoryFound(onlyUniqueById(arr));
+      setGroupSelected(true);
+      return;
+    }
+
     const groupCat = emojiGroups?.find((g) => g.title === category);
     if (!groupCat) return;
 
@@ -215,6 +242,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
         arr.add(e);
       }
     }
+    setGroupSelected(true);
 
     setEmojisCategoryFound([...arr.values()]);
   });
@@ -382,6 +410,8 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     setUnfocused();
   });
 
+  console.log("XE", {emojiQuery, emojisCategoryFound, emojisFound})
+
   if (!chat) return undefined;
 
   function renderCover(
@@ -537,7 +567,7 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
           onGroupSelect={handleEmojiGroupSelect}
           inputId="emoji-search"
         />
-        {!emojiQuery && !emojisCategoryFound.length ? (
+        {!emojiQuery && !emojisCategoryFound.length && !groupSelected? (
           <>
             {allSets.map((stickerSet, i) => (
               <StickerSet

@@ -115,6 +115,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
 
   const onInputReset = useLastCallback(() => {
     setActiveGroup(undefined);
+    onGroupSelect('');
     onReset();
   });
 
