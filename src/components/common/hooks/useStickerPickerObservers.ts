@@ -45,6 +45,7 @@ export function useStickerPickerObservers(
     }, Infinity);
 
     if (minIntersectingIndex === Infinity) {
+      setActiveSetIndex(-1);
       return;
     }
 

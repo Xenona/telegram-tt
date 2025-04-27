@@ -243,9 +243,10 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   // eslint-disable-next-line no-null/no-null
   const headerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line no-null/no-null
-  const stripeRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line no-null/no-null
   const sharedCanvasRef = useRef<HTMLCanvasElement>(null);
+  // eslint-disable-next-line no-null/no-null
+  const recentEmojisRef = useRef<HTMLDivElement>(null);
+
   // eslint-disable-next-line no-null/no-null
   const [categories, setCategories] = useState<EmojiCategoryData[]>();
   // eslint-disable-next-line no-null/no-null
@@ -558,7 +559,6 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
   const shouldRenderContent = areAddedLoaded && canRenderContent && !noPopulatedSets;
 
   useHorizontalScroll(headerRef, isMobile || !shouldRenderContent);
-  useHorizontalScroll(stripeRef, isMobile || !shouldRenderContent);
 
   // Initialize data on first render.
   useEffect(() => {
@@ -628,6 +628,12 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
       setActiveCategoryIndex(minIntersectingIndex);
     },
   );
+
+  useEffect(() => {
+    if (!recentEmojisRef.current) return () => {};
+    return observeIntersection(recentEmojisRef.current!);
+    // eslint-disable-next-line react-hooks-static-deps/exhaustive-deps
+  }, [recentEmojisRef.current, observeIntersection]);
 
   function renderCover(
     stickerSet: StickerSetOrReactionsSetOrRecent,
@@ -808,17 +814,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
     );
   }
 
-  useEffect(() => {
-    const header = stripeRef.current;
-    if (!header) {
-      return;
-    }
-
-    const newLeft = activeCategoryIndex * HEADER_BUTTON_WIDTH
-      - (header.offsetWidth / 2 - HEADER_BUTTON_WIDTH / 2);
-
-    animateHorizontalScroll(header, newLeft);
-  }, [activeCategoryIndex]);
+  const stripeLeft = activeCategoryIndex * HEADER_BUTTON_WIDTH;
 
   function renderSmiley(smiley: string) {
     const emoji = emojis![smiley];
@@ -874,17 +870,18 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
           {renderCategoryButton(allCategories[0], 0)}
 
           <div
-            ref={stripeRef}
             className={buildClassName(
               styles.emojiCategoryStripe,
               activeCategoryIndex > 0
                 && activeCategoryIndex < allCategories.length
+                && activeSetIndex < 0
                 && styles.activated,
               canAnimate ? styles.animatedWidth : '',
             )}
+            style={`--stripe-left: ${-stripeLeft}px;`}
           >
             <div
-              className=""
+              className={styles.emojiCategoryStripeInner}
             >
               {allCategories
                 .slice(1)
@@ -958,6 +955,7 @@ const EsgEmojiPicker: FC<OwnProps & StateProps> = ({
                     key={category.id}
                     id="emoji-category-0"
                     className="symbol-set"
+                    ref={recentEmojisRef}
                   >
                     <canvas
                       ref={sharedSearchCanvasRef}
