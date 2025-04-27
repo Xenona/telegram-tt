@@ -292,6 +292,7 @@ export class RichEditable {
     );
 
     this.handleSelectionUpdate();
+    this.preview.refreshPreview();
     if (!wasEmpty && this.emptyS() && this.selectionS()?.collapsed) {
       betterExecCommand(this.root, this.selectionS()?.range, 'removeFormat');
     }

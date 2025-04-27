@@ -56,7 +56,7 @@ export class Previewer {
     if (!this.isPreviewing()) return;
 
     const text = this.editable.getFormattedText();
-    TeactDOM.render(<>{renderTextWithEntities(text)}</>, this.root);
+    TeactDOM.render(<>{renderTextWithEntities({ ...text })}</>, this.root);
   }
 
   startPreview() {
@@ -76,7 +76,7 @@ export class Previewer {
   }
 
   delayedPreview(time = 1000) {
-    if(this.delayedTimeout != -1) return;
+    if (this.delayedTimeout !== -1) return;
 
     this.delayedTimeout = window.setTimeout(() => {
       this.startPreview();

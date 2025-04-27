@@ -4,6 +4,14 @@
   left: 0;
   right: 0;
   z-index: 0;
+
+  :global(.Spoiler) {
+    padding-left: 2px;
+    padding-right: 2px;
+    :global(.Spoiler__content) {
+      opacity: 1 !important;
+    }
+  }
 }
 
 .previewHidden {
