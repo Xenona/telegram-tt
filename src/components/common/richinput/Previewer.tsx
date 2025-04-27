@@ -21,6 +21,8 @@ export class Previewer {
 
   private setIsPreviewing: (isPreviewing: boolean) => void;
 
+  private delayedTimeout = -1;
+
   constructor(edtiable: RichEditable) {
     this.editable = edtiable;
     this.root = document.createElement('div');
@@ -40,6 +42,10 @@ export class Previewer {
     this.editable.root.addEventListener('focus', () => {
       this.endPreview();
     });
+
+    this.editable.root.addEventListener('blur', () => {
+      this.delayedPreview(1000);
+    });
   }
 
   addHiddenOnPreview(...el: HTMLElement[]) {
@@ -54,6 +60,9 @@ export class Previewer {
   }
 
   startPreview() {
+    window.clearTimeout(this.delayedTimeout);
+    this.delayedTimeout = -1;
+
     if (this.isPreviewing()) return;
     this.setIsPreviewing(true);
     this.refreshPreview();
@@ -66,7 +75,18 @@ export class Previewer {
     });
   }
 
+  delayedPreview(time = 1000) {
+    if(this.delayedTimeout != -1) return;
+
+    this.delayedTimeout = window.setTimeout(() => {
+      this.startPreview();
+    }, time);
+  }
+
   endPreview() {
+    window.clearTimeout(this.delayedTimeout);
+    this.delayedTimeout = -1;
+
     if (!this.isPreviewing()) return;
 
     this.setIsPreviewing(false);
