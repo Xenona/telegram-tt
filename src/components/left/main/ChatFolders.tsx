@@ -8,16 +8,18 @@ import {
 
 import type { CustomEmojiIconsFolder, GlobalState } from '../../../global/types';
 import type { FolderEditDispatch } from '../../../hooks/reducers/useFoldersReducer';
-import type { LeftColumnContent, SettingsScreens } from '../../../types';
 import type { IconName } from '../../../types/icons';
 import type { MenuItemContextAction } from '../../ui/ListItem';
 import type { TabWithProperties } from '../../ui/TabList';
 import {
   type ApiChatFolder, type ApiChatlistExportedInvite, type ApiSession, type ApiSticker,
 } from '../../../api/types';
+import { type LeftColumnContent, SettingsScreens } from '../../../types';
 
 import { ALL_FOLDER_ID } from '../../../config';
-import { selectCanAnimateInterface, selectCanShareFolder, selectTabState } from '../../../global/selectors';
+import {
+  selectCanAnimateInterface, selectCanShareFolder, selectIsCurrentUserFrozen, selectTabState,
+} from '../../../global/selectors';
 import { selectCurrentLimit } from '../../../global/selectors/limits';
 import { IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
@@ -369,7 +371,8 @@ const ChatFolders: FC<OwnProps & StateProps> = ({
     });
   }, [
     displayedFolders, maxFolders, folderCountersById, lang, chatFoldersById, maxChatLists, folderInvitesById,
-    maxFolderInvites, folderUnreadChatsCountersById, onSettingsScreenSelect, customEmojiIcons, canAnimate, isMobile, ref, foldersVertical,
+    maxFolderInvites, folderUnreadChatsCountersById, onSettingsScreenSelect, customEmojiIcons,
+    canAnimate, isMobile, ref, foldersVertical,
   ]);
 
   const handleSwitchTab = useLastCallback((index: number) => {

@@ -1,6 +1,7 @@
 import type { ApiLanguage } from '../../api/types';
 import type {
   AnimationLevel,
+  FoldersView,
   PerformanceType,
   Point,
   Size,
@@ -30,6 +31,7 @@ export type SharedState = {
     shouldDebugExportedSenders?: boolean;
     shouldWarnAboutSvg?: boolean;
     shouldSkipWebAppCloseConfirmation: boolean;
+    foldersView: FoldersView;
   };
   isInitial?: true;
 };

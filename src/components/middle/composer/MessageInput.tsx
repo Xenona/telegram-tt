@@ -16,14 +16,13 @@ import { EDITABLE_INPUT_ID } from '../../../config';
 import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import { selectCanPlayAnimatedEmojis, selectDraft, selectIsInSelectMode } from '../../../global/selectors';
 import { selectSharedSettings } from '../../../global/selectors/sharedState';
-
+import { IS_ANDROID, IS_IOS, IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
 import captureKeyboardListeners from '../../../util/captureKeyboardListeners';
 import { getIsDirectTextInputDisabled } from '../../../util/directInputManager';
 import parseEmojiOnlyString from '../../../util/emoji/parseEmojiOnlyString';
 import focusEditableElement from '../../../util/focusEditableElement';
 import { debounce } from '../../../util/schedulers';
-import { IS_ANDROID, IS_IOS, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import renderText from '../../common/helpers/renderText';
 import { useRichEditableKeyboardListener } from '../../common/richinput/useRichEditable';
 

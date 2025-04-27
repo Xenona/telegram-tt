@@ -17,9 +17,9 @@ import {
 } from './browser/windowEnvironment';
 import * as cacheApi from './cacheApi';
 import { fetchBlob } from './files';
+import { ungzipTGV } from './gzipUncompress';
 import { ACCOUNT_SLOT } from './multiaccount';
 import { oggToWav } from './oggToWav';
-import { ungzipTGV } from './gzipUncompress';
 
 const asCacheApiType = {
   [ApiMediaFormat.BlobUrl]: cacheApi.Type.Blob,

@@ -51,11 +51,11 @@ import {
 } from '../../global/selectors';
 import animateHorizontalScroll from '../../util/animateHorizontalScroll';
 import animateScroll from '../../util/animateScroll';
+import { IS_MOBILE, IS_TOUCH_ENV } from '../../util/browser/windowEnvironment';
 import buildClassName from '../../util/buildClassName';
 import { uncompressEmoji } from '../../util/emoji/emoji';
 import { pickTruthy, unique } from '../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
-import { IS_MOBILE, IS_TOUCH_ENV } from '../../util/windowEnvironment';
 import windowSize from '../../util/windowSize';
 import { REM } from './helpers/mediaDimensions';
 

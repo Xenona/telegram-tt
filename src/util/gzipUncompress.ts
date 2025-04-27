@@ -3,7 +3,7 @@
 import pako from 'pako/dist/pako_inflate.min.js';
 
 // this part of code was inspired by webk codebase
-import { IS_FIREFOX } from './windowEnvironment';
+import { IS_FIREFOX } from './browser/windowEnvironment';
 
 export default function gzipUncompress(bytes: ArrayBuffer, toString?: boolean): string | Uint8Array {
   const result = pako.inflate(bytes, toString ? { to: 'string' } : undefined);

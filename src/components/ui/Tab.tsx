@@ -6,8 +6,8 @@ import React, {
 import type { ApiThemeParameters } from '../../api/types';
 import type { MenuItemContextAction } from './ListItem';
 
-import { MouseButton } from '../../util/browser/windowEnvironment';
 import { requestForcedReflow, requestMeasure, requestMutation } from '../../lib/fasterdom/fasterdom';
+import { MouseButton } from '../../util/browser/windowEnvironment';
 import buildClassName from '../../util/buildClassName';
 import forceReflow from '../../util/forceReflow';
 import { extractCurrentThemeParams } from '../../util/themeStyle';

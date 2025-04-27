@@ -19,13 +19,13 @@ import { requestMeasure } from '../../../../lib/fasterdom/fasterdom';
 import { isUserId } from '../../../../global/helpers';
 import { selectCanPlayAnimatedEmojis, selectCanShareFolder } from '../../../../global/selectors';
 import { selectCurrentLimit } from '../../../../global/selectors/limits';
+import { IS_TOUCH_ENV } from '../../../../util/browser/windowEnvironment';
 import buildClassName from '../../../../util/buildClassName';
 import buildStyle from '../../../../util/buildStyle';
 import { findIntersectionWithSet } from '../../../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../../../util/memo';
 import { CUSTOM_PEER_EXCLUDED_CHAT_TYPES, CUSTOM_PEER_INCLUDED_CHAT_TYPES } from '../../../../util/objects/customPeer';
 import { extractCurrentThemeParams } from '../../../../util/themeStyle';
-import { IS_TOUCH_ENV } from '../../../../util/windowEnvironment';
 import { LOCAL_TGS_URLS } from '../../../common/helpers/animatedAssets';
 
 import { selectChatFilters } from '../../../../hooks/reducers/useFoldersReducer';

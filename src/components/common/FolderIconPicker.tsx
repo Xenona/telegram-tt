@@ -31,6 +31,7 @@ import {
 } from '../../global/selectors';
 import animateHorizontalScroll from '../../util/animateHorizontalScroll';
 import animateScroll from '../../util/animateScroll';
+import { IS_TOUCH_ENV } from '../../util/browser/windowEnvironment';
 import buildClassName from '../../util/buildClassName';
 import
 {
@@ -38,7 +39,6 @@ import
 } from '../../util/emoji/emoji';
 import { pickTruthy, unique } from '../../util/iteratees';
 import { MEMO_EMPTY_ARRAY } from '../../util/memo';
-import { IS_TOUCH_ENV } from '../../util/windowEnvironment';
 import { REM } from './helpers/mediaDimensions';
 
 import useAppLayout from '../../hooks/useAppLayout';

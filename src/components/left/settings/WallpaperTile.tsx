@@ -13,11 +13,11 @@ import { UPLOADING_WALLPAPER_SLUG } from '../../../types';
 import { CUSTOM_BG_CACHE_NAME } from '../../../config';
 import { selectCanAnimateInterface } from '../../../global/selectors';
 import { transformStringsToColors } from '../../../util/BaseAnimBackgroundRender';
+import { IS_TOUCH_ENV } from '../../../util/browser/windowEnvironment';
 import buildClassName from '../../../util/buildClassName';
 import * as cacheApi from '../../../util/cacheApi';
 import { fetchBlob } from '../../../util/files';
 import { PreviewAnimgBgRender } from '../../../util/PreviewBackgroundRender';
-import { IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 
 import useCanvasBlur from '../../../hooks/useCanvasBlur';
 import useMedia from '../../../hooks/useMedia';

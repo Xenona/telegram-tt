@@ -335,6 +335,7 @@ function unsafeMigrateCache(cached: GlobalState, initialState: GlobalState) {
       shouldCollectDebugLogs: untypedCached.settings.byKey.shouldCollectDebugLogs,
       shouldDebugExportedSenders: untypedCached.settings.byKey.shouldDebugExportedSenders,
       shouldWarnAboutSvg: untypedCached.settings.byKey.shouldWarnAboutSvg,
+      foldersView: untypedCached.settings.foldersView,
     };
   }
 
