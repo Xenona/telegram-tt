@@ -44,7 +44,7 @@ export class Previewer {
     });
 
     this.editable.root.addEventListener('blur', () => {
-      this.delayedPreview(1000);
+      this.delayedPreview(20);
     });
   }
 
@@ -75,7 +75,7 @@ export class Previewer {
     });
   }
 
-  delayedPreview(time = 1000) {
+  delayedPreview(time = 20) {
     if (this.delayedTimeout !== -1) return;
 
     this.delayedTimeout = window.setTimeout(() => {
