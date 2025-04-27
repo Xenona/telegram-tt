@@ -27,7 +27,7 @@ export const HEADER_BUTTON_WIDTH = 2.625 * REM; // px (including margin)
 
 export const manualGroups = [
   { name: 'msg-emoji-happy', keywords: ['happy', 'smile'] },
-  { name: 'msg-emoji-activities2', keywords: ['sport', 'art', ] },
+  { name: 'msg-emoji-activities2', keywords: ['sport', 'art'] },
   { name: 'msg-emoji-away', keywords: ['vacation', 'holiday'] },
   { name: 'msg-emoji-bath', keywords: ['bath', 'clean', 'shower', 'nail'] },
   { name: 'msg-emoji-busy', keywords: ['busy', 'stop', 'time', 'work'] },
@@ -38,7 +38,7 @@ export const manualGroups = [
   { name: 'msg-emoji-study', keywords: ['study', 'school', 'write', 'book'] },
   { name: 'msg-emoji-vacation3', keywords: ['vacation', 'holiday'] },
   { name: 'msg-emoji-work', keywords: ['work'] },
-]
+];
 export const manualGroupNames = manualGroups.map((group) => group.name);
 
 type OwnProps = {

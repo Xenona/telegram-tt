@@ -51,8 +51,8 @@
     & :global(.icon) {
       font-size: 1.375rem;
     }
-
   }
+
   & :global(.icon) {
     /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
     transition: font-size 0.2s ease;
