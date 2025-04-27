@@ -415,7 +415,7 @@ const TextFormatter: FC<OwnProps> = ({
     if (!selectionRange || !isOpen) return;
 
     const selectionRect = selectionRange.getBoundingClientRect();
-    const rootRect = richInputCtx.editable.root.getBoundingClientRect();
+    const rootRect = containerRef.current?.parentElement?.getBoundingClientRect()!;
 
     let x = (selectionRect.left + selectionRect.width / 2) - rootRect.left;
 

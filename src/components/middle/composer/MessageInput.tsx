@@ -1,7 +1,7 @@
 import type { FC, TeactNode } from '../../../lib/teact/teact';
 import React, {
   getIsHeavyAnimating,
-  memo, useEffect, useLayoutEffect,
+  memo, useEffect,
   useRef, useState,
 } from '../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../global';
@@ -13,7 +13,7 @@ import type {
 import type { RichInputCtx } from '../../common/richinput/useRichEditable';
 
 import { EDITABLE_INPUT_ID } from '../../../config';
-import { requestForcedReflow, requestMutation } from '../../../lib/fasterdom/fasterdom';
+import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import { selectCanPlayAnimatedEmojis, selectDraft, selectIsInSelectMode } from '../../../global/selectors';
 import { selectSharedSettings } from '../../../global/selectors/sharedState';
 
@@ -130,10 +130,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   // eslint-disable-next-line no-null/no-null
   const selectionTimeoutRef = useRef<number>(null);
   // eslint-disable-next-line no-null/no-null
-  const cloneRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line no-null/no-null
-  const scrollerCloneRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line no-null/no-null
   const sharedCanvasRef = useRef<HTMLCanvasElement>(null);
   // eslint-disable-next-line no-null/no-null
   const sharedCanvasHqRef = useRef<HTMLCanvasElement>(null);
@@ -156,61 +152,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   const handleTimerEnd = useLastCallback(() => {
     setShouldDisplayTimer(false);
   });
-
-  // useInputCustomEmojis(
-  //   richInputCtx.getHtml,
-  //   inputRef,
-  //   sharedCanvasRef,
-  //   sharedCanvasHqRef,
-  //   absoluteContainerRef,
-  //   customEmojiPrefix,
-  //   canPlayAnimatedEmojis,
-  //   isReady,
-  //   isActive,
-  // );
-
-  // const maxInputHeight = isAttachmentModalInput
-  //   ? MAX_ATTACHMENT_MODAL_INPUT_HEIGHT
-  //   : isStoryInput ? MAX_STORY_MODAL_INPUT_HEIGHT : (isMobile ? 256 : 416);
-  const updateInputHeight = useLastCallback(() => {
-    requestForcedReflow(() => {
-      // TODO: Improve height handling
-
-      // const scroller = inputRef.current!.closest<HTMLDivElement>(`.${SCROLLER_CLASS}`)!;
-      // const currentHeight = Number(scroller.style.height.replace('px', ''));
-      // const clone = scrollerCloneRef.current!;
-      // const { scrollHeight } = clone;
-      // const newHeight = Math.min(scrollHeight, maxInputHeight);
-
-      // if (newHeight === currentHeight) {
-      //   return undefined;
-      // }
-
-      // const isOverflown = scrollHeight > maxInputHeight;
-
-      // function exec() {
-      //   const transitionDuration = Math.round(
-      //     TRANSITION_DURATION_FACTOR * Math.log(Math.abs(newHeight - currentHeight)),
-      //   );
-      //   scroller.style.height = `${newHeight}px`;
-      //   scroller.style.transitionDuration = `${transitionDuration}ms`;
-      //   scroller.classList.toggle('overflown', isOverflown);
-      // }
-
-      // if (willSend) {
-      //   // Delay to next frame to sync with sending animation
-      //   requestMutation(exec);
-      //   return undefined;
-      // } else {
-      //   return exec;
-      // }
-    });
-  });
-
-  useLayoutEffect(() => {
-    if (!isAttachmentModalInput) return;
-    updateInputHeight();
-  }, [isAttachmentModalInput, updateInputHeight]);
 
   const chatIdRef = useRef(chatId);
   chatIdRef.current = chatId;
@@ -402,7 +343,10 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   }
 
   function handleClick() {
-    if (isAttachmentModalInput || canSendPlainText || (isStoryInput && isNeedPremium)) return;
+    if (isAttachmentModalInput || canSendPlainText || (isStoryInput && isNeedPremium)) {
+      richInputCtx.editable.focus();
+      return;
+    }
     showAllowedMessageTypesNotification({ chatId, messageListType });
   }
 
@@ -506,18 +450,20 @@ const MessageInput: FC<OwnProps & StateProps> = ({
   );
 
   const className = buildClassName(
-    'form-control allow-selection',
+    'allow-selection',
     shouldSuppressFocus && 'focus-disabled',
   );
 
-  const inputScrollerContentClass = buildClassName('input-scroller-content', isNeedPremium && 'is-need-premium');
+  const inputScrollerContentClass = buildClassName(
+    'form-control input-scroller-content', isNeedPremium && 'is-need-premium',
+  );
 
   return (
     <div id={id} onClick={shouldSuppressFocus ? onSuppressedFocus : undefined} dir={oldLang.isRtl ? 'rtl' : undefined}>
       <div
         className={buildClassName('custom-scroll', SCROLLER_CLASS, isNeedPremium && 'is-need-premium')}
         onScroll={onScroll}
-        onClick={!isAttachmentModalInput && !canSendPlainText ? handleClick : undefined}
+        onClick={handleClick}
       >
         <div
           className={inputScrollerContentClass}
@@ -558,17 +504,6 @@ const MessageInput: FC<OwnProps & StateProps> = ({
           <canvas ref={sharedCanvasRef} className="shared-canvas" />
           <canvas ref={sharedCanvasHqRef} className="shared-canvas" />
           <div ref={absoluteContainerRef} className="absolute-video-container" />
-        </div>
-      </div>
-      <div
-        ref={scrollerCloneRef}
-        className={buildClassName('custom-scroll',
-          SCROLLER_CLASS,
-          'clone',
-          isNeedPremium && 'is-need-premium')}
-      >
-        <div className={inputScrollerContentClass}>
-          <div ref={cloneRef} className={buildClassName(className, 'clone')} dir="auto" />
         </div>
       </div>
       {captionLimit !== undefined && (

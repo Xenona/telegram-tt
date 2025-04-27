@@ -8,7 +8,7 @@ import { requestMutation } from '../../../lib/fasterdom/fasterdom';
 import { createSignal } from '../../../util/signals';
 import { renderTextWithEntities } from '../helpers/renderTextWithEntities';
 
-import styles from './Previewer.module.scss';
+import styles from './RichEditable.module.scss';
 
 export class Previewer {
   public root: HTMLElement;
@@ -27,7 +27,7 @@ export class Previewer {
     this.root.classList.add(styles.inputPreview);
     this.root.classList.add(styles.previewHidden);
     // While not really a form control, it needs same styles
-    this.root.classList.add('form-control');
+    // this.root.classList.add('form-control');
 
     this.hiddenOnPreview = [
       this.editable.root,

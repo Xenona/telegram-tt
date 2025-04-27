@@ -7,7 +7,6 @@ import { betterExecCommand } from '../../../util/execCommand';
 import focusEditableElement from '../../../util/focusEditableElement';
 import parseHtmlAsFormattedText from '../../../util/parseHtmlAsFormattedText';
 import { createSignal } from '../../../util/signals';
-import { IS_MOBILE, IS_TOUCH_ENV } from '../../../util/windowEnvironment';
 import { preparePastedHtml } from '../../middle/composer/helpers/cleanHtml';
 import { getTextWithEntitiesAsHtml } from '../helpers/renderTextWithEntities';
 import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
@@ -15,6 +14,8 @@ import { INPUT_CUSTOM_EMOJI_SELECTOR } from './customEmoji';
 import { BlockQuoteEnterHandler } from './BlockquoteEnter';
 import { EditableEmojiRender } from './EditableEmojiRender';
 import { Previewer } from './Previewer';
+
+import styles from './RichEditable.module.scss';
 
 const SAFARI_BR = '<br>';
 const WHITESPACE_RE = /\s/;
@@ -72,10 +73,7 @@ export class RichEditable {
 
   constructor() {
     this.root = document.createElement('div');
-    this.root.style.maxHeight = '256px';
-    if (IS_TOUCH_ENV || IS_MOBILE) {
-      this.root.style.overflowY = 'scroll';
-    }
+    this.root.classList.add(styles.editRoot);
     this.attached = undefined;
 
     this.disableEdit = false;
@@ -139,6 +137,7 @@ export class RichEditable {
     this.emojiRenderer.attachTo(el);
 
     el.appendChild(this.preview.root);
+    el.classList.add(styles.attachTarget);
     this.handleContentUpdate();
   }
 
@@ -171,6 +170,7 @@ export class RichEditable {
   }) {
     if (props.className) {
       this.root.className = props.className;
+      this.root.classList.add(styles.editRoot);
     }
     if (props.placeholder) {
       this.root.setAttribute('aria-label', props.placeholder);

@@ -1,5 +1,11 @@
 .RichInput {
   height: auto;
+  max-height: 250px;
+  overflow: auto;
+
+  div[contenteditable] {
+    outline: none;
+  }
 }
 
 .RichInputContainer {

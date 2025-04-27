@@ -45,27 +45,21 @@ const RichInput: FC<OwnProps> = ({
 
   return (
     <div className={style.RichInputContainer}>
-      <RichEditableAttachment
-        richInputCtx={richInputCtx}
-        placeholder={placeholder}
-        className={fullClass}
-      />
-      <span
-        className={buildClassName(
-          style.placeholderText,
-          isTouched && style.touched,
-        )}
-        dir="auto"
-      >
-        {placeholder}
-      </span>
-      <TextFormatter
-        richInputCtx={richInputCtx}
-        isOpen={isTextFormatterOpen}
-        isActive
-        onClose={closeTextFormatter}
-        disablePreview={disablePreview}
-      />
+      <div className={fullClass}>
+        <RichEditableAttachment
+          richInputCtx={richInputCtx}
+          placeholder={placeholder}
+        />
+        <span
+          className={buildClassName(
+            style.placeholderText,
+            isTouched && style.touched,
+          )}
+          dir="auto"
+        >
+          {placeholder}
+        </span>
+      </div>
       {limitRemaining !== undefined && limitRemaining < 10 && (
         <div
           style={buildStyle(limitRemaining < 0 && 'color: var(--color-error)')}
@@ -73,6 +67,14 @@ const RichInput: FC<OwnProps> = ({
         >{limitRemaining}
         </div>
       )}
+
+      <TextFormatter
+        richInputCtx={richInputCtx}
+        isOpen={isTextFormatterOpen}
+        isActive
+        onClose={closeTextFormatter}
+        disablePreview={disablePreview}
+      />
     </div>
   );
 };
