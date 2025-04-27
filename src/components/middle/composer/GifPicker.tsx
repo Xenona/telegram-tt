@@ -74,6 +74,7 @@ const GifPicker: FC<OwnProps & StateProps> = ({
 
   const handleEmojiSearchQueryChange = useLastCallback((e: string) => {
     setGifSearchQuery({ query: e, tabId: -1 });
+    setEmojiQuery(e);
   });
 
   const { observe: observeIntersection } = useIntersectionObserver({
