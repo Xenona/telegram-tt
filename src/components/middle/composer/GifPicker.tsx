@@ -22,7 +22,8 @@ import useLastCallback from '../../../hooks/useLastCallback';
 import useAsyncRendering from '../../right/hooks/useAsyncRendering';
 
 import GifButton from '../../common/GifButton';
-import ScrollableSearchInputWithEmojis from '../../common/ScrollableSearchInputWithEmojis';
+// eslint-disable-next-line max-len
+import ScrollableSearchInputWithEmojis, { manualGroupNames, manualGroups } from '../../common/ScrollableSearchInputWithEmojis';
 import InfiniteScroll from '../../ui/InfiniteScroll';
 import Loading from '../../ui/Loading';
 
@@ -69,42 +70,11 @@ const GifPicker: FC<OwnProps & StateProps> = ({
   const [isInputFocused, setFocused, setUnfocused] = useFlag();
   const onReset = useLastCallback(() => {
     setEmojiQuery('');
-    // setEmojisFound([]);
-    // setEmojisCategoryFound([]);
   });
 
   const handleEmojiSearchQueryChange = useLastCallback((e: string) => {
     setGifSearchQuery({ query: e, tabId: -1 });
   });
-
-  //   const handleEmojiSearchQueryChange = useDebouncedCallback(
-  //   (query: string) => {
-  //     setEmojiQuery(query.toLowerCase());
-
-  //     const arr: Set<ApiSticker> = new Set();
-
-  //     for (const emKw of Object.values(emojiKeywords ?? {})) {
-  //       if (!emKw || !emKw.keywords) continue;
-  //       for (const [kw, emojisKws] of Object.entries(emKw.keywords)) {
-  //         if (!kw.includes(query)) continue;
-
-  //         for (const em of emojisKws) {
-  //           for (const e of textToEmojiMap.get(em) ?? []) {
-  //             arr.add(e);
-  //           }
-  //         }
-  //       }
-  //     }
-  //     setEmojisFound([...arr.values()]);
-  //     if (query === "") {
-  //       setEmojisFound([]);
-  //       setEmojisCategoryFound([]);
-  //     }
-  //   },
-  //   [emojiKeywords, textToEmojiMap],
-  //   300,
-  //   true,
-  // );
 
   const { observe: observeIntersection } = useIntersectionObserver({
     rootRef: containerRef,
@@ -122,18 +92,10 @@ const GifPicker: FC<OwnProps & StateProps> = ({
   });
 
   const handleEmojiGroupSelect = useLastCallback((category: string) => {
-    // const groupCat = emojiGroups?.find((g) => g.title === category);
-    // if (!groupCat) return;
-
-    // const arr: Set<ApiSticker> = new Set();
-
-    // for (const em of groupCat?.emoticons) {
-    //   for (const e of textToEmojiMap.get(em) ?? []) {
-    //     arr.add(e);
-    //   }
-    // }
-
-    // setEmojisCategoryFound([...arr.values()]);
+    if (manualGroupNames.includes(category)) {
+      category = manualGroups.find((g) => g.name === category)?.keywords[0] ?? '';
+    }
+    setGifSearchQuery({ query: category, tabId: -1 });
   });
 
   const handleSearchMoreGifs = useLastCallback(() => {
@@ -181,7 +143,7 @@ const GifPicker: FC<OwnProps & StateProps> = ({
         isInputFocused={isInputFocused}
         // lang pack should have a proper key
         // @ts-ignore
-        placeholder={lang('Search Stickers')}
+        placeholder={lang('Search Gifs')}
         onChange={handleEmojiSearchQueryChange}
         onGroupSelect={handleEmojiGroupSelect}
         inputId="emoji-search"

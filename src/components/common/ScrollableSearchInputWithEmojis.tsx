@@ -51,6 +51,7 @@ type OwnProps = {
   onReset: () => void;
   className?: string;
   inputId?: string;
+  placeholder?: string;
 };
 
 const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
@@ -59,6 +60,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
   onFocus,
   emojiQuery,
   className,
+  placeholder,
   onChange,
   onGroupSelect,
   inputId,
@@ -133,9 +135,11 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
         className,
         'with-emojis',
       )}
-      // lang pack should have a proper key
-      // placeholder={lang("Search Emoji")}
-      onChange={onChange}
+      // eslint-disable-next-line react/jsx-no-bind
+      onChange={(e: string) => {
+        onChange(e);
+        setActiveGroup(undefined);
+      }}
       inputId={inputId ?? ''}
     >
       <div className={buildClassName('placeholder-with-categories')}>
@@ -156,7 +160,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
             )}
           >
             {/* @ts-ignore */}
-            {lang('Search Emoji')}
+            {placeholder || lang('Search Emoji')}
           </p>
 
           <div>
@@ -168,6 +172,7 @@ const ScrollableSearchInputWithEmojis: FC<OwnProps> = ({
                 // eslint-disable-next-line react/jsx-no-bind
                 onClick={() => {
                   onFocus();
+                  if (emojiQuery) onChange('');
                   setActiveSetIndex(index);
                   setActiveGroup(group.name);
                   onGroupSelect(group.group_name ? group.group_name : group.name);
