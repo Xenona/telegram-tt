@@ -533,6 +533,13 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
     });
   }
 
+  const marginRight = !emojiQuery && !emojisCategoryFound.length && !groupSelected
+    ? (0)
+    : emojisFound.length
+      ? (IS_MOBILE ? emojisFound.length < 9 ? 0.5 : 0 : emojisFound.length < 16 ? 0.5 : 0)
+      : emojisCategoryFound.length
+        ? (IS_MOBILE ? emojisCategoryFound.length < 9 ? 0.5 : 0 : emojisCategoryFound.length < 16 ? 0.5 : 0) : (0.5);
+
   return (
     <div className={fullClassName}>
       {!isForEffects && (
@@ -554,6 +561,8 @@ const StickerPicker: FC<OwnProps & StateProps> = ({
           isInputFocused || emojiQuery ? headerStyles.mainHide : '',
           canAnimate ? headerStyles.animatedSlide : '',
         )}
+        style={`margin-right: ${marginRight}rem;`}
+
       >
         <ScrollableSearchInputWithEmojis
           onBlur={setUnfocused}
